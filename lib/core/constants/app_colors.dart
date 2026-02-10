@@ -5,7 +5,7 @@ class AppColors {
   AppColors._();
 
   // ─── Primary ───
-  static const Color primaryBlue = Color(0xFF2952CC);
+  static const Color primaryBlue = Color(0xFF2E5BFF); // Royal Blue
   static const Color darkBlue = Color(0xFF1C3FAA);
   static const Color lightBlue = Color(0xFF5B8DEE);
   static const Color secondaryBlue = Color(0xFF5B8DEE);
@@ -18,9 +18,9 @@ class AppColors {
 
   // ─── Grades ───
   static const Color gradeExcellent = Color(0xFF00C48C); // 5
-  static const Color gradeGood = Color(0xFFFFB800);      // 4
-  static const Color gradeAverage = Color(0xFFFF9F43);   // 3
-  static const Color gradePoor = Color(0xFFFF5757);      // 2
+  static const Color gradeGood = Color(0xFFFFB800); // 4
+  static const Color gradeAverage = Color(0xFFFF9F43); // 3
+  static const Color gradePoor = Color(0xFFFF5757); // 2
 
   // ─── Neutral ───
   static const Color white = Color(0xFFFFFFFF);

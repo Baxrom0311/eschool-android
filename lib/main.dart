@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 import 'package:provider/provider.dart';
 
 import 'core/routing/app_router.dart';
@@ -13,7 +14,11 @@ void main() async {
   // SharedPreferences init
   await SharedPrefsService.init();
 
-  runApp(const ParentSchoolApp());
+  runApp(
+    const ProviderScope(
+      child: ParentSchoolApp(),
+    ),
+  );
 }
 
 class ParentSchoolApp extends StatelessWidget {

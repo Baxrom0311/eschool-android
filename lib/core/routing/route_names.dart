@@ -21,19 +21,21 @@ class RouteNames {
   static const String grades = '/academics/grades';
   static const String schedule = '/academics/schedule';
   static const String assignments = '/academics/assignments';
+  static const String assignmentDetail = '/academics/assignments/detail';
   static const String attendance = '/academics/attendance';
   static const String rating = '/academics/rating';
 
   // ─── Payments ───
   static const String payments = '/payments';
   static const String paymentMethod = '/payments/method';
+  static const String paymentHistory = '/payments/history';
 
   // ─── Menu ───
   static const String menu = '/menu';
 
   // ─── Chat ───
   static const String chatList = '/chat';
-  static const String chatRoom = '/chat/room';
+  static const String chatRoom = '/chat/details';
 
   // ─── Notifications ───
   static const String notifications = '/notifications';

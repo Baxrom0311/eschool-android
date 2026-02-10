@@ -26,7 +26,7 @@ class LoadingIndicator extends StatelessWidget {
             height: size,
             child: CircularProgressIndicator(
               strokeWidth: 3,
-              valueColor: const AlwaysStoppedAnimation<Color>(
+              valueColor: AlwaysStoppedAnimation<Color>(
                 color ?? AppColors.primaryBlue,
               ),
             ),
