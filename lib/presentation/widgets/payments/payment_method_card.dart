@@ -32,7 +32,7 @@ class PaymentMethodCard extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primaryBlue.withOpacity(0.1),
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -54,7 +54,7 @@ class PaymentMethodCard extends StatelessWidget {
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) => Icon(
                   Icons.payment_rounded,
-                  color: AppColors.primaryBlue.withOpacity(0.5),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -62,7 +62,7 @@ class PaymentMethodCard extends StatelessWidget {
             Expanded(
               child: Text(
                 name,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,

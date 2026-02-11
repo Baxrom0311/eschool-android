@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/academic_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../data/models/grade_model.dart';
 import '../../widgets/grades/grade_card.dart';
 import '../../widgets/grades/overall_grade_card.dart';
 
 /// Grades Screen - Subject Grades List
-///
-/// Sprint 2 - Academics Module
-/// Dev1 Responsibility
 ///
 /// Design: Vertical list of subject cards with grades and progress
 class GradesScreen extends ConsumerStatefulWidget {
@@ -18,66 +18,109 @@ class GradesScreen extends ConsumerStatefulWidget {
 }
 
 class _GradesScreenState extends ConsumerState<GradesScreen> {
-  // Mock data for subjects
-  final List<Map<String, dynamic>> subjects = [
-    {
-      'name': 'Matematika',
-      'teacher': 'Aziza Karimova',
-      'grade': 5,
-      'attendance': 100,
-      'average': 98,
-      'icon': Icons.calculate_rounded,
-      'color': const Color(0xFF4CAF50), // Green
-    },
-    {
-      'name': 'Ingliz tili',
-      'teacher': 'Dilnoza Rahimova',
-      'grade': 5,
-      'attendance': 95,
-      'average': 92,
-      'icon': Icons.language_rounded,
-      'color': const Color(0xFF2196F3), // Blue
-    },
-    {
-      'name': 'Fizika',
-      'teacher': 'Sardor Aliyev',
-      'grade': 4,
-      'attendance': 98,
-      'average': 88,
-      'icon': Icons.science_rounded,
-      'color': const Color(0xFFFF9800), // Orange
-    },
-    {
-      'name': 'Kimyo',
-      'teacher': 'Malika Tosheva',
-      'grade': 5,
-      'attendance': 100,
-      'average': 95,
-      'icon': Icons.biotech_rounded,
-      'color': const Color(0xFF9C27B0), // Purple
-    },
-    {
-      'name': 'Tarix',
-      'teacher': 'Jamshid Umarov',
-      'grade': 4,
-      'attendance': 92,
-      'average': 85,
-      'icon': Icons.history_edu_rounded,
-      'color': const Color(0xFF795548), // Brown
-    },
-    {
-      'name': 'Adabiyot',
-      'teacher': 'Nodira Yusupova',
-      'grade': 5,
-      'attendance': 100,
-      'average': 96,
-      'icon': Icons.menu_book_rounded,
-      'color': const Color(0xFFE91E63), // Pink
-    },
-  ];
+  void _loadGradesForSelectedChild() {
+    final selectedChild = ref.read(selectedChildProvider);
+    if (selectedChild == null) return;
+
+    final quarter = ref.read(gradesProvider).selectedQuarter;
+    ref.read(gradesProvider.notifier).loadGrades(
+          selectedChild.id,
+          quarter: quarter,
+        );
+  }
+
+  void _loadAttendanceForSelectedChild() {
+    final selectedChild = ref.read(selectedChildProvider);
+    if (selectedChild == null) return;
+
+    final now = DateTime.now();
+    final month = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    ref.read(attendanceProvider.notifier).loadAttendance(
+          selectedChild.id,
+          month: month,
+        );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      _loadGradesForSelectedChild();
+      _loadAttendanceForSelectedChild();
+    });
+  }
+
+  IconData _subjectIcon(String subjectName) {
+    final value = subjectName.toLowerCase();
+    if (value.contains('matemat') || value.contains('algebra')) {
+      return Icons.calculate_rounded;
+    }
+    if (value.contains('ingliz') || value.contains('english')) {
+      return Icons.translate_rounded;
+    }
+    if (value.contains('fizik') || value.contains('kimyo')) {
+      return Icons.science_rounded;
+    }
+    if (value.contains('ona tili') || value.contains('adabiyot')) {
+      return Icons.menu_book_rounded;
+    }
+    return Icons.book_rounded;
+  }
+
+  Color _gradeColor(int grade) {
+    if (grade >= 5) return Colors.green;
+    if (grade >= 4) return Colors.blue;
+    return Colors.orange;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(gradesProvider);
+    final userState = ref.watch(userProvider);
+    final attendanceState = ref.watch(attendanceProvider);
+
+    ref.listen(selectedChildProvider, (previous, next) {
+      if (next != null && previous?.id != next.id) {
+        _loadGradesForSelectedChild();
+        _loadAttendanceForSelectedChild();
+      }
+    });
+
+    if (state.isLoading && state.grades.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.error != null && state.grades.isEmpty) {
+      return Center(child: Text(state.error!));
+    }
+    
+    final double gpaFromSummary = state.summary.isNotEmpty
+        ? state.summary.fold(0.0, (sum, item) => sum + item.averageGrade) /
+            state.summary.length
+        : 0.0;
+    final double gpaFromGrades = state.grades.isNotEmpty
+        ? state.grades.fold(0.0, (sum, item) => sum + item.grade) /
+            state.grades.length
+        : 0.0;
+    final fallbackGpa = userState.selectedChild?.averageGrade ?? 0.0;
+    final double gpa = (gpaFromSummary > 0
+            ? gpaFromSummary
+            : (gpaFromGrades > 0 ? gpaFromGrades : fallbackGpa))
+        .clamp(0.0, 5.0);
+
+    final attendanceRate = (() {
+      final summary = attendanceState.summary;
+      if (summary != null && summary.totalDays > 0) {
+        return summary.attendancePercentage.round().clamp(0, 100);
+      }
+      return (userState.selectedChild?.attendancePercentage ?? 0).clamp(0, 100);
+    })();
+
+    final summaryBySubject = <String, SubjectGradeSummary>{
+      for (final item in state.summary) item.subjectName.toLowerCase(): item,
+    };
+    final int totalSubjects = state.summary.length;
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -88,7 +131,7 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
             backgroundColor: AppColors.primaryBlue,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -109,23 +152,40 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
               ),
               centerTitle: true,
             ),
+            actions: [
+               if (userState.selectedChild != null)
+                 Padding(
+                   padding: const EdgeInsets.only(right: 16),
+                   child: Center(
+                     child: CircleAvatar(
+                       radius: 16,
+                       backgroundImage: userState.selectedChild!.avatarUrl != null 
+                           ? NetworkImage(userState.selectedChild!.avatarUrl!) 
+                           : null,
+                       child: userState.selectedChild!.avatarUrl == null
+                           ? Text(userState.selectedChild!.fullName[0]) 
+                           : null,
+                     ),
+                   ),
+                 )
+            ],
           ),
 
           // ─── Overall Stats ───
-          const SliverPadding(
-            padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
             sliver: SliverToBoxAdapter(
               child: OverallGradeCard(
-                gpa: 4.8,
-                totalLessons: 124,
-                attendanceRate: 98,
+                gpa: gpa,
+                totalLessons: totalSubjects,
+                attendanceRate: attendanceRate,
               ),
             ),
           ),
 
           // ─── Section Title ───
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          const SliverPadding(
+            padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
             sliver: SliverToBoxAdapter(
               child: Text(
                 'Fanlar bo\'yicha',
@@ -144,21 +204,30 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final subject = subjects[index];
+                  final grade = state.grades[index];
+                  final summary =
+                      summaryBySubject[grade.subjectName.toLowerCase()];
+                  final averagePercent = summary != null
+                      ? ((summary.averageGrade / 5) * 100).round()
+                      : ((grade.grade / 5) * 100).round();
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: GradeCard(
-                      name: subject['name'],
-                      teacher: subject['teacher'],
-                      grade: subject['grade'],
-                      attendance: subject['attendance'],
-                      average: subject['average'],
-                      icon: subject['icon'],
-                      color: subject['color'],
+                      name: grade.subjectName,
+                      teacher:
+                          grade.teacherName ??
+                          summary?.teacherName ??
+                          'O\'qituvchi',
+                      grade: grade.grade,
+                      attendance: attendanceRate,
+                      average: averagePercent.clamp(0, 100),
+                      icon: _subjectIcon(grade.subjectName),
+                      color: _gradeColor(grade.grade),
                     ),
                   );
                 },
-                childCount: subjects.length,
+                childCount: state.grades.length,
               ),
             ),
           ),

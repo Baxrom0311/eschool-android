@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import '../../data/models/assignment_model.dart';
 
 import 'route_names.dart';
 import '../../presentation/screens/splash/splash_screen.dart';
@@ -21,6 +23,8 @@ import '../../presentation/screens/academics/assignment_detail_screen.dart';
 import '../../presentation/screens/chat/chat_list_screen.dart';
 import '../../presentation/screens/chat/chat_room_screen.dart';
 import '../../presentation/screens/notifications/notifications_screen.dart';
+import '../../presentation/screens/profile/children_list_screen.dart';
+import '../../presentation/screens/profile/change_password_screen.dart';
 
 // Placeholder screens — Developer 1 ularni haqiqiy screenlar bilan almashtiradi
 
@@ -34,7 +38,7 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: RouteNames.splash,
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: kDebugMode,
     routes: [
       // ─── Splash ───
       GoRoute(
@@ -67,6 +71,14 @@ class AppRouter {
         path: RouteNames.profile,
         builder: (context, state) => const ProfileScreen(),
       ),
+      GoRoute(
+        path: RouteNames.childrenList,
+        builder: (context, state) => const ChildrenListScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.changePassword,
+        builder: (context, state) => const ChangePasswordScreen(),
+      ),
 
       // ─── Academics ───
       GoRoute(
@@ -84,7 +96,7 @@ class AppRouter {
       GoRoute(
         path: RouteNames.assignmentDetail,
         builder: (context, state) => AssignmentDetailScreen(
-          assignment: state.extra as Map<String, dynamic>?,
+          assignment: state.extra as AssignmentModel?,
         ),
       ),
       GoRoute(

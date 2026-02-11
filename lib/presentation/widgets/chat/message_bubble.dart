@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
 /// Message Bubble - Displays a single chat message
-///
-/// Sprint 6 - Task 2
 class MessageBubble extends StatelessWidget {
   final String text;
   final String time;

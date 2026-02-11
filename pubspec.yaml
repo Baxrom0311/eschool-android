@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ^3.8.0
 
 dependencies:
   flutter:
@@ -22,6 +22,10 @@ dependencies:
   provider: ^6.1.2
   flutter_riverpod: ^2.5.1
   riverpod: ^2.5.1
+
+  # Firebase
+  firebase_core: ^2.27.0
+  firebase_messaging: ^14.7.19
 
   # Network & API
   dio: ^5.4.3+1
@@ -62,7 +66,7 @@ dependencies:
   # Error Handling & Utilities
   dartz: ^0.10.1
   equatable: ^2.0.5
-  json_annotation: ^4.9.0
+  json_annotation: ^4.10.0
 
   # UI Enhancements
   animations: ^2.0.11

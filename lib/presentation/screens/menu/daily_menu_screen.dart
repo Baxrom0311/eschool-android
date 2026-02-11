@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../data/models/menu_model.dart';
+import '../../providers/menu_provider.dart';
+import '../../providers/user_provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../widgets/menu/meal_card.dart';
 
 /// Daily Menu Screen - Weekly food schedule
-///
-/// Sprint 4 - Task 1
-/// Dev1 Responsibility
 class DailyMenuScreen extends ConsumerStatefulWidget {
   const DailyMenuScreen({super.key});
 
@@ -20,76 +20,68 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
 
-  // Mock data for meals
-  final Map<int, List<Map<String, dynamic>>> _mockMeals = {
-    // 1: Monday, 2: Tuesday, etc.
-    DateTime.monday: [
-      {
-        'title': 'Suli bo\'tqasi va mevalar',
-        'time': '08:30 - Nonushta',
-        'calories': '350',
-        'imageUrl':
-            'https://images.unsplash.com/photo-1517673132405-a56a62b18caf',
-        'ingredients': ['Suli', 'Sut', 'Banan', 'Asal'],
-      },
-      {
-        'title': 'Mastava va Sho\'rva',
-        'time': '13:00 - Tushlik',
-        'calories': '650',
-        'imageUrl': 'https://images.unsplash.com/photo-1547592166-23ac45744acd',
-        'ingredients': ['Guruch', 'Go\'sht', 'Sabzi', 'Kartoshka'],
-      },
-      {
-        'title': 'Tovuqli salat',
-        'time': '16:00 - Ikkinchi tushlik',
-        'calories': '250',
-        'imageUrl': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
-        'ingredients': ['Tovuq', 'Bodring', 'Pomidor', 'Zaytun moyi'],
-      },
-    ],
-    DateTime.tuesday: [
-      {
-        'title': 'Issiq sendvich va choy',
-        'time': '08:30 - Nonushta',
-        'calories': '400',
-        'imageUrl':
-            'https://images.unsplash.com/photo-1525351484163-7529414344d8',
-        'ingredients': ['Non', 'Pishloq', 'Bodring'],
-      },
-      {
-        'title': 'Palov (Osh)',
-        'time': '13:00 - Tushlik',
-        'calories': '850',
-        'imageUrl':
-            'https://images.unsplash.com/photo-1512058560566-d837c3aee132',
-        'ingredients': ['Guruch', 'Go\'sht', 'Sabzi', 'No\'xat'],
-      },
-      {
-        'title': 'Meva va sharbat',
-        'time': '16:00 - Ikkinchi tushlik',
-        'calories': '150',
-        'imageUrl':
-            'https://images.unsplash.com/photo-1490818387583-1baba5e638af',
-        'ingredients': ['Olma', 'Banan', 'Sharbat'],
-      },
-    ],
-    // Add other days if needed, but for mock, we rotate
-  };
-
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
+    Future.microtask(_loadWeeklyMenuForSelectedChild);
   }
 
-  List<Map<String, dynamic>> _getMealsForDay(DateTime day) {
-    // Return meals based on weekday (1-7)
-    return _mockMeals[day.weekday] ?? _mockMeals[DateTime.monday]!;
+  void _loadWeeklyMenuForSelectedChild() {
+    final selectedChild = ref.read(selectedChildProvider);
+    ref.read(menuProvider.notifier).loadWeeklyMenu(studentId: selectedChild?.id);
+  }
+
+  int _mealOrder(MealType mealType) {
+    switch (mealType) {
+      case MealType.breakfast:
+        return 0;
+      case MealType.lunch:
+        return 1;
+      case MealType.snack:
+        return 2;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final meals = _getMealsForDay(_selectedDay ?? _focusedDay);
+    final state = ref.watch(menuProvider);
+
+    ref.listen(selectedChildProvider, (previous, next) {
+      if (previous?.id != next?.id) {
+        _loadWeeklyMenuForSelectedChild();
+      }
+    });
+
+    // Tanlangan sana uchun barcha meal lar
+    final dailyMenus = state.weeklyMenu.where((menu) {
+      if (menu.date.isEmpty) return false;
+      try {
+        final menuDate = DateTime.parse(menu.date);
+        return isSameDay(menuDate, _selectedDay ?? _focusedDay);
+      } catch (_) {
+        return false;
+      }
+    }).toList()
+      ..sort((a, b) => _mealOrder(a.mealType).compareTo(_mealOrder(b.mealType)));
+
+    final meals = dailyMenus
+        .expand(
+          (menu) => menu.dishes.map(
+            (dish) => {
+              'title': dish.name,
+              'time': menu.mealTypeText,
+              'calories': '${dish.calories}',
+              'imageUrl': dish.imageUrl ?? '',
+              'ingredients': (dish.description ?? '')
+                  .split(',')
+                  .map((e) => e.trim())
+                  .where((e) => e.isNotEmpty)
+                  .toList(),
+            },
+          ),
+        )
+        .toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -114,9 +106,9 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
         children: [
           // ─── Top Calendar Section ───
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.primaryBlue,
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(24),
                 bottomRight: Radius.circular(24),
               ),
@@ -154,7 +146,7 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
                       const Icon(Icons.chevron_right, color: Colors.white),
                   formatButtonTextStyle: const TextStyle(color: Colors.white),
                   formatButtonDecoration: BoxDecoration(
-                    border: Border.all(color: Colors.white.withOpacity(0.5)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
@@ -162,7 +154,7 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
                   defaultTextStyle: const TextStyle(color: Colors.white),
                   weekendTextStyle: const TextStyle(color: Colors.white70),
                   selectedDecoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     shape: BoxShape.circle,
                   ),
                   todayDecoration: BoxDecoration(
@@ -180,26 +172,35 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
 
           // ─── Meals List Section ───
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-              itemCount: meals.length,
-              itemBuilder: (context, index) {
-                final meal = meals[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: MealCard(
-                    title: meal['title'],
-                    time: meal['time'],
-                    calories: meal['calories'],
-                    imageUrl: meal['imageUrl'],
-                    ingredients: meal['ingredients'],
-                  ),
-                );
-              },
-            ),
+            child: state.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : state.error != null
+                    ? Center(child: Text(state.error!))
+                    : meals.isEmpty
+                        ? const Center(
+                            child: Text('Tanlangan kun uchun menyu mavjud emas'),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                            itemCount: meals.length,
+                            itemBuilder: (context, index) {
+                              final meal = meals[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 20),
+                                child: MealCard(
+                                  title: meal['title'] as String,
+                                  time: meal['time'] as String,
+                                  calories: meal['calories'] as String,
+                                  imageUrl: meal['imageUrl'] as String,
+                                  ingredients: meal['ingredients'] as List<String>,
+                                ),
+                              );
+                            },
+                          ),
           ),
         ],
       ),
     );
   }
+
 }

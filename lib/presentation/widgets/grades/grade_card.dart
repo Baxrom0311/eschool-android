@@ -47,7 +47,7 @@ class GradeCard extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -65,7 +65,7 @@ class GradeCard extends StatelessWidget {
                     children: [
                       Text(
                         name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
@@ -74,7 +74,7 @@ class GradeCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         teacher,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
                         ),
@@ -88,7 +88,7 @@ class GradeCard extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: gradeColor.withOpacity(0.1),
+                    color: gradeColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -116,7 +116,7 @@ class GradeCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'Davomat',
                             style: TextStyle(
                               fontSize: 12,
@@ -125,7 +125,7 @@ class GradeCard extends StatelessWidget {
                           ),
                           Text(
                             '$attendance%',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -158,7 +158,7 @@ class GradeCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'O\'rtacha',
                             style: TextStyle(
                               fontSize: 12,
@@ -167,7 +167,7 @@ class GradeCard extends StatelessWidget {
                           ),
                           Text(
                             '$average%',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,

@@ -8,9 +8,6 @@ import '../../widgets/common/custom_text_field.dart';
 
 /// Forgot Password Screen - Reset Password
 ///
-/// Sprint 1 - Task 4
-/// Dev1 Responsibility
-///
 /// Design: Same Blue Header style as Login/Register
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -23,7 +20,7 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   void dispose() {
@@ -34,44 +31,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _handleSendCode() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-
-    try {
-      // TODO: Call forgot password provider (Dev2 will provide)
-      // Example:
-      // await ref.read(authProvider.notifier).sendResetCode(
-      //   phone: _phoneController.text,
-      // );
-
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (!mounted) return;
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Kod yuborildi! Telefon raqamingizni tekshiring.'),
-          backgroundColor: AppColors.success,
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Tenant API da parolni tiklash endpointi mavjud emas. '
+          'Administratorga murojaat qiling.',
         ),
-      );
-
-      // Navigate to login (for now, until OTP screen is created)
-      context.go(RouteNames.login);
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Xatolik yuz berdi: ${e.toString()}'),
-          backgroundColor: AppColors.danger,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+      ),
+    );
   }
 
   @override
@@ -91,16 +58,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             right: 0,
             child: Container(
               height: topHeight,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.primaryBlue,
-                    AppColors.secondaryBlue,
-                  ],
+                  colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
                 ),
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(40),
                   bottomRight: Radius.circular(40),
                 ),
@@ -114,7 +78,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -140,7 +104,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       'Parolni qayta tiklash',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -177,7 +141,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           const SizedBox(height: 8),
 
                           // ─── Instruction Text ───
-                          Text(
+                          const Text(
                             'Ro\'yxatdan o\'tgan telefon raqamingizni kiriting.',
                             style: TextStyle(
                               fontSize: 15,

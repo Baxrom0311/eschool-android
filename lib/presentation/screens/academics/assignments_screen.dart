@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/route_names.dart';
+import '../../providers/academic_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../../data/models/assignment_model.dart';
 import '../../widgets/common/custom_button.dart';
 
 /// Assignments Screen - Homework Assignments List
-///
-/// Sprint 2 - Academics Module
-/// Dev1 Responsibility
 ///
 /// Design: List of assignments with urgency badges and submit buttons
 class AssignmentsScreen extends ConsumerStatefulWidget {
@@ -21,62 +21,40 @@ class AssignmentsScreen extends ConsumerStatefulWidget {
 class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
   int _selectedTab = 0; // 0 = New, 1 = Weekly
 
-  // Mock data for new assignments
-  final List<Map<String, dynamic>> newAssignments = [
-    {
-      'subject': 'Matematika',
-      'title': '15-20 mashqlar',
-      'description': 'Kvadrat tenglamalar mavzusidan barcha mashqlarni yechish',
-      'deadline': 'Ertaga 09:00',
-      'isUrgent': true,
-      'status': 'urgent',
-      'color': const Color(0xFF4CAF50),
-    },
-    {
-      'subject': 'Ingliz tili',
-      'title': 'Essay yozish',
-      'description': '"My Future Career" mavzusida 200 so\'zli insho',
-      'deadline': '2 kun ichida',
-      'isUrgent': false,
-      'status': 'in_progress',
-      'color': const Color(0xFF2196F3),
-    },
-    {
-      'subject': 'Fizika',
-      'title': 'Laboratoriya ishi',
-      'description': 'Nyuton qonunlari bo\'yicha tajriba hisoboti',
-      'deadline': '3 kun ichida',
-      'isUrgent': false,
-      'status': 'new',
-      'color': const Color(0xFFFF9800),
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAssignments();
+    });
+  }
 
-  // Mock data for weekly assignments
-  final List<Map<String, dynamic>> weeklyAssignments = [
-    {
-      'subject': 'Kimyo',
-      'title': 'Davriy jadval',
-      'description': 'Elementlarning xossalarini o\'rganish',
-      'deadline': '5 kun ichida',
-      'isUrgent': false,
-      'status': 'new',
-      'color': const Color(0xFF9C27B0),
-    },
-    {
-      'subject': 'Tarix',
-      'title': 'Prezentatsiya',
-      'description': 'O\'zbekiston tarixi mavzusida slayd tayyorlash',
-      'deadline': '1 hafta ichida',
-      'isUrgent': false,
-      'status': 'in_progress',
-      'color': const Color(0xFF795548),
-    },
-  ];
+  void _loadAssignments() {
+    final selectedChild = ref.read(selectedChildProvider);
+    if (selectedChild != null) {
+      final status = _selectedTab == 0 ? 'pending' : null;
+      ref.read(assignmentsProvider.notifier).loadAssignments(
+            selectedChild.id,
+            status: status,
+          );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final assignments = _selectedTab == 0 ? newAssignments : weeklyAssignments;
+    final assignmentsState = ref.watch(assignmentsProvider);
+    final assignments = assignmentsState.assignments;
+    final isLoading = assignmentsState.isLoading;
+
+    // Listen to tab changes or child changes if needed?
+    // Changing child is global, so initState/build usually handles it if we watch userProvider?
+    // But we need to reload. `selectedChild` comes from `userProvider`.
+    // It's better to listen to selectedChild changes to reload.
+    ref.listen(selectedChildProvider, (previous, next) {
+      if (next != null && previous?.id != next.id) {
+        _loadAssignments();
+      }
+    });
 
     return Scaffold(
       body: CustomScrollView(
@@ -90,7 +68,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
             backgroundColor: AppColors.primaryBlue,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -106,49 +84,65 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            // Avatar
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Colors.white,
-                              child: CircleAvatar(
-                                radius: 28,
-                                backgroundColor: const Color(0xFFE8F0FF),
-                                child: Icon(
-                                  Icons.person_rounded,
-                                  size: 32,
-                                  color: AppColors.primaryBlue,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final user = ref.watch(userProvider).user;
+                            final selectedChild =
+                                ref.watch(selectedChildProvider);
 
-                            // User Info
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Azizbek Rahimov',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
+                            return Row(
+                              children: [
+                                // Avatar
+                                CircleAvatar(
+                                  radius: 30,
+                                  backgroundColor: Colors.white,
+                                  backgroundImage: selectedChild?.avatarUrl != null
+                                      ? NetworkImage(selectedChild!.avatarUrl!)
+                                      : null,
+                                  child: selectedChild?.avatarUrl == null
+                                      ? const CircleAvatar(
+                                          radius: 28,
+                                          backgroundColor: Color(0xFFE8F0FF),
+                                          child: Icon(
+                                            Icons.person_rounded,
+                                            size: 32,
+                                            color: AppColors.primaryBlue,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 16),
+
+                                // User Info
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        selectedChild != null
+                                            ? selectedChild.fullName
+                                            : (user?.fullName ?? 'Foydalanuvchi'),
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        selectedChild?.className ?? 'Sinf yo\'q',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white
+                                              .withValues(alpha: 0.9),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '8-A sinf',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white.withOpacity(0.9),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -174,7 +168,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                         label: 'Baholar',
                         isActive: false,
                         onTap: () {
-                          // TODO: Navigate to grades screen
+                          context.push(RouteNames.grades);
                         },
                       ),
                     ),
@@ -183,7 +177,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                         label: 'Reyting',
                         isActive: false,
                         onTap: () {
-                          // TODO: Navigate to rating screen
+                          context.push(RouteNames.rating);
                         },
                       ),
                     ),
@@ -219,16 +213,22 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                         label: 'Yangi vazifalar',
                         isActive: _selectedTab == 0,
                         onTap: () {
-                          setState(() => _selectedTab = 0);
+                          if (_selectedTab != 0) {
+                            setState(() => _selectedTab = 0);
+                            _loadAssignments();
+                          }
                         },
                       ),
                     ),
                     Expanded(
                       child: _SegmentButton(
-                        label: 'Haftalik',
+                        label: 'Barchasi', // Haftalik -> Barchasi implies no status filter?
                         isActive: _selectedTab == 1,
                         onTap: () {
-                          setState(() => _selectedTab = 1);
+                          if (_selectedTab != 1) {
+                            setState(() => _selectedTab = 1);
+                            _loadAssignments();
+                          }
                         },
                       ),
                     ),
@@ -241,35 +241,50 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
           // ═══════════════════════════════════════════════════════
           // Assignment Cards List
           // ═══════════════════════════════════════════════════════
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final assignment = assignments[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: InkWell(
-                      onTap: () {
-                        context.push(RouteNames.assignmentDetail,
-                            extra: assignment);
-                      },
-                      child: _AssignmentCard(
-                        subject: assignment['subject'],
-                        title: assignment['title'],
-                        description: assignment['description'],
-                        deadline: assignment['deadline'],
-                        isUrgent: assignment['isUrgent'],
-                        status: assignment['status'],
-                        color: assignment['color'],
+          if (isLoading)
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (assignments.isEmpty)
+            const SliverFillRemaining(
+              child: Center(child: Text('Vazifalar topilmadi')),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final assignment = assignments[index];
+                    // Logic to determine color based on subject or random
+                    // For now, let's use a default or consistent hashing
+                    final color = Colors.primaries[
+                        assignment.subjectName.length % Colors.primaries.length];
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: InkWell(
+                        onTap: () {
+                          context.push(RouteNames.assignmentDetail,
+                              extra: assignment);
+                        },
+                        child: _AssignmentCard(
+                          subject: assignment.subjectName,
+                          title: assignment.title,
+                          description: assignment.description ?? '',
+                          deadline:
+                              assignment.dueDate.split('T')[0], // Simple format
+                          isUrgent: assignment.isOverdue, // or logic?
+                          status: assignment.status, // Pass enum directly
+                          color: color,
+                        ),
                       ),
-                    ),
-                  );
-                },
-                childCount: assignments.length,
+                    );
+                  },
+                  childCount: assignments.length,
+                ),
               ),
             ),
-          ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
         ],
@@ -347,7 +362,7 @@ class _SegmentButton extends StatelessWidget {
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: AppColors.shadow.withOpacity(0.1),
+                    color: AppColors.shadow.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -378,7 +393,7 @@ class _AssignmentCard extends StatelessWidget {
   final String description;
   final String deadline;
   final bool isUrgent;
-  final String status;
+  final AssignmentStatus status;
   final Color color;
 
   const _AssignmentCard({
@@ -393,23 +408,27 @@ class _AssignmentCard extends StatelessWidget {
 
   String get statusLabel {
     switch (status) {
-      case 'urgent':
-        return 'Shoshilinch';
-      case 'in_progress':
+      case AssignmentStatus.pending:
         return 'Jarayonda';
-      default:
-        return 'Yangi';
+      case AssignmentStatus.submitted:
+        return 'Topshirilgan';
+      case AssignmentStatus.graded:
+        return 'Baholangan';
+      case AssignmentStatus.overdue:
+        return 'Muddati o\'tgan';
     }
   }
 
   Color get statusColor {
     switch (status) {
-      case 'urgent':
-        return const Color(0xFFF44336); // Red
-      case 'in_progress':
+      case AssignmentStatus.pending:
         return const Color(0xFFFF9800); // Orange
-      default:
+      case AssignmentStatus.submitted:
+        return const Color(0xFF2196F3); // Blue
+      case AssignmentStatus.graded:
         return const Color(0xFF4CAF50); // Green
+      case AssignmentStatus.overdue:
+        return const Color(0xFFF44336); // Red
     }
   }
 
@@ -427,7 +446,7 @@ class _AssignmentCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow.withOpacity(0.08),
+            color: AppColors.shadow.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -448,7 +467,7 @@ class _AssignmentCard extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -487,7 +506,7 @@ class _AssignmentCard extends StatelessWidget {
                 // Deadline
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.schedule_rounded,
                       size: 16,
                       color: AppColors.textSecondary,
@@ -495,7 +514,7 @@ class _AssignmentCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       deadline,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
                       ),
@@ -509,7 +528,7 @@ class _AssignmentCard extends StatelessWidget {
             // Title
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -520,7 +539,7 @@ class _AssignmentCard extends StatelessWidget {
             // Description
             Text(
               description,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
                 height: 1.4,
@@ -531,22 +550,22 @@ class _AssignmentCard extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Submit Button
-            SizedBox(
-              width: double.infinity,
-              child: CustomButton(
-                text: 'Yuborish',
-                onPressed: () {
-                  // TODO: Submit assignment
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Vazifa yuborish funksiyasi tez orada...'),
-                    ),
-                  );
-                },
-                height: 44,
-                borderRadius: 12,
+            if (status == AssignmentStatus.pending || status == AssignmentStatus.overdue)
+              SizedBox(
+                width: double.infinity,
+                child: CustomButton(
+                  text: 'Yuborish',
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vazifa yuborish funksiyasi tez orada...'),
+                      ),
+                    );
+                  },
+                  height: 44,
+                  borderRadius: 12,
+                ),
               ),
-            ),
           ],
         ),
       ),

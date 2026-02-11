@@ -1,45 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/payment_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../../core/constants/app_colors.dart';
 
 /// Payment History Screen - List of past transactions
-///
-/// Sprint 3 - Task 2
-class PaymentHistoryScreen extends StatelessWidget {
+class PaymentHistoryScreen extends ConsumerStatefulWidget {
   const PaymentHistoryScreen({super.key});
 
   @override
+  ConsumerState<PaymentHistoryScreen> createState() => _PaymentHistoryScreenState();
+}
+
+class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  void _ensureDataLoaded() {
+    final selectedStudentId = ref.read(selectedChildProvider)?.id;
+    final paymentState = ref.read(paymentProvider);
+    if (paymentState.payments.isEmpty ||
+        paymentState.selectedStudentId != selectedStudentId) {
+      ref
+          .read(paymentProvider.notifier)
+          .loadInitialData(studentId: selectedStudentId);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    Future.microtask(_ensureDataLoaded);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(paymentProvider.notifier).loadMore();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Mock data for transactions
-    final List<Map<String, dynamic>> transactions = [
-      {
-        'title': 'Oylik to\'lov (Yanvar)',
-        'amount': '1,200,000 UZS',
-        'date': '05.01.2024, 10:15',
-        'status': 'success',
-        'method': 'Click',
-      },
-      {
-        'title': 'Oylik to\'lov (Dekabr)',
-        'amount': '1,200,000 UZS',
-        'date': '02.12.2023, 14:22',
-        'status': 'success',
-        'method': 'PayMe',
-      },
-      {
-        'title': 'Tushlik uchun',
-        'amount': '50,000 UZS',
-        'date': '28.11.2023, 11:05',
-        'status': 'failed',
-        'method': 'Click',
-      },
-      {
-        'title': 'Oylik to\'lov (Noyabr)',
-        'amount': '1,200,000 UZS',
-        'date': '03.11.2023, 09:45',
-        'status': 'success',
-        'method': 'Visa',
-      },
-    ];
+    final state = ref.watch(paymentProvider);
+    final transactions = state.payments;
+    final isLoading = state.isLoading;
+
+    ref.listen(selectedChildProvider, (previous, next) {
+      if (previous?.id != next?.id) {
+        ref
+            .read(paymentProvider.notifier)
+            .loadInitialData(studentId: next?.id);
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -50,133 +69,122 @@ class PaymentHistoryScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Filter Chips
+          // Filter Chips (Visual only for now, or implement local filter)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
             color: Colors.white,
-            child: SingleChildScrollView(
+            child: const SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  _FilterChip(label: 'Hammasi', isActive: true),
-                  const SizedBox(width: 8),
+                   _FilterChip(label: 'Hammasi', isActive: true),
+                  SizedBox(width: 8),
                   _FilterChip(label: 'Muvaffaqiyatli', isActive: false),
-                  const SizedBox(width: 8),
-                  _FilterChip(label: 'Rad etilgan', isActive: false),
-                  const SizedBox(width: 8),
-                  _FilterChip(label: 'Kutilmoqda', isActive: false),
+                  SizedBox(width: 8),
+                   _FilterChip(label: 'Rad etilgan', isActive: false),
                 ],
               ),
             ),
           ),
 
-          // Search / Period Selector
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Text(
-                  'Oxirgi 3 oy',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                Icon(Icons.calendar_month_rounded,
-                    color: AppColors.primaryBlue, size: 20),
-              ],
-            ),
-          ),
-
           // Transactions List
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: transactions.length,
-              itemBuilder: (context, index) {
-                final tx = transactions[index];
-                final isSuccess = tx['status'] == 'success';
+          if (transactions.isEmpty && !isLoading)
+            const Expanded(child: Center(child: Text('To\'lovlar tarixi bo\'sh')))
+          else
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                itemCount: transactions.length + (state.hasMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == transactions.length) {
+                    return const Center(child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(),
+                    ));
+                  }
 
-                return Card(
-                  elevation: 1,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: isSuccess
-                            ? AppColors.success.withOpacity(0.1)
-                            : AppColors.danger.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isSuccess ? Icons.check_rounded : Icons.close_rounded,
-                        color: isSuccess ? AppColors.success : AppColors.danger,
-                        size: 24,
-                      ),
-                    ),
-                    title: Text(
-                      tx['title'],
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text(
-                          tx['date'],
-                          style: TextStyle(
-                              fontSize: 12, color: AppColors.textSecondary),
+                  final tx = transactions[index];
+                  final isSuccess = tx.isCompleted;
+
+                  return Card(
+                    elevation: 1,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isSuccess
+                              ? AppColors.success.withValues(alpha: 0.1)
+                              : AppColors.danger.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Text(
-                              tx['method'],
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '• ${isSuccess ? "Muvaffaqiyatli" : "Xatolik"}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isSuccess
-                                    ? AppColors.success
-                                    : AppColors.danger,
+                        child: Icon(
+                          isSuccess ? Icons.check_rounded : Icons.close_rounded,
+                          color: isSuccess ? AppColors.success : AppColors.danger,
+                          size: 24,
+                        ),
+                      ),
+                      title: Text(
+                        'To\'lov #${tx.id}', 
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text(
+                            tx.createdAt, 
+                            style: const TextStyle(
+                                fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                tx.methodText,
+                                style: const TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.w600),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 4),
+                              Text(
+                                '• ${tx.statusText}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isSuccess
+                                      ? AppColors.success
+                                      : AppColors.danger,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      trailing: Text(
+                        tx.formattedAmount,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: isSuccess
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                          decoration:
+                              isSuccess ? null : TextDecoration.lineThrough,
                         ),
-                      ],
-                    ),
-                    trailing: Text(
-                      tx['amount'],
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: isSuccess
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
-                        decoration:
-                            isSuccess ? null : TextDecoration.lineThrough,
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );

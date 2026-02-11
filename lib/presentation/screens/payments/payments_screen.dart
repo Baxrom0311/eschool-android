@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/payment_provider.dart';
+import '../../providers/user_provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/route_names.dart';
@@ -7,14 +9,54 @@ import '../../widgets/payments/balance_header.dart';
 import '../../widgets/common/custom_button.dart';
 
 /// Payments Screen - Main view for billing and payments
-///
-/// Sprint 3 - Task 1
-/// Dev1 Responsibility
-class PaymentsScreen extends ConsumerWidget {
+class PaymentsScreen extends ConsumerStatefulWidget {
   const PaymentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PaymentsScreen> createState() => _PaymentsScreenState();
+}
+
+class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
+  void _loadPaymentDataForSelectedChild() {
+    final studentId = ref.read(selectedChildProvider)?.id;
+    ref.read(paymentProvider.notifier).loadInitialData(studentId: studentId);
+  }
+
+  String _formatLastUpdated(String? rawDate) {
+    if (rawDate == null || rawDate.isEmpty) return 'Yangilanmagan';
+    final parsed = DateTime.tryParse(rawDate);
+    if (parsed == null) return 'Yangilanmagan';
+
+    final now = DateTime.now();
+    if (now.year == parsed.year &&
+        now.month == parsed.month &&
+        now.day == parsed.day) {
+      return 'Bugun';
+    }
+
+    final day = parsed.day.toString().padLeft(2, '0');
+    final month = parsed.month.toString().padLeft(2, '0');
+    return '$day.$month.${parsed.year}';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_loadPaymentDataForSelectedChild);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(paymentProvider);
+    final userState = ref.watch(userProvider);
+    final child = userState.selectedChild;
+
+    ref.listen(selectedChildProvider, (previous, next) {
+      if (next != null && previous?.id != next.id) {
+        _loadPaymentDataForSelectedChild();
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -26,115 +68,168 @@ class PaymentsScreen extends ConsumerWidget {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // ─── Header Section ───
-            Container(
-              color: AppColors.primaryBlue,
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              child: const BalanceHeader(
-                balance: '450,000 UZS',
-                lastUpdated: 'Bugun, 14:30',
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ─── Contract Info Card ───
-                  _InfoCard(
-                    title: 'Shartnoma ma\'lumotlari',
-                    icon: Icons.description_rounded,
-                    items: const [
-                      {'label': 'Shartnoma №', 'value': 'EDU-2024-452'},
-                      {'label': 'O\'quvchi', 'value': 'Azizbek Rahimov'},
-                      {'label': 'Sinf', 'value': '8-A sinf'},
-                      {'label': 'Oylik to\'lov', 'value': '1,200,000 UZS'},
-                      {'label': 'To\'langan', 'value': '750,000 UZS'},
-                    ],
+      body: state.isLoading && state.balance == null
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: () => ref.read(paymentProvider.notifier).refresh(
+                    studentId: child?.id,
                   ),
-                  const SizedBox(height: 24),
-
-                  // ─── Payment Status ───
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0), // Light Orange
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.warning_amber_rounded,
-                          color: Colors.orange,
-                          size: 32,
-                        ),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Qarzdorlik mavjud',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFE65100),
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'Fevral oyi uchun 450,000 UZS to\'lov kutilmoqda',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFFE65100),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // ─── Action Buttons ───
-                  CustomButton(
-                    text: 'Hozir to\'lash',
-                    onPressed: () {
-                      context.push(RouteNames.paymentMethod);
-                    },
-                    height: 56,
-                    borderRadius: 16,
-                    icon: Icons.payments_rounded,
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      context.push(RouteNames.paymentHistory);
-                    },
-                    icon: const Icon(Icons.history_rounded),
-                    label: const Text('To\'lovlar tarixi'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side:
-                          BorderSide(color: AppColors.primaryBlue, width: 1.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    // ─── Header Section ───
+                    Container(
+                      color: AppColors.primaryBlue,
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      child: BalanceHeader(
+                        balance: state.balance?.balance != null
+                            ? '${state.balance!.balance} UZS'
+                            : '0 UZS',
+                        lastUpdated:
+                            _formatLastUpdated(state.balance?.nextPaymentDate),
                       ),
-                      foregroundColor: AppColors.primaryBlue,
                     ),
-                  ),
-                ],
+
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (state.error != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Text(
+                                state.error!,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+
+                          // ─── Contract Info Card ───
+                          if (child != null ||
+                              state.balance?.contractNumber != null)
+                            _InfoCard(
+                              title: 'Shartnoma ma\'lumotlari',
+                              icon: Icons.description_rounded,
+                              items: [
+                                if (state.balance?.contractNumber != null)
+                                  {
+                                    'label': 'Shartnoma',
+                                    'value': state.balance!.contractNumber!,
+                                  },
+                                if (child != null)
+                                  {
+                                    'label': 'O\'quvchi',
+                                    'value': child.fullName,
+                                  },
+                                if (child != null)
+                                  {'label': 'Sinf', 'value': child.className},
+                                {
+                                  'label': 'Balans',
+                                  'value':
+                                      state.balance?.formattedBalance ??
+                                      '0 so\'m',
+                                },
+                                if (state.balance?.monthlyFee != null)
+                                  {
+                                    'label': 'Oylik to\'lov',
+                                    'value': state.balance!.formattedMonthlyFee,
+                                  },
+                              ],
+                            ),
+                          const SizedBox(height: 24),
+
+                          // ─── Payment Status ───
+                          if ((state.balance?.balance ?? 0) < 0)
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF3E0), // Light Orange
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.orange.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: Colors.orange,
+                                    size: 32,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Qarzdorlik mavjud',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFFE65100),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Iltimos, ${(state.balance?.balance ?? 0).abs()} UZS to\'lov qiling',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFFE65100),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: 32),
+
+                          // ─── Action Buttons ───
+                          CustomButton(
+                            text: 'Hozir to\'lash',
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Parent API da to\'lov yaratish endpointi mavjud emas. '
+                                    'To\'lovlar maktab tomonidan kiritiladi.',
+                                  ),
+                                ),
+                              );
+                            },
+                            height: 56,
+                            borderRadius: 16,
+                            icon: Icons.payments_rounded,
+                          ),
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              context.push(RouteNames.paymentHistory);
+                            },
+                            icon: const Icon(Icons.history_rounded),
+                            label: const Text('To\'lovlar tarixi'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              side: const BorderSide(
+                                color: AppColors.primaryBlue,
+                                width: 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              foregroundColor: AppColors.primaryBlue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -166,7 +261,7 @@ class _InfoCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -178,29 +273,31 @@ class _InfoCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Divider(),
             ),
-            ...items.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        item['label']!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
+            ...items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      item['label']!,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
                       ),
-                      Text(
-                        item['value']!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
+                    ),
+                    Text(
+                      item['value']!,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
                       ),
-                    ],
-                  ),
-                )),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

@@ -8,9 +8,6 @@ import '../../widgets/common/custom_text_field.dart';
 
 /// Register Screen - Create New Account
 ///
-/// Sprint 1 - Task 3
-/// Dev1 Responsibility
-///
 /// Design: EXACTLY like LoginScreen (Blue curved header 40%, White Card)
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -25,7 +22,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   void dispose() {
@@ -39,46 +36,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-
-    try {
-      // TODO: Call register provider (Dev2 will provide)
-      // Example:
-      // await ref.read(authProvider.notifier).register(
-      //   name: _nameController.text,
-      //   phone: _phoneController.text,
-      //   password: _passwordController.text,
-      // );
-
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (!mounted) return;
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Hisob muvaffaqiyatli yaratildi!'),
-          backgroundColor: AppColors.success,
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Tenant API da ro\'yxatdan o\'tish endpointi mavjud emas. '
+          'Hisoblar administrator tomonidan yaratiladi.',
         ),
-      );
-
-      // Navigate to login
-      context.go(RouteNames.login);
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Ro\'yxatdan o\'tish amalga oshmadi: ${e.toString()}'),
-          backgroundColor: AppColors.danger,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+      ),
+    );
   }
 
   @override
@@ -98,16 +63,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             right: 0,
             child: Container(
               height: topHeight,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.primaryBlue,
-                    AppColors.secondaryBlue,
-                  ],
+                  colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
                 ),
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(40),
                   bottomRight: Radius.circular(40),
                 ),
@@ -121,7 +83,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -147,7 +109,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       'Yangi hisob yaratish',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -274,7 +236,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
+                              const Text(
                                 'Hisobingiz bormi? ',
                                 style: TextStyle(
                                   fontSize: 15,

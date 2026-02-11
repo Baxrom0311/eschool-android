@@ -18,18 +18,18 @@ class BalanceHeader extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
             AppColors.primaryBlue,
-            const Color(0xFF6B8EFF),
+            Color(0xFF6B8EFF),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withOpacity(0.3),
+            color: AppColors.primaryBlue.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -52,7 +52,7 @@ class BalanceHeader extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -78,14 +78,14 @@ class BalanceHeader extends StatelessWidget {
             children: [
               Icon(
                 Icons.update_rounded,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 size: 14,
               ),
               const SizedBox(width: 4),
               Text(
                 'Oxirgi yangilanish: $lastUpdated',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 12,
                 ),
               ),

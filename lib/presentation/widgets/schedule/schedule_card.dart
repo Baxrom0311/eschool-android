@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
 /// Schedule Card - Displays a single lesson in the schedule
-///
-/// Sprint 5 - Task 1
 class ScheduleCard extends StatelessWidget {
   final String startTime;
   final String endTime;
@@ -54,7 +52,7 @@ class ScheduleCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   endTime,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary,
                   ),
@@ -79,7 +77,7 @@ class ScheduleCard extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.shadow.withOpacity(0.05),
+                    color: AppColors.shadow.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -93,7 +91,7 @@ class ScheduleCard extends StatelessWidget {
                     children: [
                       Text(
                         subjectName,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
@@ -123,7 +121,7 @@ class ScheduleCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.location_on_outlined,
                         size: 14,
                         color: AppColors.textSecondary,
@@ -131,13 +129,13 @@ class ScheduleCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         'Xona: $room',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Icon(
+                      const Icon(
                         Icons.person_outline_rounded,
                         size: 14,
                         color: AppColors.textSecondary,
@@ -146,7 +144,7 @@ class ScheduleCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           teacherName,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.textSecondary,
                           ),

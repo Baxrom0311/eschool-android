@@ -2,74 +2,75 @@
 class ApiConstants {
   ApiConstants._();
 
-  // Base URL
-  static const String baseUrl = 'https://ranchschool.izlash.uz/api';
+  // Base URL (dart-define: --dart-define=API_BASE_URL=https://...)
+  static const String _defaultBaseUrl = 'https://ranchschool.izlash.uz';
+  static const String _envBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: _defaultBaseUrl,
+  );
+  static String get baseUrl => _envBaseUrl.isEmpty ? _defaultBaseUrl : _envBaseUrl;
 
   // Timeout durations (milliseconds)
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;
   static const int sendTimeout = 30000;
 
-  // ─── Auth ───
-  static const String login = '/auth/login';
-  static const String register = '/auth/register';
-  static const String logout = '/auth/logout';
-  static const String refreshToken = '/auth/refresh';
-  static const String forgotPassword = '/auth/forgot-password';
-  static const String googleAuth = '/auth/google';
+  // ─── Auth (Tenant OAS) ───
+  static const String login = '/api/login';
+  static const String logout = '/api/logout';
+  static const String me = '/api/me';
 
-  // ─── User & Children ───
-  static const String profile = '/parent/profile';
-  static const String updateProfile = '/parent/profile';
-  static const String children = '/parent/children';
-  static String childDetails(int id) => '/parent/children/$id';
+  // ─── Parent (Tenant OAS) ───
+  static const String parentChildren = '/api/parent/children';
+  static String parentChildProfile(int studentId) =>
+      '/api/parent/children/$studentId';
+  static const String parentHomeworks = '/api/parent/homeworks';
+  static String parentHomeworkSubmit(int homeworkId) =>
+      '/api/parent/homeworks/$homeworkId/submit';
+  static const String parentTimetable = '/api/parent/timetable';
+  static const String parentMeals = '/api/parent/meals';
+  static const String parentPayments = '/api/parent/payments';
+  static const String parentChatContacts = '/api/parent/chat/contacts';
+  static String parentChatMessages(int userId) =>
+      '/api/parent/chat/messages/$userId';
+  static const String parentSendChatMessage = '/api/parent/chat/messages';
 
-  // ─── School ───
-  static const String schoolSettings = '/school/settings';
-  static const String schoolTheme = '/school/theme';
+  // ─── User & Children (app aliases) ───
+  static const String profile = me;
+  static const String children = parentChildren;
+  static String childDetails(int id) => parentChildProfile(id);
 
   // ─── Academics ───
-  static String grades(int childId) => '/parent/children/$childId/grades';
-  static String schedule(int childId) => '/parent/children/$childId/schedule';
+  // Parent OAS grades/attendance/rating ni alohida endpoint qilib bermaydi;
+  // child profile/timetable/homeworks dan derivation qilinadi.
+  static String grades(int childId) => parentChildProfile(childId);
+  static String schedule(int childId) =>
+      parentTimetable; // childId queryda ketadi
   static String assignments(int childId) =>
-      '/parent/children/$childId/assignments';
-  static String attendance(int childId) =>
-      '/parent/children/$childId/attendance';
-  static String childRating(int childId) =>
-      '/parent/children/$childId/rating';
+      parentHomeworks; // childId queryda ketadi
+  static String attendance(int childId) => parentChildProfile(childId);
+  static String childRating(int childId) => parentChildProfile(childId);
 
   // ─── Assignments ───
-  static String assignmentDetails(int id) => '/assignments/$id';
-  static String submitAssignment(int id) => '/assignments/$id/submit';
-  static String uploadAssignmentFile(int id) => '/assignments/$id/upload';
+  static String submitAssignment(int id) => parentHomeworkSubmit(id);
 
   // ─── Payments ───
-  static const String balance = '/parent/balance';
-  static const String contract = '/parent/contract';
-  static const String paymentHistory = '/parent/payments/history';
-  static const String createPayment = '/parent/payments/create';
-  static const String paymentMethods = '/payments/methods';
+  static const String balance = parentPayments;
+  static const String paymentHistory = parentPayments;
 
   // ─── Menu ───
-  static const String dailyMenu = '/menu/daily';
-  static const String weeklyMenu = '/menu/weekly';
+  static const String dailyMenu = parentMeals;
 
   // ─── Chat ───
-  static const String conversations = '/chat/conversations';
+  static const String conversations = parentChatContacts;
   static String messages(int conversationId) =>
-      '/chat/$conversationId/messages';
-  static String sendMessage(int conversationId) =>
-      '/chat/$conversationId/send';
-  static const String uploadChatFile = '/chat/upload';
+      parentChatMessages(conversationId);
+  static String sendMessage(int conversationId) => parentSendChatMessage;
 
-  // ─── Notifications ───
-  static const String notifications = '/notifications';
-  static String markAsRead(int id) => '/notifications/$id/read';
-  static const String saveFcmToken = '/notifications/token';
-
-  // ─── Rating ───
-  static String classRating(int classId) => '/rating/class/$classId';
-  static const String schoolRating = '/rating/school';
+  // ─── Notifications (tenant OAS'da yo'q, optional integration) ───
+  static const String notifications = '/api/notifications';
+  static String markAsRead(int id) => '/api/notifications/$id/read';
+  static const String saveFcmToken = '/api/notifications/token';
 
   // ─── Pagination ───
   static const int defaultPageSize = 20;

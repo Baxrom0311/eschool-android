@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../providers/payment_provider.dart';
 import '../../widgets/payments/payment_method_card.dart';
 import '../../widgets/common/custom_button.dart';
 
-/// Payment Method Selection Screen
-///
-/// Sprint 3 - Task 3
-class PaymentMethodScreen extends StatefulWidget {
+class PaymentMethodScreen extends ConsumerStatefulWidget {
   const PaymentMethodScreen({super.key});
 
   @override
-  State<PaymentMethodScreen> createState() => _PaymentMethodScreenState();
+  ConsumerState<PaymentMethodScreen> createState() =>
+      _PaymentMethodScreenState();
 }
 
-class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
+class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
   String _selectedMethod = 'click';
-  final TextEditingController _amountController =
-      TextEditingController(text: '450,000');
+  final TextEditingController _amountController = TextEditingController(
+    text: '450000',
+  );
 
   @override
   void dispose() {
@@ -25,8 +26,38 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     super.dispose();
   }
 
+  void _handlePayment() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Parent API da to\'lov yaratish qo\'llab-quvvatlanmaydi.',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen(paymentProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+
+      if (previous?.isLoading == true &&
+          !next.isLoading &&
+          next.error == null) {
+        _showSuccessDialog();
+      }
+    });
+
+    final paymentState = ref.watch(paymentProvider);
+    final isLoading = paymentState.isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -67,6 +98,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   hintText: '0',
+                  suffixText: 'UZS',
                 ),
               ),
             ),
@@ -113,10 +145,8 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
             // ─── Pay Button ───
             CustomButton(
               text: 'To\'lovni amalga oshirish',
-              onPressed: () {
-                // Handle payment initiation
-                _showSuccessDialog();
-              },
+              onPressed: isLoading ? null : _handlePayment,
+              isLoading: isLoading,
               height: 56,
               borderRadius: 16,
             ),
@@ -160,15 +190,12 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'To\'lov yuborildi!',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              'To\'lov muvaffaqiyatli!',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             const Text(
-              'To\'lov muvaffaqiyatli amalga oshirildi. Tez orada hisobingiz to\'ldiriladi.',
+              'To\'lov tizimiga yo\'naltirilmoqdasiz...',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Color(0xFF718096)),
             ),

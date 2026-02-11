@@ -1,30 +1,117 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/constants/app_colors.dart';
+import '../../../data/models/assignment_model.dart';
+import '../../providers/academic_provider.dart';
 import '../../widgets/common/custom_button.dart';
 
-/// Assignment Detail Screen - Detailed view of a homework assignment
-///
-/// Sprint 5 - Task 2
-class AssignmentDetailScreen extends StatelessWidget {
-  final Map<String, dynamic>? assignment;
+/// Assignment Detail Screen - real API detail + submit flow
+class AssignmentDetailScreen extends ConsumerStatefulWidget {
+  final AssignmentModel? assignment;
 
-  const AssignmentDetailScreen({
-    super.key,
-    this.assignment,
-  });
+  const AssignmentDetailScreen({super.key, this.assignment});
+
+  @override
+  ConsumerState<AssignmentDetailScreen> createState() =>
+      _AssignmentDetailScreenState();
+}
+
+class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen> {
+  String? _selectedFilePath;
+  String? _selectedFileName;
+  bool _isSubmitting = false;
+
+  int get _assignmentId => widget.assignment?.id ?? 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_assignmentId > 0) {
+      Future.microtask(
+        () => ref.read(assignmentsProvider.notifier).loadAssignmentDetails(
+              _assignmentId,
+            ),
+      );
+    }
+  }
+
+  Future<void> _pickFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.any,
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.first;
+    if (file.path == null || file.path!.isEmpty) return;
+
+    setState(() {
+      _selectedFilePath = file.path;
+      _selectedFileName = file.name;
+    });
+  }
+
+  Future<void> _submitAssignment() async {
+    if (_assignmentId <= 0) return;
+    if (_selectedFilePath == null || _selectedFilePath!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Avval fayl tanlang')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    final success = await ref.read(assignmentsProvider.notifier).submitAssignment(
+          _assignmentId,
+          filePath: _selectedFilePath,
+        );
+    if (!mounted) return;
+
+    setState(() => _isSubmitting = false);
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vazifa muvaffaqiyatli yuborildi')),
+      );
+      setState(() {
+        _selectedFilePath = null;
+        _selectedFileName = null;
+      });
+      await ref
+          .read(assignmentsProvider.notifier)
+          .loadAssignmentDetails(_assignmentId);
+    } else {
+      final error = ref.read(assignmentsProvider).error ?? 'Yuborishda xatolik';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Fallback data if assignment is null
-    final data = assignment ??
-        {
-          'subject': 'Matematika',
-          'title': '15-20 mashqlar',
-          'description':
-              'Kvadrat tenglamalar mavzusidan barcha mashqlarni yechish. Har bir yechimni to\'liq yozish va chizmalar bilan ko\'rsatish shart.',
-          'deadline': 'Ertaga 18:00 gacha',
-          'color': const Color(0xFF4CAF50),
-        };
+    final assignmentsState = ref.watch(assignmentsProvider);
+    final loaded = assignmentsState.selectedAssignment;
+    final assignment = loaded != null && loaded.id == _assignmentId
+        ? loaded
+        : widget.assignment;
+
+    if (assignment == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Vazifa tafsilotlari'),
+          backgroundColor: AppColors.primaryBlue,
+          foregroundColor: Colors.white,
+        ),
+        body: const Center(child: Text('Vazifa topilmadi')),
+      );
+    }
+
+    final isPending = assignment.isPending || assignment.isOverdue;
+    final submittedFiles = assignment.submittedFiles;
+    final teacherFiles = assignment.attachments;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -37,220 +124,209 @@ class AssignmentDetailScreen extends StatelessWidget {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ─── Top Info Card ───
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.shadow.withOpacity(0.05),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color:
-                                    (data['color'] as Color).withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.auto_stories_rounded,
-                                color: data['color'],
-                                size: 32,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    data['subject'],
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: data['color'],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    data['title'],
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: AppColors.textPrimary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 32),
-                        Row(
-                          children: [
-                            Icon(Icons.event_note_rounded,
-                                color: AppColors.danger, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Muddat:',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              data['deadline'],
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.danger,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // ─── Description Section ───
-                  Text(
-                    'Topshiriq mazmuni',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Text(
-                      data['description'],
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: AppColors.textPrimary,
-                        height: 1.6,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // ─── Attachments Section ───
-                  Text(
-                    'Biriktirilgan fayllar',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFEBEE),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.picture_as_pdf_rounded,
-                            color: Color(0xFFC62828),
-                            size: 24,
+                        Text(
+                          assignment.subjectName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'algebra_vazifa.pdf',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                '1.2 MB',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
+                        const SizedBox(height: 8),
+                        Text(
+                          assignment.title,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.file_download_outlined),
-                          color: AppColors.primaryBlue,
-                          onPressed: () {
-                            // TODO: Download file
-                          },
+                        const SizedBox(height: 8),
+                        Text(
+                          'Muddat: ${assignment.dueDate}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.danger,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Status: ${assignment.statusText}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        if (assignment.description != null &&
+                            assignment.description!.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          Text(
+                            assignment.description!,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              height: 1.5,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'O\'qituvchi fayllari',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (teacherFiles.isEmpty)
+                          const Text(
+                            'Biriktirilgan fayl yo\'q',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          )
+                        else
+                          ...teacherFiles.map(
+                            (file) => ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(Icons.insert_drive_file_rounded),
+                              title: Text(file.name),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Yuborilgan fayllar',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (submittedFiles.isEmpty)
+                          const Text(
+                            'Hali yuborilmagan',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          )
+                        else
+                          ...submittedFiles.map(
+                            (file) => ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(Icons.file_copy_rounded),
+                              title: Text(file.name),
+                              subtitle: Text(file.formattedSize),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (_selectedFileName != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.attach_file_rounded),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _selectedFileName!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedFilePath = null;
+                                _selectedFileName = null;
+                              });
+                            },
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
-
-          // ─── Action Bottom Button ───
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
+          if (isPending)
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Column(
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _isSubmitting ? null : _pickFile,
+                      icon: const Icon(Icons.upload_file_rounded),
+                      label: Text(
+                        _selectedFileName == null
+                            ? 'Fayl tanlash'
+                            : 'Boshqa fayl tanlash',
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomButton(
+                      text: 'Vazifani yuborish',
+                      onPressed: (_isSubmitting || assignmentsState.isLoading)
+                          ? null
+                          : _submitAssignment,
+                      isLoading: _isSubmitting || assignmentsState.isLoading,
+                      height: 52,
+                      borderRadius: 12,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-            child: CustomButton(
-              text: 'Vazifani yuklash',
-              onPressed: () {
-                // TODO: Upload assignment logic
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Fayl tanlash oynasi ochiladi...')),
-                );
-              },
-              height: 56,
-              borderRadius: 16,
-              icon: Icons.cloud_upload_outlined,
-            ),
-          ),
         ],
       ),
     );

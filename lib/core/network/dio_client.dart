@@ -14,8 +14,12 @@ class DioClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(milliseconds: ApiConstants.connectTimeout),
-        receiveTimeout: const Duration(milliseconds: ApiConstants.receiveTimeout),
+        connectTimeout: const Duration(
+          milliseconds: ApiConstants.connectTimeout,
+        ),
+        receiveTimeout: const Duration(
+          milliseconds: ApiConstants.receiveTimeout,
+        ),
         sendTimeout: const Duration(milliseconds: ApiConstants.sendTimeout),
         headers: {
           'Content-Type': 'application/json',
@@ -36,12 +40,9 @@ class DioClient {
         },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            // Token expired — refresh attempt
-            final refreshed = await _tryRefreshToken();
-            if (refreshed) {
-              // Retry original request
-              final retryResponse = await _retry(error.requestOptions);
-              return handler.resolve(retryResponse);
+            // 401 holatida eskirgan token qayta yuborilmasligi uchun local tokenni tozalaymiz.
+            if (!error.requestOptions.path.endsWith(ApiConstants.login)) {
+              await _secureStorage.clearAll();
             }
           }
           handler.next(error);
@@ -65,53 +66,6 @@ class DioClient {
 
   Dio get dio => _dio;
 
-  /// Token refresh qilish
-  Future<bool> _tryRefreshToken() async {
-    try {
-      final refreshToken = await _secureStorage.getRefreshToken();
-      if (refreshToken == null) return false;
-
-      final response = await Dio().post(
-        '${ApiConstants.baseUrl}${ApiConstants.refreshToken}',
-        data: {'refresh_token': refreshToken},
-      );
-
-      if (response.statusCode == 200) {
-        final newAccessToken = response.data['access_token'] as String?;
-        final newRefreshToken = response.data['refresh_token'] as String?;
-        if (newAccessToken != null) {
-          await _secureStorage.saveAccessToken(newAccessToken);
-        }
-        if (newRefreshToken != null) {
-          await _secureStorage.saveRefreshToken(newRefreshToken);
-        }
-        return true;
-      }
-      return false;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  /// So'rovni qayta yuborish
-  Future<Response<dynamic>> _retry(RequestOptions requestOptions) async {
-    final token = await _secureStorage.getAccessToken();
-    final options = Options(
-      method: requestOptions.method,
-      headers: {
-        ...requestOptions.headers,
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    return _dio.request<dynamic>(
-      requestOptions.path,
-      data: requestOptions.data,
-      queryParameters: requestOptions.queryParameters,
-      options: options,
-    );
-  }
-
   // ─── CRUD Methods ───
 
   Future<Response> get(
@@ -128,23 +82,19 @@ class DioClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) {
-    return _dio.post(path,
-        data: data, queryParameters: queryParameters, options: options);
+    return _dio.post(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 
-  Future<Response> put(
-    String path, {
-    dynamic data,
-    Options? options,
-  }) {
+  Future<Response> put(String path, {dynamic data, Options? options}) {
     return _dio.put(path, data: data, options: options);
   }
 
-  Future<Response> delete(
-    String path, {
-    dynamic data,
-    Options? options,
-  }) {
+  Future<Response> delete(String path, {dynamic data, Options? options}) {
     return _dio.delete(path, data: data, options: options);
   }
 

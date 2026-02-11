@@ -21,11 +21,11 @@ class OverallGradeCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.shadow,
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -45,12 +45,12 @@ class OverallGradeCard extends StatelessWidget {
                       strokeWidth: 8,
                       backgroundColor: AppColors.border,
                       valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
+                          const AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
                     ),
                   ),
                   Text(
                     gpa.toStringAsFixed(1),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primaryBlue,
@@ -60,18 +60,18 @@ class OverallGradeCard extends StatelessWidget {
               ),
               const SizedBox(width: 20),
               // Text Info
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Umumiy o\'zlashtirish',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       'Sizning ko\'rsatkichingiz sinfda 4-o\'rinda',
                       style: TextStyle(
@@ -129,7 +129,7 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: AppColors.primaryBlue.withOpacity(0.6), size: 24),
+        Icon(icon, color: AppColors.primaryBlue.withValues(alpha: 0.6), size: 24),
         const SizedBox(height: 8),
         Text(
           value,
@@ -141,7 +141,7 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             color: AppColors.textSecondary,
           ),

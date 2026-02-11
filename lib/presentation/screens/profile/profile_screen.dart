@@ -3,62 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/route_names.dart';
+import '../../../core/utils/formatters.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/payment_provider.dart';
+import '../../providers/user_provider.dart';
 
-/// Profile Screen - User Profile and Settings
-///
-/// Sprint 2 - Task 2
-/// Dev1 Responsibility
-///
-/// Design:
-/// - Blue header with rounded bottom corners
-/// - User avatar, name, ID
-/// - Stats row (Balance, Children count)
-/// - Settings list
-class ProfileScreen extends ConsumerStatefulWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userState = ref.watch(userProvider);
+    final paymentState = ref.watch(paymentProvider);
+    final user = userState.user;
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  Future<void> _handleLogout() async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Chiqish'),
-        content: const Text('Haqiqatan ham tizimdan chiqmoqchimisiz?'),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Yo\'q'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.danger,
-            ),
-            child: const Text('Ha, chiqish'),
-          ),
-        ],
-      ),
-    );
+    // Initial data load if needed
+    // Note: Splash screen already loads profile, but balance might need refresh
 
-    if (confirmed == true && mounted) {
-      // TODO: Call logout provider (Dev2 will provide)
-      // await ref.read(authProvider.notifier).logout();
-
-      // Navigate to login
-      context.go(RouteNames.login);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
@@ -67,7 +28,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           // ═══════════════════════════════════════════════════════
           Container(
             width: double.infinity,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -76,7 +37,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   AppColors.secondaryBlue,
                 ],
               ),
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(32),
                 bottomRight: Radius.circular(32),
               ),
@@ -88,24 +49,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Column(
                   children: [
                     // ─── Avatar and Name ───
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 50,
                       backgroundColor: Colors.white,
                       child: CircleAvatar(
                         radius: 47,
-                        backgroundColor: Color(0xFFE8F0FF),
-                        child: Icon(
-                          Icons.person_rounded,
-                          size: 50,
-                          color: AppColors.primaryBlue,
-                        ),
+                        backgroundColor: const Color(0xFFE8F0FF),
+                        backgroundImage: user?.avatarUrl != null
+                            ? NetworkImage(user!.avatarUrl!)
+                            : null,
+                        child: user?.avatarUrl == null
+                            ? const Icon(
+                                Icons.person_rounded,
+                                size: 50,
+                                color: AppColors.primaryBlue,
+                              )
+                            : null,
                       ),
                     ),
                     const SizedBox(height: 16),
 
-                    const Text(
-                      'Azizbek Rahimov',
-                      style: TextStyle(
+                    Text(
+                      user?.fullName ?? 'Foydalanuvchi',
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -114,10 +80,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 4),
 
                     Text(
-                      'ID: 2023-8841',
+                      'Tel: ${user?.phone ?? "---"}',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -131,7 +97,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             child: _StatCard(
                               icon: Icons.account_balance_wallet_rounded,
                               label: 'Balans',
-                              value: '450,000 UZS',
+                              value: paymentState.balance != null
+                                  ? '${Formatters.formatCurrency(paymentState.balance!.balance.toDouble())} UZS'
+                                  : '--- UZS',
                             ),
                           ),
                         ),
@@ -142,7 +110,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             child: _StatCard(
                               icon: Icons.people_rounded,
                               label: 'Farzandlar',
-                              value: '2 ta',
+                              value: '${userState.children.length} ta',
                             ),
                           ),
                         ),
@@ -168,7 +136,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   title: 'Shaxsiy ma\'lumotlar',
                   subtitle: 'Profilingizni tahrirlash',
                   onTap: () {
-                    // TODO: Navigate to edit profile screen
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Tez orada...'),
@@ -183,12 +150,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   title: 'Parolni o\'zgartirish',
                   subtitle: 'Xavfsizlik sozlamalari',
                   onTap: () {
-                    // TODO: Navigate to change password screen
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tez orada...'),
-                      ),
-                    );
+                    context.push(RouteNames.changePassword);
                   },
                 ),
                 const SizedBox(height: 8),
@@ -208,12 +170,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   title: 'Bildirishnomalar',
                   subtitle: 'Bildirishnoma sozlamalari',
                   onTap: () {
-                    // TODO: Navigate to notifications settings
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tez orada...'),
-                      ),
-                    );
+                    context.push(RouteNames.notifications);
                   },
                 ),
                 const SizedBox(height: 8),
@@ -242,12 +199,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: OutlinedButton.icon(
-                    onPressed: _handleLogout,
+                    onPressed: () => _handleLogout(context, ref),
                     icon: const Icon(Icons.logout_rounded),
                     label: const Text('Tizimdan chiqish'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.danger,
-                      side: BorderSide(
+                      side: const BorderSide(
                         color: AppColors.danger,
                         width: 1.5,
                       ),
@@ -260,6 +217,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleLogout(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tizimdan chiqish'),
+        content: const Text('Rostdan ham tizimdan chiqmoqchimisiz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Bekor qilish'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ref.read(authProvider.notifier).logout();
+              context.go(RouteNames.login);
+            },
+            child: const Text(
+              'Chiqish',
+              style: TextStyle(color: AppColors.danger),
             ),
           ),
         ],
@@ -288,10 +272,10 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withOpacity(0.3),
+          color: Colors.white.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -307,7 +291,7 @@ class _StatCard extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -349,7 +333,7 @@ class _SettingsItem extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
+        side: const BorderSide(
           color: AppColors.border,
           width: 1,
         ),
@@ -360,7 +344,7 @@ class _SettingsItem extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: AppColors.primaryBlue.withOpacity(0.1),
+            color: AppColors.primaryBlue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -371,7 +355,7 @@ class _SettingsItem extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -379,12 +363,12 @@ class _SettingsItem extends StatelessWidget {
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13,
             color: AppColors.textSecondary,
           ),
         ),
-        trailing: Icon(
+        trailing: const Icon(
           Icons.chevron_right_rounded,
           color: AppColors.textSecondary,
         ),

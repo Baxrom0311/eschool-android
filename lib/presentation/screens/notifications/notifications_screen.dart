@@ -1,188 +1,202 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../data/models/notification_model.dart';
+import '../../../core/utils/formatters.dart';
+import '../../providers/notification_provider.dart';
 
-/// Notifications Screen - Grouped view of system and app notifications
-///
-/// Sprint 7 - Task 2
-class NotificationsScreen extends StatelessWidget {
+/// Notifications Screen - Shows list of notifications
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Hardcoded Mock Data inside build
-    final List<Map<String, dynamic>> todayNotifications = [
-      {
-        'title': 'Dastur yangilandi',
-        'body':
-            'E-School ilovasining yangi 1.1.0 versiyasi yuklandi. Yangi imkoniyatlar bilan tanishib chiqing.',
-        'time': '10:30',
-        'type': 'system',
-        'isRead': false,
-      },
-      {
-        'title': 'To\'lov qabul qilindi',
-        'body': 'Fevral oyi uchun oylik to\'lov muvaffaqiyatli qabul qilindi.',
-        'time': '09:15',
-        'type': 'payment',
-        'isRead': false,
-      },
-    ];
+  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+}
 
-    final List<Map<String, dynamic>> yesterdayNotifications = [
-      {
-        'title': 'Matematikadan 5 baho',
-        'body':
-            'Bugungi nazorat ishi uchun sizga 5 baho qo\'yildi. Baraka toping!',
-        'time': 'Kecha, 16:45',
-        'type': 'grade',
-        'isRead': true,
-      },
-      {
-        'title': 'Yangi vazifa: Fizika',
-        'body':
-            'Sardor Aliyev yangi laboratoriya ishlari bo\'yicha topshiriq yukladi.',
-        'time': 'Kecha, 11:00',
-        'type': 'homework',
-        'isRead': true,
-      },
-    ];
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Bildirishnomalar'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildHeader('Bugun'),
-          ...todayNotifications.map((n) => _NotificationTile(data: n)),
-          const SizedBox(height: 24),
-          _buildHeader('Kecha'),
-          ...yesterdayNotifications.map((n) => _NotificationTile(data: n)),
-        ],
-      ),
-    );
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch notifications on screen load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationProvider.notifier).loadNotifications();
+    });
   }
 
-  Widget _buildHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(notificationProvider);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        title: const Text(
+          'Bildirishnomalar',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
+      body: state.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : state.error != null
+              ? Center(child: Text('Xatolik: ${state.error}'))
+              : state.notifications.isEmpty
+                  ? const Center(child: Text('Bildirishnomalar yo\'q'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: state.notifications.length,
+                      itemBuilder: (context, index) {
+                        final notification = state.notifications[index];
+                        return _NotificationTile(data: notification);
+                      },
+                    ),
     );
   }
 }
 
-/// Internal Notification Tile Widget
-class _NotificationTile extends StatelessWidget {
-  final Map<String, dynamic> data;
+class _NotificationTile extends ConsumerWidget {
+  final NotificationModel data;
 
   const _NotificationTile({required this.data});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     IconData icon;
     Color color;
 
-    switch (data['type']) {
-      case 'system':
-        icon = Icons.info_outline_rounded;
-        color = AppColors.primaryBlue;
-        break;
-      case 'grade':
-        icon = Icons.star_rounded;
-        color = Colors.orange;
-        break;
-      case 'payment':
+    switch (data.type) {
+      case NotificationType.payment:
         icon = Icons.check_circle_outline_rounded;
         color = Colors.green;
         break;
-      case 'homework':
+      case NotificationType.grade:
+        icon = Icons.star_rounded;
+        color = Colors.orange;
+        break;
+      case NotificationType.attendance:
+        icon = Icons.event_available_rounded;
+        color = Colors.blue;
+        break;
+      case NotificationType.assignment:
         icon = Icons.book_rounded;
         color = Colors.purple;
         break;
-      default:
+      case NotificationType.announcement:
+        icon = Icons.campaign_rounded;
+        color = Colors.red;
+        break;
+       default:
         icon = Icons.notifications_none_rounded;
         color = AppColors.textSecondary;
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: data['isRead'] ? Colors.white.withOpacity(0.6) : Colors.white,
+        color: data.isRead ? Colors.white.withValues(alpha: 0.6) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: data['isRead']
+        boxShadow: data.isRead
             ? null
             : [
                 BoxShadow(
-                  color: AppColors.shadow.withOpacity(0.05),
+                  color: AppColors.shadow.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
               ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () {
+            if (!data.isRead) {
+              ref.read(notificationProvider.notifier).markAsRead(data.id);
+            }
+            // Navigate if data content exists (implementation for later)
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      data['title'],
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight:
-                            data['isRead'] ? FontWeight.w600 : FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      data['time'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 24),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  data['body'],
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    height: 1.4,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              data.title,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight:
+                                    data.isRead ? FontWeight.w600 : FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            _formatDate(data.createdAt),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        data.body,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.tryParse(dateString);
+      if (date == null) return dateString; // Fallback to raw string if parse fails
+
+      final now = DateTime.now();
+      if (date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day) {
+        return Formatters.formatTime(date);
+      }
+      return Formatters.formatDate(date);
+    } catch (_) {
+      return dateString;
+    }
   }
 }

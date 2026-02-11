@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/routing/route_names.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/user_provider.dart';
 
 /// Splash Screen - Shows app logo and checks authentication status
-///
-/// Sprint 1 - Task 1
-/// Dev1 Responsibility
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -27,16 +26,27 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     if (!mounted) return;
 
-    // TODO: Check authentication status from provider (Dev2 will provide)
-    // Example:
-    // final isAuthenticated = ref.read(authProvider).isAuthenticated;
+    // Check authentication status from provider
+    final isAuthenticated =
+        await ref.read(authProvider.notifier).checkAuthStatus();
 
-    // For now, navigate to login screen
-    // Replace this with actual auth check
-    final isAuthenticated = false;
+    if (!mounted) return;
 
     if (isAuthenticated) {
-      context.go(RouteNames.home);
+      // Load user profile before navigating
+      await ref.read(userProvider.notifier).loadProfile();
+      
+      if (!mounted) return;
+
+      // START FIX: Check if profile load was actually successful
+      final userState = ref.read(userProvider);
+      if (userState.user != null) {
+        context.go(RouteNames.home);
+      } else {
+        // Token exists but profile load failed (likely expired) -> Login
+        context.go(RouteNames.login);
+      }
+      // END FIX
     } else {
       context.go(RouteNames.login);
     }

@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/route_names.dart';
+import '../../providers/academic_provider.dart';
+import '../../providers/rating_provider.dart';
+import '../../providers/user_provider.dart';
 import '../profile/profile_screen.dart';
 import '../academics/grades_screen.dart';
 import '../payments/payments_screen.dart';
@@ -10,9 +13,6 @@ import '../menu/daily_menu_screen.dart';
 import '../rating/rating_screen.dart';
 
 /// Home Screen - Main App Screen with Bottom Navigation
-///
-/// Sprint 2 - Task 1
-/// Dev1 Responsibility
 ///
 /// Structure: Scaffold with BottomNavigationBar
 /// Tabs: Home, Education, Menu, Payments, Profile
@@ -105,41 +105,130 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 // Placeholder Tab Screens (Dev1 will implement later)
 // ═══════════════════════════════════════════════════════
 
-class _HomeTabScreen extends StatelessWidget {
+class _HomeTabScreen extends ConsumerStatefulWidget {
   const _HomeTabScreen();
 
-  // Mock data for today's classes
-  final List<Map<String, dynamic>> todayClasses = const [
-    {
-      'subject': 'Matematika',
-      'time': '08:00 - 08:45',
-      'room': '204-xona',
-      'isActive': true,
-    },
-    {
-      'subject': 'Ingliz tili',
-      'time': '09:00 - 09:45',
-      'room': '301-xona',
-      'isActive': false,
-    },
-    {
-      'subject': 'Fizika',
-      'time': '10:00 - 10:45',
-      'room': '205-xona',
-      'isActive': false,
-    },
-  ];
+  @override
+  ConsumerState<_HomeTabScreen> createState() => _HomeTabScreenState();
+}
+
+class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_loadHomeData);
+  }
+
+  void _loadHomeData() {
+    final child = ref.read(selectedChildProvider);
+    if (child == null) return;
+
+    final now = DateTime.now();
+    final month = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+
+    ref.read(scheduleProvider.notifier).loadSchedule(child.id);
+    ref.read(scheduleProvider.notifier).selectDay(now.weekday);
+    ref.read(attendanceProvider.notifier).loadAttendance(child.id, month: month);
+    ref.read(gradesProvider.notifier).loadGrades(child.id);
+    ref.read(ratingProvider.notifier).loadChildRating(child.id);
+  }
+
+  bool _isLessonNow(String start, String end) {
+    final now = DateTime.now();
+    final startParts = start.split(':');
+    final endParts = end.split(':');
+    if (startParts.length < 2 || endParts.length < 2) return false;
+
+    final startHour = int.tryParse(startParts[0]) ?? -1;
+    final startMinute = int.tryParse(startParts[1]) ?? -1;
+    final endHour = int.tryParse(endParts[0]) ?? -1;
+    final endMinute = int.tryParse(endParts[1]) ?? -1;
+    if (startHour < 0 || startMinute < 0 || endHour < 0 || endMinute < 0) {
+      return false;
+    }
+
+    final nowMinutes = now.hour * 60 + now.minute;
+    final startMinutes = startHour * 60 + startMinute;
+    final endMinutes = endHour * 60 + endMinute;
+    return nowMinutes >= startMinutes && nowMinutes <= endMinutes;
+  }
+
+  String _todayText() {
+    const weekdays = [
+      'dushanba',
+      'seshanba',
+      'chorshanba',
+      'payshanba',
+      'juma',
+      'shanba',
+      'yakshanba',
+    ];
+    const months = [
+      'yanvar',
+      'fevral',
+      'mart',
+      'aprel',
+      'may',
+      'iyun',
+      'iyul',
+      'avgust',
+      'sentabr',
+      'oktabr',
+      'noyabr',
+      'dekabr',
+    ];
+
+    final now = DateTime.now();
+    return 'Bugun ${weekdays[now.weekday - 1]}, ${now.day}-${months[now.month - 1]}';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+    final child = ref.watch(selectedChildProvider);
+    final scheduleState = ref.watch(scheduleProvider);
+    final attendanceState = ref.watch(attendanceProvider);
+    final gradesState = ref.watch(gradesProvider);
+    final ratingState = ref.watch(ratingProvider);
+
+    ref.listen(selectedChildProvider, (previous, next) {
+      if (next != null && previous?.id != next.id) {
+        _loadHomeData();
+      }
+    });
+
+    final attendanceRate = (() {
+      final summary = attendanceState.summary;
+      if (summary != null && summary.totalDays > 0) {
+        return summary.attendancePercentage.round().clamp(0, 100);
+      }
+      return (child?.attendancePercentage ?? 0).clamp(0, 100);
+    })();
+
+    final gpaFromSummary = gradesState.summary.isNotEmpty
+        ? gradesState.summary
+                .fold<double>(0.0, (sum, item) => sum + item.averageGrade) /
+            gradesState.summary.length
+        : 0.0;
+    final gpaFromGrades = gradesState.grades.isNotEmpty
+        ? gradesState.grades.fold<double>(0.0, (sum, item) => sum + item.grade) /
+            gradesState.grades.length
+        : 0.0;
+    final gpa = (gpaFromSummary > 0
+            ? gpaFromSummary
+            : (gpaFromGrades > 0 ? gpaFromGrades : (child?.averageGrade ?? 0)))
+        .clamp(0.0, 5.0);
+
+    final score = ratingState.childRating?.totalScore.round() ?? 0;
+    final rank = ratingState.childRating?.rank;
+    final todaySchedule = scheduleState.todaySchedule;
+
+    return Container(
+      color: AppColors.background,
+      child: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ─── Top Welcome Row ───
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 8, 0),
                 child: Row(
@@ -149,16 +238,16 @@ class _HomeTabScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Salom, Azizbek 👋',
-                          style: TextStyle(
+                          'Salom, ${child?.fullName ?? 'Foydalanuvchi'}',
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
                           ),
                         ),
                         Text(
-                          'Bugun dushanba, 10-fevral',
-                          style: TextStyle(
+                          _todayText(),
+                          style: const TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary,
                           ),
@@ -171,7 +260,7 @@ class _HomeTabScreen extends StatelessWidget {
                       },
                       icon: Stack(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.notifications_none_rounded,
                             size: 30,
                             color: AppColors.textPrimary,
@@ -194,14 +283,11 @@ class _HomeTabScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              // ═══════════════════════════════════════════════════════
-              // Header Card (Attendance & Points)
-              // ═══════════════════════════════════════════════════════
               Container(
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
@@ -212,7 +298,7 @@ class _HomeTabScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryBlue.withOpacity(0.3),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -228,13 +314,13 @@ class _HomeTabScreen extends StatelessWidget {
                             'Davomat',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            '98%',
-                            style: TextStyle(
+                          Text(
+                            '$attendanceRate%',
+                            style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -246,7 +332,7 @@ class _HomeTabScreen extends StatelessWidget {
                     Container(
                       width: 1,
                       height: 60,
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
                     Expanded(
                       child: Column(
@@ -256,13 +342,13 @@ class _HomeTabScreen extends StatelessWidget {
                             'Ballar',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            '845',
-                            style: TextStyle(
+                          Text(
+                            '$score',
+                            style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -275,15 +361,12 @@ class _HomeTabScreen extends StatelessWidget {
                 ),
               ),
 
-              // ═══════════════════════════════════════════════════════
-              // Today's Classes Section
-              // ═══════════════════════════════════════════════════════
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       'Bugungi Darslar',
                       style: TextStyle(
                         fontSize: 18,
@@ -303,103 +386,113 @@ class _HomeTabScreen extends StatelessWidget {
 
               SizedBox(
                 height: 140,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: todayClasses.length,
-                  itemBuilder: (context, index) {
-                    final classItem = todayClasses[index];
-                    return Container(
-                      width: 200,
-                      margin: const EdgeInsets.only(right: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: classItem['isActive']
-                            ? AppColors.primaryBlue
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.shadow.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.schedule_rounded,
-                                size: 16,
-                                color: classItem['isActive']
-                                    ? Colors.white
-                                    : AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                classItem['time'],
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: classItem['isActive']
-                                      ? Colors.white.withOpacity(0.9)
-                                      : AppColors.textSecondary,
+                child: todaySchedule.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Bugun darslar topilmadi',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      )
+                    : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: todaySchedule.length,
+                        itemBuilder: (context, index) {
+                          final classItem = todaySchedule[index];
+                          final time =
+                              '${classItem.startTime} - ${classItem.endTime}';
+                          final isActive = _isLessonNow(
+                            classItem.startTime,
+                            classItem.endTime,
+                          );
+
+                          return Container(
+                            width: 200,
+                            margin: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? AppColors.primaryBlue
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.shadow.withValues(alpha: 0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            classItem['subject'],
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: classItem['isActive']
-                                  ? Colors.white
-                                  : AppColors.textPrimary,
+                              ],
                             ),
-                          ),
-                          const Spacer(),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.room_rounded,
-                                size: 14,
-                                color: classItem['isActive']
-                                    ? Colors.white.withOpacity(0.9)
-                                    : AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                classItem['room'],
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: classItem['isActive']
-                                      ? Colors.white.withOpacity(0.9)
-                                      : AppColors.textSecondary,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.schedule_rounded,
+                                      size: 16,
+                                      color: isActive
+                                          ? Colors.white
+                                          : AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      time,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isActive
+                                            ? Colors.white.withValues(alpha: 0.9)
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(height: 12),
+                                Text(
+                                  classItem.subjectName,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: isActive
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.room_rounded,
+                                      size: 14,
+                                      color: isActive
+                                          ? Colors.white.withValues(alpha: 0.9)
+                                          : AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      classItem.roomNumber ?? '-',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: isActive
+                                            ? Colors.white.withValues(alpha: 0.9)
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
 
               const SizedBox(height: 24),
 
-              // ═══════════════════════════════════════════════════════
-              // Stats Row (Average Grade & Class Rank)
-              // ═══════════════════════════════════════════════════════
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    // Average Grade Card
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.all(20),
@@ -408,7 +501,7 @@ class _HomeTabScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.shadow.withOpacity(0.08),
+                              color: AppColors.shadow.withValues(alpha: 0.08),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -416,7 +509,7 @@ class _HomeTabScreen extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            Text(
+                            const Text(
                               'O\'rtacha baho',
                               style: TextStyle(
                                 fontSize: 13,
@@ -431,18 +524,17 @@ class _HomeTabScreen extends StatelessWidget {
                                   width: 80,
                                   height: 80,
                                   child: CircularProgressIndicator(
-                                    value: 0.96,
+                                    value: (gpa / 5).clamp(0.0, 1.0),
                                     strokeWidth: 8,
                                     backgroundColor: AppColors.border,
-                                    valueColor:
-                                        const AlwaysStoppedAnimation<Color>(
+                                    valueColor: const AlwaysStoppedAnimation<Color>(
                                       Color(0xFF4CAF50),
                                     ),
                                   ),
                                 ),
-                                const Text(
-                                  '4.8',
-                                  style: TextStyle(
+                                Text(
+                                  gpa.toStringAsFixed(1),
+                                  style: const TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF4CAF50),
@@ -456,7 +548,6 @@ class _HomeTabScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
 
-                    // Class Rank Card
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.all(20),
@@ -465,7 +556,7 @@ class _HomeTabScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.shadow.withOpacity(0.08),
+                              color: AppColors.shadow.withValues(alpha: 0.08),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -473,7 +564,7 @@ class _HomeTabScreen extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            Text(
+                            const Text(
                               'Sinf reytingi',
                               style: TextStyle(
                                 fontSize: 13,
@@ -487,15 +578,15 @@ class _HomeTabScreen extends StatelessWidget {
                               color: Color(0xFFFFD700),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
-                              '#3',
-                              style: TextStyle(
+                            Text(
+                              rank != null ? '#$rank' : '-',
+                              style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFFFFD700),
                               ),
                             ),
-                            Text(
+                            const Text(
                               'o\'rin',
                               style: TextStyle(
                                 fontSize: 12,
@@ -512,11 +603,8 @@ class _HomeTabScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // ═══════════════════════════════════════════════════════
-              // Latest News Section
-              // ═══════════════════════════════════════════════════════
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   'So\'nggi yangilik',
                   style: TextStyle(
@@ -548,7 +636,7 @@ class _HomeTabScreen extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.7),
+                        Colors.black.withValues(alpha: 0.7),
                       ],
                     ),
                   ),
@@ -613,29 +701,30 @@ class _EducationTabScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(50),
-          child: Container(
+      child: Column(
+        children: [
+          Container(
             color: Colors.white,
-            child: TabBar(
+            child: const TabBar(
               labelColor: AppColors.primaryBlue,
               unselectedLabelColor: AppColors.textSecondary,
               indicatorColor: AppColors.primaryBlue,
-              indicatorPadding: const EdgeInsets.symmetric(horizontal: 40),
-              tabs: const [
+              indicatorPadding: EdgeInsets.symmetric(horizontal: 40),
+              tabs: [
                 Tab(text: 'Baholar'),
                 Tab(text: 'Reyting'),
               ],
             ),
           ),
-        ),
-        body: const TabBarView(
-          children: [
-            GradesScreen(),
-            RatingScreen(),
-          ],
-        ),
+          const Expanded(
+            child: TabBarView(
+              children: [
+                GradesScreen(),
+                RatingScreen(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

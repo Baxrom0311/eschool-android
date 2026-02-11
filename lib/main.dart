@@ -1,18 +1,17 @@
+import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
-import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/routing/app_router.dart';
 import 'core/storage/shared_prefs_service.dart';
-import 'core/storage/secure_storage.dart';
-import 'core/network/dio_client.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/firebase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // SharedPreferences init
-  await SharedPrefsService.init();
+  await _bootstrap();
 
   runApp(
     const ProviderScope(
@@ -21,36 +20,29 @@ void main() async {
   );
 }
 
+Future<void> _bootstrap() async {
+  try {
+    await SharedPrefsService.init();
+  } catch (e) {
+    if (kDebugMode) {
+      log('SharedPrefs init error: $e', name: 'Bootstrap');
+    }
+  }
+
+  // Firebase startupni UI ochilishini bloklamasdan fon rejimida ishga tushiramiz.
+  unawaited(FirebaseService.init());
+}
+
 class ParentSchoolApp extends StatelessWidget {
   const ParentSchoolApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        // ─── Core Services ───
-        Provider<SecureStorageService>(
-          create: (_) => SecureStorageService(),
-        ),
-        ProxyProvider<SecureStorageService, DioClient>(
-          update: (_, secureStorage, __) => DioClient(secureStorage),
-        ),
-
-        // ─── Feature Providers ───
-        // Dev2 bu yerga o'zining providerlarini qo'shadi:
-        // ChangeNotifierProvider(create: (_) => AuthProvider(...)),
-        // ChangeNotifierProvider(create: (_) => UserProvider(...)),
-        // ChangeNotifierProvider(create: (_) => PaymentProvider(...)),
-        // ChangeNotifierProvider(create: (_) => AcademicProvider(...)),
-        // ChangeNotifierProvider(create: (_) => MenuProvider(...)),
-        // ChangeNotifierProvider(create: (_) => ChatProvider(...)),
-      ],
-      child: MaterialApp.router(
-        title: 'Parent School',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        routerConfig: AppRouter.router,
-      ),
+    return MaterialApp.router(
+      title: 'Ranch School Parent',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      routerConfig: AppRouter.router,
     );
   }
 }

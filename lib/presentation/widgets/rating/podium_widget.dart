@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
 /// Podium Widget - Displays the top 3 students in the rating
-///
-/// Sprint 7 - Rating Module
 class PodiumWidget extends StatelessWidget {
   final Map<String, dynamic> first;
   final Map<String, dynamic> second;
@@ -81,12 +79,12 @@ class PodiumWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [borderColor, borderColor.withOpacity(0.5)],
+                  colors: [borderColor, borderColor.withValues(alpha: 0.5)],
                 ),
               ),
               child: CircleAvatar(
                 radius: avatarSize / 2,
-                backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
                 child: Text(
                   data['name'][0],
                   style: TextStyle(
@@ -130,7 +128,7 @@ class PodiumWidget extends StatelessWidget {
         Text(
           '${data['points']} ball',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontSize: 12,
           ),
         ),

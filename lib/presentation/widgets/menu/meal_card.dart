@@ -44,11 +44,11 @@ class MealCard extends StatelessWidget {
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       height: 160,
-                      color: AppColors.primaryBlue.withOpacity(0.1),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
                       child: Icon(
                         Icons.restaurant_rounded,
                         size: 60,
-                        color: AppColors.primaryBlue.withOpacity(0.3),
+                        color: AppColors.primaryBlue.withValues(alpha: 0.3),
                       ),
                     );
                   },
@@ -63,7 +63,7 @@ class MealCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -122,7 +122,7 @@ class MealCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -130,7 +130,7 @@ class MealCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 if (ingredients.isNotEmpty) ...[
-                  Text(
+                  const Text(
                     'Tarkibi:',
                     style: TextStyle(
                       fontSize: 13,
@@ -149,12 +149,12 @@ class MealCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.border.withOpacity(0.5),
+                          color: AppColors.border.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           item,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textPrimary,
                           ),

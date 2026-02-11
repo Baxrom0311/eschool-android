@@ -1,45 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/rating_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../../data/models/rating_model.dart';
 import '../../../core/constants/app_colors.dart';
 
 /// Rating Screen - Class and School student rankings
-///
-/// Sprint 7 - Task 1
-class RatingScreen extends StatefulWidget {
+class RatingScreen extends ConsumerStatefulWidget {
   const RatingScreen({super.key});
 
   @override
-  State<RatingScreen> createState() => _RatingScreenState();
+  ConsumerState<RatingScreen> createState() => _RatingScreenState();
 }
 
-class _RatingScreenState extends State<RatingScreen> {
+class _RatingScreenState extends ConsumerState<RatingScreen> {
   int _selectedTab = 0; // 0: Sinfda, 1: Maktabda
 
-  // Hardcoded Mock Data inside build/state
-  final List<Map<String, dynamic>> _topStudents = [
-    {'name': 'Rahimov Aziz', 'points': 1200, 'rank': 1, 'isMe': true},
-    {'name': 'Karimov Jamshid', 'points': 1050, 'rank': 2},
-    {'name': 'Salimova Dilnoza', 'points': 980, 'rank': 3},
-  ];
-
-  final List<Map<String, dynamic>> _otherStudents = [
-    {'name': 'Umarov Bekzod', 'points': 950, 'rank': 4},
-    {'name': 'Tosheva Nodira', 'points': 920, 'rank': 5},
-    {'name': 'Aliyev Sardor', 'points': 890, 'rank': 6},
-    {'name': 'Qodirova Malika', 'points': 860, 'rank': 7},
-    {'name': 'Yusupova Gulnora', 'points': 830, 'rank': 8},
-    {'name': 'Sardorbek Aliyev', 'points': 820, 'rank': 9},
-    {'name': 'Malika Ergasheva', 'points': 815, 'rank': 10},
-    {'name': 'Dilnozaxon Rahmonova', 'points': 810, 'rank': 11},
-    {
-      'name': 'Azizbek Rahimov',
-      'points': 805,
-      'rank': 12,
-      'isMe': true
-    }, // My Rank
-  ];
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      final child = ref.read(userProvider).selectedChild;
+      if (child?.classId != null) {
+        ref.read(ratingProvider.notifier).loadClassRating(child!.classId!);
+      } else {
+        ref.read(ratingProvider.notifier).loadSchoolRating();
+      }
+      ref.read(ratingProvider.notifier).loadSchoolRating();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(ratingProvider);
+    final currentList = _selectedTab == 0
+        ? state.classRating
+        : state.schoolRating;
+
+    // Sort to be sure
+    final sortedList = List<RatingModel>.from(currentList)
+      ..sort((a, b) => a.rank.compareTo(b.rank));
+
+    // Top 3
+    final top3 = sortedList.take(3).toList();
+    // Others
+    final others = sortedList.length > 3
+        ? sortedList.sublist(3)
+        : <RatingModel>[];
+
+    if (state.isLoading && currentList.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -47,13 +59,13 @@ class _RatingScreenState extends State<RatingScreen> {
           // ─── Blue Header with Podium ───
           Container(
             width: double.infinity,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
               ),
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(32),
                 bottomRight: Radius.circular(32),
               ),
@@ -76,11 +88,13 @@ class _RatingScreenState extends State<RatingScreen> {
 
                   // ─── Segmented Toggle ───
                   Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 8,
+                    ),
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -92,40 +106,52 @@ class _RatingScreenState extends State<RatingScreen> {
                   ),
 
                   // ─── Podium Content ───
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // 2nd Place
-                        _PodiumItem(
-                          name: _topStudents[1]['name'],
-                          score: _topStudents[1]['points'],
-                          rank: 2,
-                          avatarSize: 65,
-                          color: const Color(0xFFC0C0C0), // Silver
-                        ),
-                        // 1st Place
-                        _PodiumItem(
-                          name: _topStudents[0]['name'],
-                          score: _topStudents[0]['points'],
-                          rank: 1,
-                          avatarSize: 85,
-                          color: const Color(0xFFFFD700), // Gold
-                          isFirst: true,
-                        ),
-                        // 3rd Place
-                        _PodiumItem(
-                          name: _topStudents[2]['name'],
-                          score: _topStudents[2]['points'],
-                          rank: 3,
-                          avatarSize: 65,
-                          color: const Color(0xFFCD7F32), // Bronze
-                        ),
-                      ],
+                  if (top3.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // 2nd Place
+                          if (top3.length > 1)
+                            _PodiumItem(
+                              name: top3[1].studentName,
+                              score: top3[1].totalScore,
+                              rank: 2,
+                              avatarSize: 65,
+                              color: const Color(0xFFC0C0C0), // Silver
+                            ),
+                          // 1st Place
+                          if (top3.isNotEmpty)
+                            _PodiumItem(
+                              name: top3[0].studentName,
+                              score: top3[0].totalScore,
+                              rank: 1,
+                              avatarSize: 85,
+                              color: const Color(0xFFFFD700), // Gold
+                              isFirst: true,
+                            ),
+                          // 3rd Place
+                          if (top3.length > 2)
+                            _PodiumItem(
+                              name: top3[2].studentName,
+                              score: top3[2].totalScore,
+                              rank: 3,
+                              avatarSize: 65,
+                              color: const Color(0xFFCD7F32), // Bronze
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
+                  if (top3.isEmpty && !state.isLoading)
+                    const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Text(
+                        "Ma'lumot yo'q",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -135,19 +161,20 @@ class _RatingScreenState extends State<RatingScreen> {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              itemCount: _otherStudents.length,
+              itemCount: others.length,
               itemBuilder: (context, index) {
-                final student = _otherStudents[index];
+                final student = others[index];
 
-                if (student['isMe'] == true) {
+                if (student.isCurrent) {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withOpacity(0.08),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                          color: AppColors.primaryBlue.withOpacity(0.3)),
+                        color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: _buildStudentTile(student),
                   );
@@ -169,7 +196,15 @@ class _RatingScreenState extends State<RatingScreen> {
     bool isSelected = _selectedTab == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedTab = index),
+        onTap: () {
+          setState(() => _selectedTab = index);
+          final child = ref.read(userProvider).selectedChild;
+          if (index == 0 && child?.classId != null) {
+            ref.read(ratingProvider.notifier).loadClassRating(child!.classId!);
+          } else {
+            ref.read(ratingProvider.notifier).loadSchoolRating();
+          }
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
@@ -191,17 +226,17 @@ class _RatingScreenState extends State<RatingScreen> {
     );
   }
 
-  Widget _buildStudentTile(Map<String, dynamic> student) {
+  Widget _buildStudentTile(RatingModel student) {
     return ListTile(
       leading: SizedBox(
         width: 70,
         child: Row(
           children: [
             Text(
-              '${student['rank']}',
+              '${student.rank}',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: student['isMe'] == true
+                color: student.isCurrent
                     ? AppColors.primaryBlue
                     : AppColors.textSecondary,
               ),
@@ -209,27 +244,28 @@ class _RatingScreenState extends State<RatingScreen> {
             const SizedBox(width: 12),
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+              backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
               child: Text(
-                student['name'][0],
-                style:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                student.studentName.isNotEmpty ? student.studentName[0] : 'U',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
         ),
       ),
       title: Text(
-        student['name'],
+        student.studentName,
         style: TextStyle(
           fontSize: 15,
-          fontWeight:
-              student['isMe'] == true ? FontWeight.bold : FontWeight.normal,
+          fontWeight: student.isCurrent ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       trailing: Text(
-        '${student['points']} ball',
-        style: TextStyle(
+        '${student.totalScore} ball',
+        style: const TextStyle(
           fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
         ),
@@ -241,7 +277,7 @@ class _RatingScreenState extends State<RatingScreen> {
 /// Internal Podium Item Widget
 class _PodiumItem extends StatelessWidget {
   final String name;
-  final int score;
+  final num score; // Changed from int to num to handle double
   final int rank;
   final double avatarSize;
   final Color color;
@@ -278,7 +314,7 @@ class _PodiumItem extends StatelessWidget {
                 border: Border.all(color: color, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.3),
+                    color: color.withValues(alpha: 0.3),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),
@@ -286,7 +322,7 @@ class _PodiumItem extends StatelessWidget {
               ),
               child: CircleAvatar(
                 radius: avatarSize / 2,
-                backgroundColor: Colors.white.withOpacity(0.2),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
                 child: Text(
                   name[0],
                   style: TextStyle(
@@ -330,7 +366,7 @@ class _PodiumItem extends StatelessWidget {
         Text(
           '$score',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),

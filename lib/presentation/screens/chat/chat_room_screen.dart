@@ -5,64 +5,60 @@ import '../../widgets/chat/message_bubble.dart';
 /// Chat Room Screen - Direct messaging interface
 ///
 /// Sprint 6 - Task 2
-class ChatRoomScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/chat_provider.dart';
+import '../../../core/utils/formatters.dart';
+
+/// Chat Room Screen - Direct messaging interface
+class ChatRoomScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? chatData;
 
   const ChatRoomScreen({super.key, this.chatData});
 
   @override
-  State<ChatRoomScreen> createState() => _ChatRoomScreenState();
+  ConsumerState<ChatRoomScreen> createState() => _ChatRoomScreenState();
 }
 
-class _ChatRoomScreenState extends State<ChatRoomScreen> {
+class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   final TextEditingController _controller = TextEditingController();
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'text':
-          'Assalomu alaykum, Malika opa. Oylik imtihon qachon bo\'lishi aniq bo\'ldimi?',
-      'time': '10:15',
-      'isMe': true,
-    },
-    {
-      'text':
-          'Vaalaykum assalom. Ha, kelasi dushanba kuni 2-parada o\'tkazamiz.',
-      'time': '10:20',
-      'isMe': false,
-    },
-    {
-      'text':
-          'Tushunarli, rahmat! Tayyorlov materiallarini qayerdan olsak bo\'ladi?',
-      'time': '10:22',
-      'isMe': true,
-    },
-    {
-      'text':
-          'Men hozir "Vazifalar" bo\'limiga barcha kerakli fayllarni yuklab qo\'ydim. O\'sha yerdan ko\'rishingiz mumkin.',
-      'time': '10:25',
-      'isMe': false,
-    },
-  ];
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.chatData != null && widget.chatData!['id'] != null) {
+      Future.microtask(() {
+        ref.read(chatRoomProvider.notifier).openConversation(widget.chatData!['id']);
+      });
+    }
+  }
 
   void _sendMessage() {
     if (_controller.text.trim().isEmpty) return;
+    
+    ref.read(chatRoomProvider.notifier).sendMessage(_controller.text.trim());
+    _controller.clear();
+  }
 
-    setState(() {
-      _messages.add({
-        'text': _controller.text.trim(),
-        'time': 'Hozir',
-        'isMe': true,
-      });
-      _controller.clear();
-    });
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    // Don't close conversation here to keep state if user navigates back and forth?
+    // Or do close it? Typically yes, close it.
+    // ref.read(chatRoomProvider.notifier).closeConversation(); 
+    // Doing this in dispose might be tricky with riverpod auto-dispose or keepAlive.
+    // Let's assume manual close for now or let provider handle it.
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final chat = widget.chatData ??
-        {
-          'name': 'Malika Qodirova',
-          'isOnline': true,
-        };
+    final state = ref.watch(chatRoomProvider);
+    final messages = state.messages;
+    
+    final chatName = widget.chatData?['name'] ?? 'Chat';
+    final isOnline = widget.chatData?['isOnline'] ?? false;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -75,10 +71,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+              backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
               child: Text(
-                chat['name'][0],
-                style: TextStyle(
+                chatName.isNotEmpty ? chatName[0] : '?',
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primaryBlue,
@@ -90,17 +86,17 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  chat['name'],
+                  chatName,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  chat['isOnline'] ? 'Onlayn' : 'Oflayn',
+                  isOnline ? 'Onlayn' : 'Oflayn',
                   style: TextStyle(
                     fontSize: 12,
-                    color: chat['isOnline']
+                    color: isOnline
                         ? AppColors.success
                         : AppColors.textSecondary,
                   ),
@@ -123,18 +119,22 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                return MessageBubble(
-                  text: msg['text'],
-                  time: msg['time'],
-                  isMe: msg['isMe'],
-                );
-              },
-            ),
+            child: state.isLoading && messages.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    controller: _scrollController,
+                    reverse: true, // Messages usually start from bottom
+                    padding: const EdgeInsets.all(20),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = messages[index];
+                      return MessageBubble(
+                        text: msg.content ?? '',
+                        time: Formatters.formatTime(msg.timestamp),
+                        isMe: msg.isMe, 
+                      );
+                    },
+                  ),
           ),
 
           // ─── Input Area ───
@@ -145,7 +145,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -168,12 +168,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Xabar yozing...',
                       hintStyle: TextStyle(color: AppColors.textSecondary),
                       border: InputBorder.none,
                       contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 12),
+                          EdgeInsets.symmetric(horizontal: 12),
                     ),
                   ),
                 ),
@@ -183,11 +183,19 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     color: AppColors.primaryBlue,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: IconButton(
-                    icon: const Icon(Icons.send_rounded),
-                    color: Colors.white,
-                    onPressed: _sendMessage,
-                  ),
+                  child: state.isSending 
+                      ? const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: SizedBox(
+                             width: 24, height: 24, 
+                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                          ),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.send_rounded),
+                          color: Colors.white,
+                          onPressed: _sendMessage,
+                        ),
                 ),
               ],
             ),
