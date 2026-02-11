@@ -83,7 +83,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
           .read(assignmentsProvider.notifier)
           .loadAssignmentDetails(_assignmentId);
     } else {
-      final error = ref.read(assignmentsProvider).error ?? 'Yuborishda xatolik';
+      final error = ref.read(assignmentsProvider).error?.toString() ?? 'Yuborishda xatolik';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error)),
       );
@@ -92,8 +92,8 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final assignmentsState = ref.watch(assignmentsProvider);
-    final loaded = assignmentsState.selectedAssignment;
+    final assignmentsAsync = ref.watch(assignmentsProvider);
+    final loaded = assignmentsAsync.valueOrNull?.selectedAssignment;
     final assignment = loaded != null && loaded.id == _assignmentId
         ? loaded
         : widget.assignment;
@@ -316,10 +316,10 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                     const SizedBox(height: 8),
                     CustomButton(
                       text: 'Vazifani yuborish',
-                      onPressed: (_isSubmitting || assignmentsState.isLoading)
+                      onPressed: (_isSubmitting || assignmentsAsync.isLoading)
                           ? null
                           : _submitAssignment,
-                      isLoading: _isSubmitting || assignmentsState.isLoading,
+                      isLoading: _isSubmitting || assignmentsAsync.isLoading,
                       height: 52,
                       borderRadius: 12,
                     ),

@@ -4,13 +4,14 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/error/exceptions.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/auth_response.dart';
+import 'api_helpers.dart';
 
 /// Auth API — Autentifikatsiya bilan bog'liq barcha API so'rovlari
 ///
 /// Bu klass faqat HTTP so'rov yuboradi va javobni parse qiladi.
 /// Biznes logika (token saqlash, xatolik qayta ishlash)
 /// [AuthRepository] da amalga oshiriladi.
-class AuthApi {
+class AuthApi with ApiHelpers {
   final DioClient _client;
 
   AuthApi(this._client);
@@ -37,7 +38,7 @@ class AuthApi {
         options: Options(contentType: Headers.formUrlEncodedContentType),
       );
 
-      final root = _asMap(response.data);
+      final root = asMap(response.data);
       final normalized = _normalizeAuthResponse(root);
       if ((normalized['token'] as String).isEmpty) {
         throw const ServerException(
@@ -47,7 +48,7 @@ class AuthApi {
       }
       return AuthResponse.fromJson(normalized);
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -95,7 +96,7 @@ class AuthApi {
     } on DioException catch (e) {
       // Logout xatoligi sessiyani tugatishga to'sqinlik qilmasligi kerak
       // Lokal tokenlar baribir tozalanadi
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -110,7 +111,7 @@ class AuthApi {
       final statusCode = e.response?.statusCode;
       // OAS'da bu endpoint yo'q bo'lishi mumkin, ilova oqimini to'xtatmaymiz.
       if (statusCode == 404 || statusCode == 405) return;
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -127,69 +128,8 @@ class AuthApi {
     );
   }
 
-  /// DioException → Custom Exception mapping
-  ///
-  /// Barcha API xatoliklarini yagona formatga keltiradi.
-  Exception _handleDioError(DioException e) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-      case DioExceptionType.connectionError:
-        return const NetworkException(
-          message: 'Internet bilan aloqa yo\'q. Tarmoqni tekshiring.',
-        );
-
-      case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode;
-        final data = e.response?.data;
-
-        String message = 'Server xatoligi';
-
-        // API dan kelgan xabarni olish
-        if (data is Map<String, dynamic>) {
-          message =
-              (data['message'] as String?) ??
-              (data['error'] as String?) ??
-              message;
-        }
-
-        // Status code ga qarab exception turi
-        if (statusCode == 401) {
-          return AuthException(message: message);
-        }
-
-        if (statusCode == 422 && data is Map<String, dynamic>) {
-          final errors = data['errors'];
-          Map<String, List<String>>? validationErrors;
-
-          if (errors is Map<String, dynamic>) {
-            validationErrors = errors.map(
-              (key, value) => MapEntry(
-                key,
-                (value is List) ? value.cast<String>() : [value.toString()],
-              ),
-            );
-          }
-
-          return ValidationException(
-            message: message,
-            errors: validationErrors,
-          );
-        }
-
-        return ServerException(message: message, statusCode: statusCode);
-
-      case DioExceptionType.cancel:
-        return const ServerException(message: 'So\'rov bekor qilindi');
-
-      default:
-        return const ServerException(message: 'Noma\'lum xatolik yuz berdi');
-    }
-  }
-
   Map<String, dynamic> _normalizeAuthResponse(Map<String, dynamic> raw) {
-    final user = _asMap(raw['user']);
+    final user = asMap(raw['user']);
     final roles = user['roles'] is List
         ? (user['roles'] as List).map((e) => e.toString()).toList()
         : const <String>[];
@@ -203,32 +143,20 @@ class AuthApi {
     return <String, dynamic>{
       'token': (raw['token'] ?? raw['access_token'] ?? '').toString(),
       'user': <String, dynamic>{
-        'id': _toInt(user['id']),
+        'id': toInt(user['id']),
         'full_name': fullName,
         'phone': user['phone']?.toString() ?? '',
         'email': email,
         'avatar_url': user['avatar_url'] ?? user['photo_url'],
         'role': (user['role'] ?? (roles.isNotEmpty ? roles.first : 'parent'))
             .toString(),
-        'balance': _toInt(user['balance']),
+        'balance': toInt(user['balance']),
         'contract_number': user['contract_number']?.toString(),
-        'monthly_fee': _toInt(user['monthly_fee']),
+        'monthly_fee': toInt(user['monthly_fee']),
         'children': user['children'] is List ? user['children'] : const [],
         'created_at': user['created_at']?.toString(),
         'notifications_enabled': user['notifications_enabled'] ?? true,
       },
     };
-  }
-
-  Map<String, dynamic> _asMap(dynamic data) {
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return <String, dynamic>{};
-  }
-
-  int _toInt(dynamic value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

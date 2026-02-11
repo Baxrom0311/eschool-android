@@ -42,14 +42,13 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final assignmentsState = ref.watch(assignmentsProvider);
-    final assignments = assignmentsState.assignments;
-    final isLoading = assignmentsState.isLoading;
+    final assignmentsAsync = ref.watch(assignmentsProvider);
+    
+    // Extract data safely
+    final assignments = assignmentsAsync.valueOrNull?.assignments ?? [];
+    final isLoading = assignmentsAsync.isLoading;
+    final hasError = assignmentsAsync.hasError;
 
-    // Listen to tab changes or child changes if needed?
-    // Changing child is global, so initState/build usually handles it if we watch userProvider?
-    // But we need to reload. `selectedChild` comes from `userProvider`.
-    // It's better to listen to selectedChild changes to reload.
     ref.listen(selectedChildProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
         _loadAssignments();
@@ -241,9 +240,13 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
           // ═══════════════════════════════════════════════════════
           // Assignment Cards List
           // ═══════════════════════════════════════════════════════
-          if (isLoading)
+          if (isLoading && assignments.isEmpty)
             const SliverFillRemaining(
               child: Center(child: CircularProgressIndicator()),
+            )
+          else if (hasError && assignments.isEmpty)
+             SliverFillRemaining(
+              child: Center(child: Text('Xatolik: ${assignmentsAsync.error}')),
             )
           else if (assignments.isEmpty)
             const SliverFillRemaining(

@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/routing/app_router.dart';
 import 'core/storage/shared_prefs_service.dart';
@@ -20,12 +21,15 @@ void main() async {
   );
 }
 
+
+
 Future<void> _bootstrap() async {
   try {
     await SharedPrefsService.init();
+    await initializeDateFormatting('uz', null);
   } catch (e) {
     if (kDebugMode) {
-      log('SharedPrefs init error: $e', name: 'Bootstrap');
+      log('Bootstrap error: $e', name: 'Bootstrap');
     }
   }
 

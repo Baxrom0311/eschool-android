@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 
-import '../../core/error/exceptions.dart';
 import '../../core/error/failures.dart';
+import '../../core/utils/safe_api_call.dart';
 import '../datasources/remote/user_api.dart';
 import '../models/child_model.dart';
 import '../models/user_model.dart';
@@ -13,20 +13,10 @@ class UserRepository {
   UserRepository({required UserApi userApi}) : _userApi = userApi;
 
   /// Profil ma'lumotlarini olish
-  Future<Either<Failure, UserModel>> getProfile() async {
-    try {
-      final user = await _userApi.getProfile();
-      return Right(user);
-    } on AuthException catch (e) {
-      return Left(AuthFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Profilni yuklashda xatolik: ${e.toString()}'));
-    }
-  }
+  Future<Either<Failure, UserModel>> getProfile() => safeApiCall(
+        () => _userApi.getProfile(),
+        errorMessage: 'Profilni yuklashda xatolik',
+      );
 
   /// Profilni yangilash
   Future<Either<Failure, UserModel>> updateProfile({
@@ -34,73 +24,33 @@ class UserRepository {
     String? email,
     String? phone,
     bool? notificationsEnabled,
-  }) async {
-    try {
-      final user = await _userApi.updateProfile(
-        fullName: fullName,
-        email: email,
-        phone: phone,
-        notificationsEnabled: notificationsEnabled,
+  }) =>
+      safeApiCall(
+        () => _userApi.updateProfile(
+          fullName: fullName,
+          email: email,
+          phone: phone,
+          notificationsEnabled: notificationsEnabled,
+        ),
+        errorMessage: 'Profilni yangilashda xatolik',
       );
-      return Right(user);
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message, e.errors));
-    } on AuthException catch (e) {
-      return Left(AuthFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Profilni yangilashda xatolik: ${e.toString()}'));
-    }
-  }
 
   /// Avatar yuklash
-  Future<Either<Failure, String>> uploadAvatar(String filePath) async {
-    try {
-      final avatarUrl = await _userApi.uploadAvatar(filePath);
-      return Right(avatarUrl);
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Rasm yuklashda xatolik: ${e.toString()}'));
-    }
-  }
+  Future<Either<Failure, String>> uploadAvatar(String filePath) => safeApiCall(
+        () => _userApi.uploadAvatar(filePath),
+        errorMessage: 'Rasm yuklashda xatolik',
+      );
 
   /// Farzandlar ro'yxati
-  Future<Either<Failure, List<ChildModel>>> getChildren() async {
-    try {
-      final children = await _userApi.getChildren();
-      return Right(children);
-    } on AuthException catch (e) {
-      return Left(AuthFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(
-        ServerFailure('Farzandlarni yuklashda xatolik: ${e.toString()}'),
+  Future<Either<Failure, List<ChildModel>>> getChildren() => safeApiCall(
+        () => _userApi.getChildren(),
+        errorMessage: 'Farzandlarni yuklashda xatolik',
       );
-    }
-  }
 
   /// Bitta farzand tafsilotlari
-  Future<Either<Failure, ChildModel>> getChildDetails(int childId) async {
-    try {
-      final child = await _userApi.getChildDetails(childId);
-      return Right(child);
-    } on AuthException catch (e) {
-      return Left(AuthFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Ma\'lumot yuklashda xatolik: ${e.toString()}'));
-    }
-  }
+  Future<Either<Failure, ChildModel>> getChildDetails(int childId) =>
+      safeApiCall(
+        () => _userApi.getChildDetails(childId),
+        errorMessage: 'Ma\'lumot yuklashda xatolik',
+      );
 }

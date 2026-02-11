@@ -1,12 +1,13 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
-import '../../../core/error/exceptions.dart';
+
 import '../../../core/network/dio_client.dart';
 import '../../models/menu_model.dart';
+import 'api_helpers.dart';
 
 /// Menu API — kunlik va haftalik ovqat menyusi
-class MenuApi {
+class MenuApi with ApiHelpers {
   final DioClient _client;
 
   MenuApi(this._client);
@@ -31,7 +32,7 @@ class MenuApi {
         studentId: studentId,
       );
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -55,7 +56,7 @@ class MenuApi {
       }
       return result;
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -64,7 +65,7 @@ class MenuApi {
     String? dateOverride,
     int? studentId,
   }) {
-    final root = _asMap(data);
+    final root = asMap(data);
     final byChild = root['meals_by_child'] is Map
         ? Map<String, dynamic>.from(root['meals_by_child'] as Map)
         : <String, dynamic>{};
@@ -89,15 +90,15 @@ class MenuApi {
     }
 
     for (final entry in entries) {
-      final childPayload = _asMap(entry.value);
-      final report = _asMap(childPayload['report']);
+      final childPayload = asMap(entry.value);
+      final report = asMap(childPayload['report']);
       if (report.isEmpty) continue;
 
       final reportDate = (report['meal_date'] ?? date).toString();
       final media = report['media'] is List
           ? (report['media'] as List).whereType<Map>().toList()
           : const <Map>[];
-      final groupName = _asMap(childPayload['group'])['name']?.toString() ?? '';
+      final groupName = asMap(childPayload['group'])['name']?.toString() ?? '';
 
       void addMeal({
         required MealType mealType,
@@ -107,7 +108,7 @@ class MenuApi {
       }) {
         if (name == null || name.isEmpty) return;
         final image = mediaItems
-            .map((e) => _asMap(e)['file_path']?.toString())
+            .map((e) => asMap(e)['file_path']?.toString())
             .whereType<String>()
             .where((e) => e.isNotEmpty)
             .cast<String?>()
@@ -115,12 +116,12 @@ class MenuApi {
 
         mapped.add(
           MenuModel.fromJson({
-            'id': _toInt(report['id']) * 10 + sequence++,
+            'id': toInt(report['id']) * 10 + sequence++,
             'date': reportDate,
             'meal_type': _mealTypeValue(mealType),
             'dishes': [
               {
-                'id': _toInt(report['id']) * 100 + sequence,
+                'id': toInt(report['id']) * 100 + sequence,
                 'name': name,
                 'description': [
                   if (groupName.isNotEmpty) 'Guruh: $groupName',
@@ -174,7 +175,7 @@ class MenuApi {
 
   List<Map> _mediaByType(List<Map> media, String mealType) {
     return media.where((item) {
-      final row = _asMap(item);
+      final row = asMap(item);
       return row['meal_type']?.toString() == mealType;
     }).toList();
   }
@@ -204,41 +205,5 @@ class MenuApi {
   DateTime? _parseDate(String? value) {
     if (value == null || value.isEmpty) return null;
     return DateTime.tryParse(value);
-  }
-
-  Map<String, dynamic> _asMap(dynamic data) {
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return <String, dynamic>{};
-  }
-
-  int _toInt(dynamic value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
-  }
-
-  Exception _handleDioError(DioException e) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-      case DioExceptionType.connectionError:
-        return const NetworkException();
-      case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode;
-        final data = e.response?.data;
-        String message = 'Server xatoligi';
-        if (data is Map<String, dynamic>) {
-          message =
-              (data['message'] as String?) ??
-              (data['error'] as String?) ??
-              message;
-        }
-        if (statusCode == 401) return AuthException(message: message);
-        return ServerException(message: message, statusCode: statusCode);
-      default:
-        return const ServerException();
-    }
   }
 }

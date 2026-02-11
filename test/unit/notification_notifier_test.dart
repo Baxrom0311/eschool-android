@@ -4,9 +4,11 @@ import 'package:parent_school_app/data/datasources/remote/notification_api.dart'
 import 'package:parent_school_app/data/models/notification_model.dart';
 import 'package:parent_school_app/core/error/exceptions.dart';
 
+import 'package:parent_school_app/data/datasources/remote/api_helpers.dart';
+
 // Mock NotificationApi (using extends because it's a class not interface, 
 // strictly we should use Mockito's generate, but manual mock is faster here)
-class MockNotificationApi implements NotificationApi {
+class MockNotificationApi with ApiHelpers implements NotificationApi {
   bool shouldThrowError = false;
 
   @override

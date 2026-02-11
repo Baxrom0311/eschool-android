@@ -4,9 +4,10 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/error/exceptions.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/payment_model.dart';
+import 'api_helpers.dart';
 
 /// Payment API — to'lov bilan bog'liq barcha API so'rovlari
-class PaymentApi {
+class PaymentApi with ApiHelpers {
   final DioClient _client;
 
   PaymentApi(this._client);
@@ -23,12 +24,12 @@ class PaymentApi {
           if (studentId != null && studentId > 0) 'student_id': studentId,
         },
       );
-      final data = _asMap(response.data);
+      final data = asMap(response.data);
       final allPayments = _extractPaymentRows(data, studentId: studentId);
 
-      final monthlyFee = _toInt(data['monthly_fee'] ?? data['default_amount']);
-      final balance = _toInt(data['balance']);
-      final explicitDebt = _toInt(data['debt_amount']);
+      final monthlyFee = toInt(data['monthly_fee'] ?? data['default_amount']);
+      final balance = toInt(data['balance']);
+      final explicitDebt = toInt(data['debt_amount']);
       final debt = explicitDebt > 0
           ? explicitDebt
           : (monthlyFee > balance ? (monthlyFee - balance) : 0);
@@ -41,7 +42,7 @@ class PaymentApi {
         'debt_amount': debt,
       });
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -59,7 +60,7 @@ class PaymentApi {
           if (studentId != null && studentId > 0) 'student_id': studentId,
         },
       );
-      final root = _asMap(response.data);
+      final root = asMap(response.data);
       var payments = _extractPaymentRows(
         root,
         studentId: studentId,
@@ -78,7 +79,7 @@ class PaymentApi {
       final end = (start + perPage).clamp(0, payments.length);
       return payments.sublist(start, end);
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -166,7 +167,7 @@ class PaymentApi {
     final method = _normalizeMethod(row['payment_method']?.toString());
     final status = _normalizeStatus(statusValue);
 
-    final group = _asMap(row['group']);
+    final group = asMap(row['group']);
     final payType = row['pay_type']?.toString();
     final note = row['note']?.toString();
     final periodMonth = row['period_month']?.toString();
@@ -180,10 +181,10 @@ class PaymentApi {
         ].join(' ');
 
     return PaymentModel.fromJson({
-      'id': _toInt(row['id']) == 0
+      'id': toInt(row['id']) == 0
           ? row.toString().hashCode.abs()
-          : _toInt(row['id']),
-      'amount': _toInt(row['amount']),
+          : toInt(row['id']),
+      'amount': toInt(row['amount']),
       'status': status,
       'method': method,
       'description': description,
@@ -229,43 +230,5 @@ class PaymentApi {
     if (dates.isEmpty) return null;
     dates.sort();
     return dates.last;
-  }
-
-  Map<String, dynamic> _asMap(dynamic data) {
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return <String, dynamic>{};
-  }
-
-  int _toInt(dynamic value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
-  }
-
-  Exception _handleDioError(DioException e) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-      case DioExceptionType.connectionError:
-        return const NetworkException();
-      case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode;
-        final data = e.response?.data;
-        String message = 'Server xatoligi';
-        if (data is Map<String, dynamic>) {
-          message =
-              (data['message'] as String?) ??
-              (data['error'] as String?) ??
-              message;
-        }
-        if (statusCode == 401) {
-          return AuthException(message: message);
-        }
-        return ServerException(message: message, statusCode: statusCode);
-      default:
-        return const ServerException();
-    }
   }
 }

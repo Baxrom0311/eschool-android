@@ -28,7 +28,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -41,8 +40,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
 
-    setState(() => _isLoading = true);
-
     try {
       await ref
           .read(authProvider.notifier)
@@ -53,30 +50,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await _completeAuthFlow(defaultError: 'Kirish amalga oshmadi');
     } catch (e) {
       _showError('Kirish amalga oshmadi: ${e.toString()}');
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    FocusScope.of(context).unfocus();
-    setState(() => _isLoading = true);
 
-    try {
-      await ref.read(authProvider.notifier).signInWithGoogle();
-      await _completeAuthFlow(
-        defaultError: 'Google orqali kirish amalga oshmadi',
-      );
-    } catch (e) {
-      _showError('Google kirish xatoligi: ${e.toString()}');
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
 
   Future<void> _completeAuthFlow({required String defaultError}) async {
     final authState = ref.read(authProvider);
@@ -121,6 +98,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final topHeight = size.height * 0.4;
+    final isLoading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -341,7 +319,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           SizedBox(
                             height: 56,
                             child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleLogin,
+                              onPressed: isLoading ? null : _handleLogin,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primaryBlue,
                                 foregroundColor: Colors.white,
@@ -351,7 +329,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   borderRadius: BorderRadius.circular(18),
                                 ),
                               ),
-                              child: _isLoading
+                              child: isLoading
                                   ? const SizedBox(
                                       width: 22,
                                       height: 22,
@@ -419,9 +397,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: _AuthOptionCard(
                                   label: 'Google',
                                   icon: Icons.g_mobiledata_rounded,
-                                  onTap: _isLoading
+                                  onTap: isLoading
                                       ? null
-                                      : _handleGoogleSignIn,
+                                      : () => _showError(
+                                            'Google orqali kirish tez kunda ishga tushiriladi',
+                                          ),
                                   iconColor: AppColors.primaryBlue,
                                 ),
                               ),
@@ -430,7 +410,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: _AuthOptionCard(
                                   label: 'QR Kod',
                                   icon: Icons.qr_code_2_rounded,
-                                  onTap: _isLoading ? null : _handleQrLogin,
+                                  onTap: isLoading ? null : _handleQrLogin,
                                   iconColor: AppColors.textPrimary,
                                 ),
                               ),
@@ -449,8 +429,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () =>
-                                    context.push(RouteNames.register),
+                                onPressed: () => _showError(
+                                  'Ro\'yxatdan o\'tish tez kunda ishga tushiriladi',
+                                ),
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: Size.zero,

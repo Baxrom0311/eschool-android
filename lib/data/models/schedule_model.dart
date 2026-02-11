@@ -70,6 +70,23 @@ class ScheduleModel extends Equatable {
   /// Qisqa vaqt diapazoni: "08:00 - 08:45"
   String get timeRange => '$startTime - $endTime';
 
+  /// Hozir bu dars davom etyaptimi?
+  bool get isActive {
+    final now = DateTime.now();
+    final startParts = startTime.split(':');
+    final endParts = endTime.split(':');
+    if (startParts.length < 2 || endParts.length < 2) return false;
+
+    final startH = int.tryParse(startParts[0]) ?? -1;
+    final startM = int.tryParse(startParts[1]) ?? -1;
+    final endH = int.tryParse(endParts[0]) ?? -1;
+    final endM = int.tryParse(endParts[1]) ?? -1;
+    if (startH < 0 || startM < 0 || endH < 0 || endM < 0) return false;
+
+    final nowMin = now.hour * 60 + now.minute;
+    return nowMin >= startH * 60 + startM && nowMin <= endH * 60 + endM;
+  }
+
   @override
   List<Object?> get props => [
         id,

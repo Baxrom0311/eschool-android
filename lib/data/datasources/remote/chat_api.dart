@@ -4,9 +4,10 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/error/exceptions.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/chat_model.dart';
+import 'api_helpers.dart';
 
 /// Chat API — suhbatlar va xabarlar
-class ChatApi {
+class ChatApi with ApiHelpers {
   final DioClient _client;
 
   ChatApi(this._client);
@@ -15,7 +16,7 @@ class ChatApi {
   Future<List<ConversationModel>> getConversations() async {
     try {
       final response = await _client.get(ApiConstants.conversations);
-      final root = _asMap(response.data);
+      final root = asMap(response.data);
       final contacts = root['contacts'] is List
           ? (root['contacts'] as List).whereType<Map>().toList()
           : const <Map>[];
@@ -23,18 +24,18 @@ class ChatApi {
       return contacts.map((raw) {
         final contact = Map<String, dynamic>.from(raw);
         return ConversationModel.fromJson({
-          'id': _toInt(contact['id']),
+          'id': toInt(contact['id']),
           'participant_name': (contact['name'] ?? 'Foydalanuvchi').toString(),
           'participant_role': contact['role']?.toString(),
           'participant_avatar': contact['avatar_url']?.toString(),
           'last_message': contact['last_message']?.toString(),
           'last_message_at': contact['last_message_at']?.toString(),
-          'unread_count': _toInt(contact['unread_count']),
+          'unread_count': toInt(contact['unread_count']),
           'is_online': contact['is_online'] ?? false,
         });
       }).toList();
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -46,24 +47,24 @@ class ChatApi {
   }) async {
     try {
       final response = await _client.get(ApiConstants.messages(conversationId));
-      final root = _asMap(response.data);
+      final root = asMap(response.data);
       final messages = root['messages'] is List
           ? (root['messages'] as List).whereType<Map>().toList()
           : const <Map>[];
 
       final mapped = messages.map((raw) {
         final row = Map<String, dynamic>.from(raw);
-        final senderId = _toInt(row['sender_id']);
-        final receiverId = _toInt(row['receiver_id']);
+        final senderId = toInt(row['sender_id']);
+        final receiverId = toInt(row['receiver_id']);
         final isMine = senderId != 0 && senderId != conversationId;
         return MessageModel.fromJson({
-          'id': _toInt(row['id']) == 0
+          'id': toInt(row['id']) == 0
               ? row.toString().hashCode.abs()
-              : _toInt(row['id']),
+              : toInt(row['id']),
           'content': (row['body'] ?? row['content'] ?? '').toString(),
           'type': 'text',
           'sender_id': senderId,
-          'sender_name': (_asMap(row['sender'])['name'] ?? 'User $senderId')
+          'sender_name': (asMap(row['sender'])['name'] ?? 'User $senderId')
               .toString(),
           'is_mine': isMine,
           'created_at': (row['created_at'] ?? DateTime.now().toIso8601String())
@@ -80,7 +81,7 @@ class ChatApi {
       final end = (start + perPage).clamp(0, mapped.length);
       return mapped.sublist(start, end);
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -95,23 +96,26 @@ class ChatApi {
         ApiConstants.sendMessage(conversationId),
         data: {'receiver_id': conversationId, 'body': content},
       );
-      final root = _asMap(response.data);
+      final root = asMap(response.data);
       final message = root['message'] is Map<String, dynamic>
           ? Map<String, dynamic>.from(root['message'] as Map<String, dynamic>)
           : root;
 
-      final senderId = _toInt(message['sender_id']);
+      final senderId = toInt(message['sender_id']);
+      // Agar sender_id 0 bo'lsa, bu API tomondan to'ldirilmagan —
+      // biz yuborgan xabar ekanligini belgilaymiz.
+      final isMine = senderId == 0 || senderId != conversationId;
       return MessageModel.fromJson({
-        'id': _toInt(message['id']) == 0
+        'id': toInt(message['id']) == 0
             ? message.toString().hashCode.abs()
-            : _toInt(message['id']),
+            : toInt(message['id']),
         'content': (message['body'] ?? message['content'] ?? content)
             .toString(),
         'type': type,
         'sender_id': senderId,
-        'sender_name': (_asMap(message['sender'])['name'] ?? 'User $senderId')
+        'sender_name': (asMap(message['sender'])['name'] ?? 'User $senderId')
             .toString(),
-        'is_mine': senderId != 0 && senderId != conversationId,
+        'is_mine': isMine,
         'created_at':
             (message['created_at'] ?? DateTime.now().toIso8601String())
                 .toString(),
@@ -120,7 +124,7 @@ class ChatApi {
         'file_name': message['file_name']?.toString(),
       });
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -130,41 +134,5 @@ class ChatApi {
       message: 'Ushbu API versiyasida chat fayl yuborish endpointi mavjud emas',
       statusCode: 501,
     );
-  }
-
-  Map<String, dynamic> _asMap(dynamic data) {
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return <String, dynamic>{};
-  }
-
-  int _toInt(dynamic value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
-  }
-
-  Exception _handleDioError(DioException e) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-      case DioExceptionType.connectionError:
-        return const NetworkException();
-      case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode;
-        final data = e.response?.data;
-        String message = 'Server xatoligi';
-        if (data is Map<String, dynamic>) {
-          message =
-              (data['message'] as String?) ??
-              (data['error'] as String?) ??
-              message;
-        }
-        if (statusCode == 401) return AuthException(message: message);
-        return ServerException(message: message, statusCode: statusCode);
-      default:
-        return const ServerException();
-    }
   }
 }

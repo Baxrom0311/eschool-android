@@ -16,6 +16,9 @@ import '../../data/repositories/auth_repository.dart';
 // zanjirini tashkil qiladi (yuqoridan pastga)
 // ═══════════════════════════════════════════════════════════════
 
+/// Sentinel value for null-aware copyWith
+const _undefined = Object();
+
 /// SecureStorage instance — tokenlar saqlash uchun
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService();
@@ -112,13 +115,13 @@ class AuthState extends Equatable {
   AuthState copyWith({
     UserModel? user,
     bool? isLoading,
-    String? error,
+    Object? error = _undefined,
     bool? isAuthenticated,
   }) {
     return AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
-      error: error, // If passed explicitly (even null), we might want to change logic, but here simple replacement
+      error: error == _undefined ? this.error : error as String?,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
     );
   }

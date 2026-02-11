@@ -20,7 +20,9 @@ class DioClient {
         receiveTimeout: const Duration(
           milliseconds: ApiConstants.receiveTimeout,
         ),
-        sendTimeout: const Duration(milliseconds: ApiConstants.sendTimeout),
+        sendTimeout: kIsWeb
+            ? null
+            : const Duration(milliseconds: ApiConstants.sendTimeout),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

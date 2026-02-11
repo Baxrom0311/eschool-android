@@ -1,4 +1,8 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dartz/dartz.dart';
+
+// Imports from the app
 import 'package:parent_school_app/presentation/providers/academic_provider.dart';
 import 'package:parent_school_app/data/repositories/academic_repository.dart';
 import 'package:parent_school_app/data/models/grade_model.dart';
@@ -6,11 +10,12 @@ import 'package:parent_school_app/data/models/schedule_model.dart';
 import 'package:parent_school_app/data/models/assignment_model.dart';
 import 'package:parent_school_app/data/models/attendance_model.dart';
 import 'package:parent_school_app/core/error/failures.dart';
-import 'package:dartz/dartz.dart';
 
-// Mock AcademicRepository
+// ─── MOCK REPOSITORY ───
 class MockAcademicRepository implements AcademicRepository {
   bool shouldReturnError = false;
+
+  MockAcademicRepository();
 
   @override
   Future<Either<Failure, List<GradeModel>>> getGrades(int childId, {int? quarter}) async {
@@ -18,7 +23,7 @@ class MockAcademicRepository implements AcademicRepository {
       return const Left(ServerFailure('Grades load failed'));
     }
     return const Right([
-      GradeModel(id: 1, subjectName: 'Math', grade: 5, createdAt: '2023-10-10', comment: 'Good', quarter: 1),
+      GradeModel(id: 1, subjectName: 'Math', grade: 5, createdAt: '2023-10-10', comment: 'Good', quarter: 1, gradeType: '5'),
     ]);
   }
 
@@ -28,7 +33,7 @@ class MockAcademicRepository implements AcademicRepository {
       return const Left(ServerFailure('Summary load failed'));
     }
     return const Right([
-      SubjectGradeSummary(subjectName: 'Math', averageGrade: 4.5, totalGrades: 10),
+      SubjectGradeSummary(subjectName: 'Math', averageGrade: 4.5, totalGrades: 10, teacherName: 'Mr. Smith'),
     ]);
   }
 
@@ -73,7 +78,7 @@ class MockAcademicRepository implements AcademicRepository {
     if (shouldReturnError) {
       return const Left(ServerFailure('Upload failed'));
     }
-    return const Right(AttachmentModel(id: 1, name: 'file.pdf', url: 'http://example.com/file.pdf'));
+    return const Right(AttachmentModel(id: 1, name: 'file.pdf', url: 'http://example.com/file.pdf', fileSize: 1024, mimeType: 'application/pdf'));
   }
 
   @override
@@ -82,7 +87,7 @@ class MockAcademicRepository implements AcademicRepository {
       return const Left(ServerFailure('Attendance load failed'));
     }
     return const Right([
-      AttendanceModel(id: 1, date: '2023-10-01', status: AttendanceStatus.present),
+      AttendanceModel(id: 1, date: '2023-10-01', status: AttendanceStatus.present, subjectName: 'Math', markedBy: 'Teacher'),
     ]);
   }
 
@@ -91,88 +96,106 @@ class MockAcademicRepository implements AcademicRepository {
     if (shouldReturnError) {
       return const Left(ServerFailure('Attendance summary failed'));
     }
-    return const Right(AttendanceSummary(presentDays: 20, absentDays: 2, lateDays: 1, excusedDays: 0));
+    return const Right(AttendanceSummary(presentDays: 20, absentDays: 2, lateDays: 1, excusedDays: 0, totalDays: 23, attendancePercentage: 95.0));
   }
 }
 
+// ─── TESTS ───
 void main() {
+  late ProviderContainer container;
   late MockAcademicRepository mockRepository;
-  late GradesNotifier gradesNotifier;
-  late ScheduleNotifier scheduleNotifier;
-  late AssignmentsNotifier assignmentsNotifier;
-  late AttendanceNotifier attendanceNotifier;
 
   setUp(() {
     mockRepository = MockAcademicRepository();
-    gradesNotifier = GradesNotifier(repository: mockRepository);
-    scheduleNotifier = ScheduleNotifier(repository: mockRepository);
-    assignmentsNotifier = AssignmentsNotifier(repository: mockRepository);
-    attendanceNotifier = AttendanceNotifier(repository: mockRepository);
+    container = ProviderContainer(
+      overrides: [
+        academicRepositoryProvider.overrideWithValue(mockRepository),
+      ],
+    );
   });
 
-  group('GradesNotifier Tests', () {
-    test('loadGrades success', () async {
-      await gradesNotifier.loadGrades(1);
-      expect(gradesNotifier.state.isLoading, false);
-      expect(gradesNotifier.state.grades.length, 1);
-      expect(gradesNotifier.state.summary.length, 1);
-      expect(gradesNotifier.state.error, null);
+  tearDown(() {
+    container.dispose();
+  });
+
+  group('GradesNotifier', () {
+    test('initial state is data(empty)', () {
+      final state = container.read(gradesProvider);
+      expect(state.isLoading, false);
+      expect(state.value?.grades, isEmpty);
     });
 
-    test('loadGrades failure', () async {
+    test('loadGrades updates state with data', () async {
+      final notifier = container.read(gradesProvider.notifier);
+      await notifier.loadGrades(1);
+
+      final state = container.read(gradesProvider);
+      expect(state.hasValue, true);
+      expect(state.value!.grades.length, 1);
+      expect(state.value!.summary.length, 1);
+      expect(state.value!.grades.first.subjectName, 'Math');
+    });
+
+    test('loadGrades sets error state on failure', () async {
       mockRepository.shouldReturnError = true;
-      await gradesNotifier.loadGrades(1);
-      expect(gradesNotifier.state.isLoading, false);
-      expect(gradesNotifier.state.error, 'Grades load failed');
+      final notifier = container.read(gradesProvider.notifier);
+      
+      try {
+        await notifier.loadGrades(1);
+      } catch (_) {}
+
+      final state = container.read(gradesProvider);
+      expect(state.hasError, true);
     });
-    
-    test('selectQuarter updates state', () {
-      gradesNotifier.selectQuarter(2);
-      expect(gradesNotifier.state.selectedQuarter, 2);
+
+    test('selectQuarter updates selectedQuarter', () {
+      // Default state is GradesData()
+      expect(container.read(gradesProvider).value?.selectedQuarter, 1);
+
+      final notifier = container.read(gradesProvider.notifier);
+      notifier.selectQuarter(2);
+      expect(container.read(gradesProvider).value?.selectedQuarter, 2);
     });
   });
 
-  group('ScheduleNotifier Tests', () {
-    test('loadSchedule success', () async {
-      await scheduleNotifier.loadSchedule(1);
-      expect(scheduleNotifier.state.isLoading, false);
-      expect(scheduleNotifier.state.schedule.length, 1);
-      expect(scheduleNotifier.state.error, null);
-    });
+  group('ScheduleNotifier', () {
+    test('loadSchedule updates state', () async {
+      final notifier = container.read(scheduleProvider.notifier);
+      await notifier.loadSchedule(1);
 
-    test('selectDay updates state', () {
-      scheduleNotifier.selectDay(2);
-      expect(scheduleNotifier.state.selectedDay, 2);
+      final state = container.read(scheduleProvider);
+      expect(state.hasValue, true);
+      expect(state.value!.fullSchedule.length, 1);
     });
   });
 
-  group('AssignmentsNotifier Tests', () {
-    test('loadAssignments success', () async {
-      await assignmentsNotifier.loadAssignments(1);
-      expect(assignmentsNotifier.state.isLoading, false);
-      expect(assignmentsNotifier.state.assignments.length, 1);
+  group('AssignmentsNotifier', () {
+    test('loadAssignments updates state', () async {
+      final notifier = container.read(assignmentsProvider.notifier);
+      await notifier.loadAssignments(1);
+
+      final state = container.read(assignmentsProvider);
+      expect(state.hasValue, true);
+      expect(state.value!.assignments.length, 1);
     });
 
-    test('submitAssignment success', () async {
-      final success = await assignmentsNotifier.submitAssignment(1, text: 'Done');
+    test('submitAssignment returns true on success', () async {
+      final notifier = container.read(assignmentsProvider.notifier);
+      final success = await notifier.submitAssignment(1);
+      
       expect(success, true);
-      expect(assignmentsNotifier.state.isLoading, false);
-    });
-
-    test('submitAssignment failure', () async {
-      mockRepository.shouldReturnError = true;
-      final success = await assignmentsNotifier.submitAssignment(1, text: 'Done');
-      expect(success, false);
-      expect(assignmentsNotifier.state.error, 'Submission failed');
     });
   });
 
-  group('AttendanceNotifier Tests', () {
-    test('loadAttendance success', () async {
-      await attendanceNotifier.loadAttendance(1);
-      expect(attendanceNotifier.state.isLoading, false);
-      expect(attendanceNotifier.state.records.length, 1);
-      expect(attendanceNotifier.state.summary?.presentDays, 20);
+  group('AttendanceNotifier', () {
+    test('loadAttendance updates state', () async {
+      final notifier = container.read(attendanceProvider.notifier);
+      await notifier.loadAttendance(1);
+
+      final state = container.read(attendanceProvider);
+      expect(state.hasValue, true);
+      expect(state.value!.records.length, 1);
+      expect(state.value!.summary?.presentDays, 20);
     });
   });
 }

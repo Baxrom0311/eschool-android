@@ -7,12 +7,13 @@ import '../../models/assignment_model.dart';
 import '../../models/attendance_model.dart';
 import '../../models/grade_model.dart';
 import '../../models/schedule_model.dart';
+import 'api_helpers.dart';
 
 /// Academic API — baholar, jadval, topshiriqlar, davomat
 ///
 /// Tenant parent OAS da ushbu ma'lumotlar turli wrapper formatlarda keladi.
 /// Shu qatlamda ular UI ishlatayotgan modellarga transform qilinadi.
-class AcademicApi {
+class AcademicApi with ApiHelpers {
   final DioClient _client;
 
   AcademicApi(this._client);
@@ -26,19 +27,19 @@ class AcademicApi {
 
       final normalizedRows = rows.where((row) {
         if (quarter == null) return true;
-        final rowQuarter = _toInt(
-          _asMap(row['quarter'])['number'] ?? row['quarter_id'],
+        final rowQuarter = toInt(
+          asMap(row['quarter'])['number'] ?? row['quarter_id'],
         );
         return rowQuarter == quarter;
       }).toList();
 
       return normalizedRows.map((row) {
         final grade5 = _resolveGrade(row);
-        final quarterNo = _toInt(
-          _asMap(row['quarter'])['number'] ?? row['quarter_id'],
+        final quarterNo = toInt(
+          asMap(row['quarter'])['number'] ?? row['quarter_id'],
         );
         return GradeModel.fromJson({
-          'id': _toInt(row['id']) == 0 ? _stableId(row) : _toInt(row['id']),
+          'id': toInt(row['id']) == 0 ? stableId(row) : toInt(row['id']),
           'subject_name': _subjectNameFromGradeRow(row),
           'grade': grade5,
           'grade_type': 'quarter',
@@ -51,7 +52,7 @@ class AcademicApi {
         });
       }).toList();
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -79,7 +80,7 @@ class AcademicApi {
         });
       }).toList();
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -91,31 +92,31 @@ class AcademicApi {
         ApiConstants.schedule(childId),
         queryParameters: {'student_id': childId, 'days': 7},
       );
-      final root = _asMap(response.data);
+      final root = asMap(response.data);
       final entries = _extractScheduleEntries(root, childId);
 
       return entries.map((entry) {
-        final lessonTime = _asMap(entry['lessonTime']);
-        final subject = _asMap(entry['subject']);
-        final teacher = _asMap(entry['teacher']);
-        final room = _asMap(entry['room']);
+        final lessonTime = asMap(entry['lessonTime']);
+        final subject = asMap(entry['subject']);
+        final teacher = asMap(entry['teacher']);
+        final room = asMap(entry['room']);
         final dateKey = entry['_date']?.toString();
 
         final fallbackDay = _weekdayFromDate(dateKey);
-        final dayOfWeek = _toInt(entry['day_of_week']) == 0
+        final dayOfWeek = toInt(entry['day_of_week']) == 0
             ? fallbackDay
-            : _toInt(entry['day_of_week']);
+            : toInt(entry['day_of_week']);
 
         return ScheduleModel.fromJson({
-          'id': _toInt(entry['id']) == 0
-              ? _stableId(entry)
-              : _toInt(entry['id']),
+          'id': toInt(entry['id']) == 0
+              ? stableId(entry)
+              : toInt(entry['id']),
           'subject_name': (subject['name'] ?? 'Fan').toString(),
           'teacher_name': (teacher['name'] ?? 'O\'qituvchi').toString(),
           'start_time': (lessonTime['starts_at'] ?? '').toString(),
           'end_time': (lessonTime['ends_at'] ?? '').toString(),
           'day_of_week': dayOfWeek == 0 ? 1 : dayOfWeek,
-          'lesson_number': _toInt(
+          'lesson_number': toInt(
             lessonTime['lesson_no'] ??
                 entry['lesson_number'] ??
                 entry['lesson_no'] ??
@@ -129,7 +130,7 @@ class AcademicApi {
         return a.lessonNumber.compareTo(b.lessonNumber);
       });
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -145,7 +146,7 @@ class AcademicApi {
         ApiConstants.assignments(childId),
         queryParameters: {'student_id': childId},
       );
-      final root = _asMap(response.data);
+      final root = asMap(response.data);
       var homeworks = _extractHomeworks(root, childId: childId);
 
       if (status != null && status.isNotEmpty) {
@@ -161,18 +162,18 @@ class AcademicApi {
       return homeworks.map(_mapAssignment).toList()
         ..sort((a, b) => b.dueDate.compareTo(a.dueDate));
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
   Future<AssignmentModel> getAssignmentDetails(int assignmentId) async {
     try {
       final response = await _client.get(ApiConstants.parentHomeworks);
-      final root = _asMap(response.data);
+      final root = asMap(response.data);
       final homeworks = _extractHomeworks(root);
 
       final match = homeworks.cast<Map<String, dynamic>?>().firstWhere(
-        (item) => _toInt(item?['id']) == assignmentId,
+        (item) => toInt(item?['id']) == assignmentId,
         orElse: () => null,
       );
       if (match == null) {
@@ -184,7 +185,7 @@ class AcademicApi {
 
       return _mapAssignment(match);
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -253,7 +254,7 @@ class AcademicApi {
         options: Options(contentType: 'multipart/form-data'),
       );
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -271,7 +272,7 @@ class AcademicApi {
         'file_size': 0,
       });
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -290,7 +291,7 @@ class AcademicApi {
       final attendance = <AttendanceModel>[];
       for (final rawMark in marks) {
         final mark = Map<String, dynamic>.from(rawMark);
-        final session = _asMap(mark['session']);
+        final session = asMap(mark['session']);
         final type = (mark['type'] ?? '').toString().toLowerCase();
         final date = (session['lesson_date'] ?? session['date'] ?? '')
             .toString();
@@ -302,21 +303,21 @@ class AcademicApi {
         final status = _statusFromLessonMark(type, mark['score']);
         attendance.add(
           AttendanceModel.fromJson({
-            'id': _toInt(mark['id']) == 0
-                ? _stableId(mark)
-                : _toInt(mark['id']),
+            'id': toInt(mark['id']) == 0
+                ? stableId(mark)
+                : toInt(mark['id']),
             'date': date,
             'status': status,
-            'subject_name': _asMap(session['subject'])['name']?.toString(),
+            'subject_name': asMap(session['subject'])['name']?.toString(),
             'reason': mark['note']?.toString(),
-            'marked_by': _asMap(session['teacher'])['name']?.toString(),
+            'marked_by': asMap(session['teacher'])['name']?.toString(),
           }),
         );
       }
 
       return attendance;
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
@@ -347,13 +348,13 @@ class AcademicApi {
         attendancePercentage: percentage,
       );
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw handleDioError(e);
     }
   }
 
   Future<Map<String, dynamic>> _getChildProfile(int childId) async {
     final response = await _client.get(ApiConstants.childDetails(childId));
-    return _asMap(response.data);
+    return asMap(response.data);
   }
 
   List<Map<String, dynamic>> _extractQuarterGradeRows(
@@ -366,7 +367,7 @@ class AcademicApi {
     for (final subjectValue in qMap.values) {
       if (subjectValue is! Map) continue;
       for (final quarterValue in subjectValue.values) {
-        final row = _asMap(quarterValue);
+        final row = asMap(quarterValue);
         if (row.isNotEmpty) rows.add(row);
       }
     }
@@ -470,8 +471,8 @@ class AcademicApi {
   }
 
   AssignmentModel _mapAssignment(Map<String, dynamic> homework) {
-    final subject = _asMap(homework['subject']);
-    final teacher = _asMap(homework['teacher']);
+    final subject = asMap(homework['subject']);
+    final teacher = asMap(homework['teacher']);
     final submissions = homework['submissions'] is List
         ? (homework['submissions'] as List).whereType<Map>().toList()
         : const <Map>[];
@@ -485,18 +486,18 @@ class AcademicApi {
     final submittedFiles = submittedFilesRaw.map((file) {
       final item = Map<String, dynamic>.from(file);
       return {
-        'id': _toInt(item['id']),
+        'id': toInt(item['id']),
         'name': (item['original_name'] ?? item['file_path'] ?? 'file')
             .toString(),
         'url': (item['url'] ?? item['file_path'] ?? '').toString(),
-        'file_size': _toInt(item['size']),
+        'file_size': toInt(item['size']),
         'mime_type': item['mime']?.toString(),
       };
     }).toList();
 
     final normalizedStatus = _normalizeAssignmentStatus(homework['status']);
     return AssignmentModel.fromJson({
-      'id': _toInt(homework['id']),
+      'id': toInt(homework['id']),
       'title': (homework['title'] ?? '').toString(),
       'description': homework['description']?.toString(),
       'subject_name': (subject['name'] ?? 'Fan').toString(),
@@ -504,7 +505,7 @@ class AcademicApi {
       'status': normalizedStatus,
       'due_date': (homework['due_at'] ?? '').toString(),
       'created_at': (homework['assigned_at'] ?? '').toString(),
-      'grade': _toNullableInt(firstSubmission['grade_5']),
+      'grade': toNullableInt(firstSubmission['grade_5']),
       'teacher_comment': firstSubmission['note']?.toString(),
       'attachments': const <Map<String, dynamic>>[],
       'submitted_files': submittedFiles,
@@ -543,11 +544,11 @@ class AcademicApi {
       final value = entry.value;
       if (value is! List) continue;
       final found = value.whereType<Map>().any(
-        (item) => _toInt(item['id']) == assignmentId,
+        (item) => toInt(item['id']) == assignmentId,
       );
       if (found) {
         final parsed = int.tryParse(key);
-        return parsed ?? _toInt(key);
+        return parsed ?? toInt(key);
       }
     }
     return null;
@@ -555,26 +556,26 @@ class AcademicApi {
 
   Future<int?> _resolveHomeworkChildId(int assignmentId) async {
     final response = await _client.get(ApiConstants.parentHomeworks);
-    final root = _asMap(response.data);
+    final root = asMap(response.data);
     return _resolveHomeworkChildIdFromPayload(root, assignmentId);
   }
 
   String _subjectNameFromGradeRow(Map<String, dynamic> row) {
-    final subject = _asMap(row['subject']);
+    final subject = asMap(row['subject']);
     return (subject['name'] ?? row['subject_name'] ?? 'Fan').toString();
   }
 
   String? _teacherNameFromGradeRow(Map<String, dynamic> row) {
-    final teacher = _asMap(row['teacher']);
+    final teacher = asMap(row['teacher']);
     final value = teacher['name'] ?? row['teacher_name'];
     return value?.toString();
   }
 
   int _resolveGrade(Map<String, dynamic> row) {
-    final explicit = _toNullableInt(row['grade_5'] ?? row['grade']);
+    final explicit = toNullableInt(row['grade_5'] ?? row['grade']);
     if (explicit != null && explicit > 0) return explicit;
 
-    final percent = _toNullableDouble(row['percent']);
+    final percent = toNullableDouble(row['percent']);
     if (percent == null) return 0;
     if (percent >= 86) return 5;
     if (percent >= 71) return 4;
@@ -603,7 +604,7 @@ class AcademicApi {
       return 'present';
     }
 
-    final numeric = _toNullableDouble(score);
+    final numeric = toNullableDouble(score);
     if (numeric != null && numeric <= 0) return 'absent';
     return 'present';
   }
@@ -612,59 +613,5 @@ class AcademicApi {
     if (dateKey == null || dateKey.isEmpty) return 0;
     final parsed = DateTime.tryParse(dateKey);
     return parsed?.weekday ?? 0;
-  }
-
-  Map<String, dynamic> _asMap(dynamic value) {
-    if (value is Map<String, dynamic>) return value;
-    if (value is Map) return Map<String, dynamic>.from(value);
-    return <String, dynamic>{};
-  }
-
-  int _toInt(dynamic value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
-  }
-
-  int? _toNullableInt(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    return int.tryParse(value.toString());
-  }
-
-  double? _toNullableDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is double) return value;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
-
-  int _stableId(Map<String, dynamic> row) {
-    return row.toString().hashCode.abs();
-  }
-
-  Exception _handleDioError(DioException e) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-      case DioExceptionType.connectionError:
-        return const NetworkException();
-      case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode;
-        final data = e.response?.data;
-        String message = 'Server xatoligi';
-        if (data is Map<String, dynamic>) {
-          message =
-              (data['message'] as String?) ??
-              (data['error'] as String?) ??
-              message;
-        }
-        if (statusCode == 401) return AuthException(message: message);
-        return ServerException(message: message, statusCode: statusCode);
-      default:
-        return const ServerException();
-    }
   }
 }

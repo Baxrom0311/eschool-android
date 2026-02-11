@@ -39,37 +39,15 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     ref.read(scheduleProvider.notifier).selectDay(date.weekday);
   }
 
-  bool _isLessonNow(String start, String end, DateTime date) {
-    final today = DateTime.now();
-    if (today.year != date.year ||
-        today.month != date.month ||
-        today.day != date.day) {
-      return false;
-    }
-
-    final startParts = start.split(':');
-    final endParts = end.split(':');
-    if (startParts.length < 2 || endParts.length < 2) return false;
-
-    final startHour = int.tryParse(startParts[0]) ?? -1;
-    final startMinute = int.tryParse(startParts[1]) ?? -1;
-    final endHour = int.tryParse(endParts[0]) ?? -1;
-    final endMinute = int.tryParse(endParts[1]) ?? -1;
-    if (startHour < 0 || startMinute < 0 || endHour < 0 || endMinute < 0) {
-      return false;
-    }
-
-    final nowMinutes = today.hour * 60 + today.minute;
-    final startMinutes = startHour * 60 + startMinute;
-    final endMinutes = endHour * 60 + endMinute;
-    return nowMinutes >= startMinutes && nowMinutes <= endMinutes;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final scheduleState = ref.watch(scheduleProvider);
-    final schedule = scheduleState.todaySchedule;
-    final isLoading = scheduleState.isLoading;
+    final scheduleAsync = ref.watch(scheduleProvider);
+    
+    // Extract data if available
+    final scheduleData = scheduleAsync.valueOrNull;
+    final schedule = scheduleData?.todaySchedule ?? [];
+    final isLoading = scheduleAsync.isLoading;
+    final hasError = scheduleAsync.hasError;
 
     ref.listen(selectedChildProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
@@ -185,8 +163,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           ),
 
           // ─── Schedule List ───
-          if (isLoading)
-            const Expanded(child: Center(child: CircularProgressIndicator()))
+          if (isLoading && schedule.isEmpty)
+             const Expanded(child: Center(child: CircularProgressIndicator()))
+          else if (hasError && schedule.isEmpty)
+             Expanded(child: Center(child: Text('Xatolik: ${scheduleAsync.error}')))
           else if (schedule.isEmpty)
              const Expanded(child: Center(child: Text('Darslar mavjud emas')))
           else
@@ -196,8 +176,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 itemCount: schedule.length,
                 itemBuilder: (context, index) {
                   final item = schedule[index];
-                  final isNow =
-                      _isLessonNow(item.startTime, item.endTime, _selectedDate);
+                  final isToday = _selectedDate.day == DateTime.now().day &&
+                      _selectedDate.month == DateTime.now().month &&
+                      _selectedDate.year == DateTime.now().year;
+                  final isNow = isToday && item.isActive;
 
                   return ScheduleCard(
                     startTime: item.startTime,

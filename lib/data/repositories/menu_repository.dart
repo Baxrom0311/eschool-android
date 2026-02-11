@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 
-import '../../core/error/exceptions.dart';
 import '../../core/error/failures.dart';
+import '../../core/utils/safe_api_call.dart';
 import '../datasources/remote/menu_api.dart';
 import '../models/menu_model.dart';
 
@@ -14,35 +14,18 @@ class MenuRepository {
   Future<Either<Failure, List<MenuModel>>> getDailyMenu({
     String? date,
     int? studentId,
-  }) async {
-    try {
-      final menu = await _menuApi.getDailyMenu(date: date, studentId: studentId);
-      return Right(menu);
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Menyuni yuklashda xatolik: ${e.toString()}'));
-    }
-  }
+  }) =>
+      safeApiCall(
+        () => _menuApi.getDailyMenu(date: date, studentId: studentId),
+        errorMessage: 'Menyuni yuklashda xatolik',
+      );
 
   Future<Either<Failure, List<MenuModel>>> getWeeklyMenu({
     String? weekStart,
     int? studentId,
-  }) async {
-    try {
-      final menu = await _menuApi.getWeeklyMenu(
-        weekStart: weekStart,
-        studentId: studentId,
+  }) =>
+      safeApiCall(
+        () => _menuApi.getWeeklyMenu(weekStart: weekStart, studentId: studentId),
+        errorMessage: 'Haftalik menyuni yuklashda xatolik',
       );
-      return Right(menu);
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Menyuni yuklashda xatolik: ${e.toString()}'));
-    }
-  }
 }

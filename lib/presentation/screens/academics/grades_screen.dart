@@ -18,11 +18,15 @@ class GradesScreen extends ConsumerStatefulWidget {
 }
 
 class _GradesScreenState extends ConsumerState<GradesScreen> {
+  // Key to preserve scroll position if needed, though simpler just to reload data
+  
   void _loadGradesForSelectedChild() {
     final selectedChild = ref.read(selectedChildProvider);
     if (selectedChild == null) return;
 
-    final quarter = ref.read(gradesProvider).selectedQuarter;
+    final currentData = ref.read(gradesProvider).valueOrNull;
+    final quarter = currentData?.selectedQuarter ?? 1;
+    
     ref.read(gradesProvider.notifier).loadGrades(
           selectedChild.id,
           quarter: quarter,
@@ -44,7 +48,7 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadGradesForSelectedChild();
       _loadAttendanceForSelectedChild();
     });
@@ -75,9 +79,9 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(gradesProvider);
+    final gradesAsync = ref.watch(gradesProvider);
     final userState = ref.watch(userProvider);
-    final attendanceState = ref.watch(attendanceProvider);
+    final attendanceAsync = ref.watch(attendanceProvider);
 
     ref.listen(selectedChildProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
@@ -86,152 +90,163 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
       }
     });
 
-    if (state.isLoading && state.grades.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (state.error != null && state.grades.isEmpty) {
-      return Center(child: Text(state.error!));
-    }
-    
-    final double gpaFromSummary = state.summary.isNotEmpty
-        ? state.summary.fold(0.0, (sum, item) => sum + item.averageGrade) /
-            state.summary.length
-        : 0.0;
-    final double gpaFromGrades = state.grades.isNotEmpty
-        ? state.grades.fold(0.0, (sum, item) => sum + item.grade) /
-            state.grades.length
-        : 0.0;
-    final fallbackGpa = userState.selectedChild?.averageGrade ?? 0.0;
-    final double gpa = (gpaFromSummary > 0
-            ? gpaFromSummary
-            : (gpaFromGrades > 0 ? gpaFromGrades : fallbackGpa))
-        .clamp(0.0, 5.0);
-
-    final attendanceRate = (() {
-      final summary = attendanceState.summary;
-      if (summary != null && summary.totalDays > 0) {
-        return summary.attendancePercentage.round().clamp(0, 100);
-      }
-      return (userState.selectedChild?.attendancePercentage ?? 0).clamp(0, 100);
-    })();
-
-    final summaryBySubject = <String, SubjectGradeSummary>{
-      for (final item in state.summary) item.subjectName.toLowerCase(): item,
-    };
-    final int totalSubjects = state.summary.length;
-
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // ─── Blue Header ───
-          SliverAppBar(
-            expandedHeight: 120,
-            pinned: true,
-            backgroundColor: AppColors.primaryBlue,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primaryBlue,
-                      AppColors.secondaryBlue,
-                    ],
+      body: gradesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Xatolik: $err')),
+        data: (gradesData) {
+          final grades = gradesData.grades;
+          final summary = gradesData.summary;
+
+          if (grades.isEmpty && summary.isEmpty) {
+            return const Center(child: Text('Baholar mavjud emas'));
+          }
+
+          // Calculate stats
+          final double gpaFromSummary = summary.isNotEmpty
+              ? summary.fold<double>(0.0, (sum, item) => sum + item.averageGrade) /
+                  summary.length
+              : 0.0;
+          final double gpaFromGrades = grades.isNotEmpty
+              ? grades.fold<double>(0.0, (sum, item) => sum + item.grade) /
+                  grades.length
+              : 0.0;
+          final fallbackGpa = userState.selectedChild?.averageGrade ?? 0.0;
+          final double gpa = (gpaFromSummary > 0
+                  ? gpaFromSummary
+                  : (gpaFromGrades > 0 ? gpaFromGrades : fallbackGpa))
+              .clamp(0.0, 5.0);
+
+          final attendanceRate = (() {
+            final attData = attendanceAsync.valueOrNull;
+            final summary = attData?.summary;
+            if (summary != null && summary.totalDays > 0) {
+              return summary.attendancePercentage.round().clamp(0, 100);
+            }
+            return (userState.selectedChild?.attendancePercentage ?? 0).clamp(0, 100);
+          })();
+
+          final summaryBySubject = <String, SubjectGradeSummary>{
+            for (final item in summary) item.subjectName.toLowerCase(): item,
+          };
+
+          return CustomScrollView(
+            slivers: [
+              // ─── Blue Header ───
+              SliverAppBar(
+                expandedHeight: 120,
+                pinned: true,
+                backgroundColor: AppColors.primaryBlue,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.primaryBlue,
+                          AppColors.secondaryBlue,
+                        ],
+                      ),
+                    ),
+                  ),
+                  title: const Text(
+                    'Mening ko\'rsatkichlarim',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  centerTitle: true,
+                ),
+                actions: [
+                  if (userState.selectedChild != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: Center(
+                        child: CircleAvatar(
+                          radius: 16,
+                          backgroundImage: userState.selectedChild!.avatarUrl != null
+                              ? NetworkImage(userState.selectedChild!.avatarUrl!)
+                              : null,
+                          child: userState.selectedChild!.avatarUrl == null
+                              ? Text(userState.selectedChild!.fullName[0])
+                              : null,
+                        ),
+                      ),
+                    )
+                ],
+              ),
+
+              // ─── Overall Stats ───
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                sliver: SliverToBoxAdapter(
+                  child: OverallGradeCard(
+                    gpa: gpa,
+                    totalLessons: summary.length,
+                    attendanceRate: attendanceRate,
                   ),
                 ),
               ),
-              title: const Text(
-                'Mening ko\'rsatkichlarim',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              centerTitle: true,
-            ),
-            actions: [
-               if (userState.selectedChild != null)
-                 Padding(
-                   padding: const EdgeInsets.only(right: 16),
-                   child: Center(
-                     child: CircleAvatar(
-                       radius: 16,
-                       backgroundImage: userState.selectedChild!.avatarUrl != null 
-                           ? NetworkImage(userState.selectedChild!.avatarUrl!) 
-                           : null,
-                       child: userState.selectedChild!.avatarUrl == null
-                           ? Text(userState.selectedChild!.fullName[0]) 
-                           : null,
-                     ),
-                   ),
-                 )
-            ],
-          ),
 
-          // ─── Overall Stats ───
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-            sliver: SliverToBoxAdapter(
-              child: OverallGradeCard(
-                gpa: gpa,
-                totalLessons: totalSubjects,
-                attendanceRate: attendanceRate,
-              ),
-            ),
-          ),
-
-          // ─── Section Title ───
-          const SliverPadding(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
-            sliver: SliverToBoxAdapter(
-              child: Text(
-                'Fanlar bo\'yicha',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-          ),
-
-          // ─── Subject Cards List ───
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final grade = state.grades[index];
-                  final summary =
-                      summaryBySubject[grade.subjectName.toLowerCase()];
-                  final averagePercent = summary != null
-                      ? ((summary.averageGrade / 5) * 100).round()
-                      : ((grade.grade / 5) * 100).round();
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: GradeCard(
-                      name: grade.subjectName,
-                      teacher:
-                          grade.teacherName ??
-                          summary?.teacherName ??
-                          'O\'qituvchi',
-                      grade: grade.grade,
-                      attendance: attendanceRate,
-                      average: averagePercent.clamp(0, 100),
-                      icon: _subjectIcon(grade.subjectName),
-                      color: _gradeColor(grade.grade),
+              // ─── Section Title ───
+              const SliverPadding(
+                padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+                sliver: SliverToBoxAdapter(
+                  child: Text(
+                    'Fanlar bo\'yicha',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
-                  );
-                },
-                childCount: state.grades.length,
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
+
+              // ─── Subject Cards List ───
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      // Note: We are only showing individual grades here?
+                      // The original code iterated over state.grades.
+                      // Usually you'd want to show Subjects (Summary) or Grades timeline.
+                      // Sticking to original logic: show list of grades.
+                      final grade = grades[index];
+                      final summaryItem =
+                          summaryBySubject[grade.subjectName.toLowerCase()];
+                      
+                      final averagePercent = summaryItem != null
+                          ? ((summaryItem.averageGrade / 5) * 100).round()
+                          : ((grade.grade / 5) * 100).round();
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: GradeCard(
+                          name: grade.subjectName,
+                          teacher:
+                              grade.teacherName ??
+                              summaryItem?.teacherName ??
+                              'O\'qituvchi',
+                          grade: grade.grade,
+                          attendance: attendanceRate,
+                          average: averagePercent.clamp(0, 100),
+                          icon: _subjectIcon(grade.subjectName),
+                          color: _gradeColor(grade.grade),
+                        ),
+                      );
+                    },
+                    childCount: grades.length,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

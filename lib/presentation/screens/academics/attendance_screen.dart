@@ -39,10 +39,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final attendanceState = ref.watch(attendanceProvider);
-    final summary = attendanceState.summary;
-    final records = attendanceState.records;
-    final isLoading = attendanceState.isLoading;
+    final attendanceAsync = ref.watch(attendanceProvider);
+    final attendanceData = attendanceAsync.valueOrNull;
+    final summary = attendanceData?.summary;
+    final records = attendanceData?.records ?? [];
+    final isLoading = attendanceAsync.isLoading;
 
     // Convert List<AttendanceModel> to Map<DateTime, AttendanceStatus> for calendar
     final Map<DateTime, AttendanceStatus> attendanceMap = {};
@@ -153,7 +154,6 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                         return null;
                       },
                       todayBuilder: (context, day, focusedDay) {
-                        // Check if today has a status, if so, show status, else show today marker
                         final normalizedDay = DateTime(day.year, day.month, day.day);
                         final status = attendanceMap[normalizedDay];
                          if (status != null) {
@@ -218,7 +218,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
        color = AppColors.primaryBlue;
        textColor = AppColors.primaryBlue;
     } else {
-      return Center(child: Text(day.day.toString()));
+      // Default handler for Today builder if we hit here without data
+      return const SizedBox.shrink(); 
     }
 
     return Container(
