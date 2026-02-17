@@ -27,26 +27,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (!mounted) return;
 
     // Check authentication status from provider
-    final isAuthenticated =
-        await ref.read(authProvider.notifier).checkAuthStatus();
+    final isAuthenticated = await ref
+        .read(authProvider.notifier)
+        .checkAuthStatus();
 
     if (!mounted) return;
 
     if (isAuthenticated) {
-      // Load user profile before navigating
-      await ref.read(userProvider.notifier).loadProfile();
-      
+      await ref.read(userProvider.notifier).restoreCachedProfile();
       if (!mounted) return;
+      // Token mavjud bo'lsa ham profilni serverdan tekshiramiz.
+      // Aks holda eskirgan token bilan home sahifaga kirib ketish xavfi bor.
+      await ref.read(userProvider.notifier).loadProfile();
 
-      // START FIX: Check if profile load was actually successful
+      if (!mounted) return;
       final userState = ref.read(userProvider);
       if (userState.user != null) {
         context.go(RouteNames.home);
       } else {
-        // Token exists but profile load failed (likely expired) -> Login
         context.go(RouteNames.login);
       }
-      // END FIX
     } else {
       context.go(RouteNames.login);
     }

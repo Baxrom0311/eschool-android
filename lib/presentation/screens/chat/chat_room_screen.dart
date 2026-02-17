@@ -28,27 +28,38 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     super.initState();
     if (widget.chatData != null && widget.chatData!['id'] != null) {
       Future.microtask(() {
-        ref.read(chatRoomProvider.notifier).openConversation(widget.chatData!['id']);
+        ref
+            .read(chatRoomProvider.notifier)
+            .openConversation(widget.chatData!['id']);
       });
     }
   }
 
-  void _sendMessage() {
-    if (_controller.text.trim().isEmpty) return;
-    
-    ref.read(chatRoomProvider.notifier).sendMessage(_controller.text.trim());
-    _controller.clear();
+  Future<void> _sendMessage() async {
+    final content = _controller.text.trim();
+    if (content.isEmpty) return;
+
+    final success = await ref
+        .read(chatRoomProvider.notifier)
+        .sendMessage(content);
+    if (!mounted) return;
+
+    if (success) {
+      _controller.clear();
+      return;
+    }
+
+    final error = ref.read(chatRoomProvider).error;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(error ?? 'Xabar yuborilmadi')));
   }
 
   @override
   void dispose() {
+    ref.read(chatRoomProvider.notifier).closeConversation();
     _controller.dispose();
     _scrollController.dispose();
-    // Don't close conversation here to keep state if user navigates back and forth?
-    // Or do close it? Typically yes, close it.
-    // ref.read(chatRoomProvider.notifier).closeConversation(); 
-    // Doing this in dispose might be tricky with riverpod auto-dispose or keepAlive.
-    // Let's assume manual close for now or let provider handle it.
     super.dispose();
   }
 
@@ -56,7 +67,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(chatRoomProvider);
     final messages = state.messages;
-    
+
     final chatName = widget.chatData?['name'] ?? 'Chat';
     final isOnline = widget.chatData?['isOnline'] ?? false;
 
@@ -106,10 +117,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -131,7 +139,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                       return MessageBubble(
                         text: msg.content ?? '',
                         time: Formatters.formatTime(msg.timestamp),
-                        isMe: msg.isMe, 
+                        isMe: msg.isMe,
                       );
                     },
                   ),
@@ -140,7 +148,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           // ─── Input Area ───
           Container(
             padding: EdgeInsets.fromLTRB(
-                16, 8, 16, MediaQuery.of(context).padding.bottom + 16),
+              16,
+              8,
+              16,
+              MediaQuery.of(context).padding.bottom + 16,
+            ),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
@@ -172,8 +184,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                       hintText: 'Xabar yozing...',
                       hintStyle: TextStyle(color: AppColors.textSecondary),
                       border: InputBorder.none,
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
                     ),
                   ),
                 ),
@@ -183,12 +194,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                     color: AppColors.primaryBlue,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: state.isSending 
+                  child: state.isSending
                       ? const Padding(
                           padding: EdgeInsets.all(8.0),
                           child: SizedBox(
-                             width: 24, height: 24, 
-                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           ),
                         )
                       : IconButton(

@@ -42,15 +42,20 @@ class DioClient {
         },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            // 401 holatida eskirgan token qayta yuborilmasligi uchun local tokenni tozalaymiz.
-            if (!error.requestOptions.path.endsWith(ApiConstants.login)) {
+            final shouldClearSession =
+                error.requestOptions.extra['clearSessionOn401'] == true;
+            // Optional endpointlar 401 qaytarishi mumkin.
+            // Sessiyani faqat explicit belgilangan so'rovlar uchun tozalaymiz.
+            if (shouldClearSession) {
               await _secureStorage.clearAll();
             }
           }
-          
+
           if (kIsWeb && error.type == DioExceptionType.connectionError) {
-             // Web da CORS yoki Network xatosi ko'pincha connectionError yoki unknown bo'ladi.
-             debugPrint('WEB NETWORK ERROR: ${error.message}. This might be a CORS issue if calling external API from localhost.');
+            // Web da CORS yoki Network xatosi ko'pincha connectionError yoki unknown bo'ladi.
+            debugPrint(
+              'WEB NETWORK ERROR: ${error.message}. This might be a CORS issue if calling external API from localhost.',
+            );
           }
           handler.next(error);
         },

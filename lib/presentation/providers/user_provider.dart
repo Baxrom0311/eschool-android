@@ -1,5 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/storage_keys.dart';
+import '../../core/error/failures.dart';
+import '../../core/storage/shared_prefs_service.dart';
 import '../../data/datasources/remote/user_api.dart';
 import '../../data/models/child_model.dart';
 import '../../data/models/user_model.dart';
@@ -86,26 +92,67 @@ class UserNotifier extends StateNotifier<UserState> {
     : _repository = repository,
       super(const UserState.initial());
 
+  Future<void> restoreCachedProfile() async {
+    final cachedUser = _readCachedUser();
+    if (cachedUser == null) return;
+
+    final selectedChild = _resolveSelectedChild(cachedUser.children);
+    state = state.copyWith(
+      user: cachedUser,
+      children: cachedUser.children,
+      selectedChild: selectedChild,
+      isLoading: false,
+      error: null,
+    );
+  }
+
   /// Profil va farzandlarni yuklash (ilovaga kirganda chaqiriladi)
   Future<void> loadProfile() async {
+    final cachedUser = _readCachedUser();
+    if (cachedUser != null && state.user == null) {
+      state = state.copyWith(
+        user: cachedUser,
+        children: cachedUser.children,
+        selectedChild: _resolveSelectedChild(cachedUser.children),
+      );
+    }
+
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _repository.getProfile();
 
     result.fold(
-      (failure) =>
-          state = state.copyWith(isLoading: false, error: failure.message),
+      (failure) {
+        if (failure is AuthFailure) {
+          unawaited(_clearCachedProfile());
+          state = const UserState.initial().copyWith(error: failure.message);
+          return;
+        }
+
+        if (state.user != null) {
+          state = state.copyWith(isLoading: false, error: failure.message);
+          return;
+        }
+
+        state = state.copyWith(
+          user: null,
+          children: const [],
+          selectedChild: null,
+          isLoading: false,
+          error: failure.message,
+        );
+      },
       (user) {
-        final children = user.children;
-        // Auto-select first child if none selected
-        final selectedChild = children.isNotEmpty ? children.first : null;
+        final selectedChild = _resolveSelectedChild(user.children);
 
         state = state.copyWith(
           user: user,
-          children: children,
+          children: user.children,
           selectedChild: selectedChild,
           isLoading: false,
+          error: null,
         );
+        unawaited(_saveCachedProfile(user, selectedChild?.id));
       },
     );
   }
@@ -113,6 +160,7 @@ class UserNotifier extends StateNotifier<UserState> {
   /// Farzandni tanlash (dropdown yoki ro'yxatdan)
   void selectChild(ChildModel? child) {
     state = state.copyWith(selectedChild: child);
+    unawaited(_saveSelectedChildId(child?.id));
   }
 
   /// Farzandni ID bo'yicha tanlash
@@ -124,6 +172,7 @@ class UserNotifier extends StateNotifier<UserState> {
       orElse: () => state.children.first,
     );
     state = state.copyWith(selectedChild: child);
+    unawaited(_saveSelectedChildId(child.id));
   }
 
   /// Profilni yangilash
@@ -145,11 +194,16 @@ class UserNotifier extends StateNotifier<UserState> {
     result.fold(
       (failure) =>
           state = state.copyWith(isLoading: false, error: failure.message),
-      (user) => state = state.copyWith(
-        user: user,
-        children: user.children,
-        isLoading: false,
-      ),
+      (user) {
+        final selectedChild = _resolveSelectedChild(user.children);
+        state = state.copyWith(
+          user: user,
+          children: user.children,
+          selectedChild: selectedChild,
+          isLoading: false,
+        );
+        unawaited(_saveCachedProfile(user, selectedChild?.id));
+      },
     );
   }
 
@@ -166,6 +220,7 @@ class UserNotifier extends StateNotifier<UserState> {
         if (state.user != null) {
           final updatedUser = state.user!.copyWith(avatarUrl: avatarUrl);
           state = state.copyWith(user: updatedUser, isLoading: false);
+          unawaited(_saveCachedProfile(updatedUser, state.selectedChild?.id));
         } else {
           state = state.copyWith(isLoading: false);
         }
@@ -183,6 +238,7 @@ class UserNotifier extends StateNotifier<UserState> {
       children: children,
       selectedChild: selectedChild,
     );
+    unawaited(_saveCachedProfile(user, selectedChild?.id));
   }
 
   /// Xatolikni tozalash
@@ -193,6 +249,95 @@ class UserNotifier extends StateNotifier<UserState> {
   /// Tizimdan chiqqanda state ni tozalash
   void clear() {
     state = const UserState.initial();
+    unawaited(_clearCachedProfile());
+  }
+
+  ChildModel? _resolveSelectedChild(List<ChildModel> children) {
+    if (children.isEmpty) return null;
+
+    final preferredId =
+        SharedPrefsService.getInt(StorageKeys.selectedChildId) ??
+        state.selectedChild?.id;
+    if (preferredId != null) {
+      for (final child in children) {
+        if (child.id == preferredId) {
+          return child;
+        }
+      }
+    }
+    return children.first;
+  }
+
+  UserModel? _readCachedUser() {
+    final raw = SharedPrefsService.getString(StorageKeys.userProfile);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return UserModel.fromJson(decoded);
+      }
+      if (decoded is Map) {
+        return UserModel.fromJson(Map<String, dynamic>.from(decoded));
+      }
+    } catch (_) {
+      unawaited(SharedPrefsService.remove(StorageKeys.userProfile));
+    }
+    return null;
+  }
+
+  Future<void> _saveCachedProfile(UserModel user, int? selectedChildId) async {
+    await SharedPrefsService.setString(
+      StorageKeys.userProfile,
+      jsonEncode(user.toJson()),
+    );
+    await _saveSelectedChildId(selectedChildId);
+  }
+
+  Future<void> _saveSelectedChildId(int? selectedChildId) async {
+    if (selectedChildId == null) {
+      await SharedPrefsService.remove(StorageKeys.selectedChildId);
+      return;
+    }
+    await SharedPrefsService.setInt(
+      StorageKeys.selectedChildId,
+      selectedChildId,
+    );
+  }
+
+  Future<void> _clearCachedProfile() async {
+    await SharedPrefsService.remove(StorageKeys.userProfile);
+    await SharedPrefsService.remove(StorageKeys.selectedChildId);
+    await _clearOfflineCaches();
+  }
+
+  Future<void> _clearOfflineCaches() async {
+    await SharedPrefsService.remove(StorageKeys.notificationsCache);
+    await SharedPrefsService.remove(StorageKeys.schoolRatingCache);
+    await SharedPrefsService.remove(StorageKeys.conversationsCache);
+
+    await SharedPrefsService.removeByPrefix(StorageKeys.gradesCachePrefix);
+    await SharedPrefsService.removeByPrefix(
+      StorageKeys.gradeSummaryCachePrefix,
+    );
+    await SharedPrefsService.removeByPrefix(StorageKeys.scheduleCachePrefix);
+    await SharedPrefsService.removeByPrefix(StorageKeys.attendanceCachePrefix);
+    await SharedPrefsService.removeByPrefix(
+      StorageKeys.attendanceSummaryCachePrefix,
+    );
+    await SharedPrefsService.removeByPrefix(StorageKeys.weeklyMenuCachePrefix);
+    await SharedPrefsService.removeByPrefix(StorageKeys.dailyMenuCachePrefix);
+    await SharedPrefsService.removeByPrefix(
+      StorageKeys.paymentStateCachePrefix,
+    );
+    await SharedPrefsService.removeByPrefix(StorageKeys.assignmentsCachePrefix);
+    await SharedPrefsService.removeByPrefix(
+      StorageKeys.assignmentDetailCachePrefix,
+    );
+    await SharedPrefsService.removeByPrefix(StorageKeys.classRatingCachePrefix);
+    await SharedPrefsService.removeByPrefix(StorageKeys.childRatingCachePrefix);
+    await SharedPrefsService.removeByPrefix(
+      StorageKeys.chatMessagesCachePrefix,
+    );
   }
 }
 

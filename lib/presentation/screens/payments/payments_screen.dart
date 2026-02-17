@@ -4,6 +4,7 @@ import '../../providers/payment_provider.dart';
 import '../../providers/user_provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../core/routing/route_names.dart';
 import '../../widgets/payments/balance_header.dart';
 import '../../widgets/common/custom_button.dart';
@@ -50,6 +51,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     final state = ref.watch(paymentProvider);
     final userState = ref.watch(userProvider);
     final child = userState.selectedChild;
+    final hasDebt = state.balance?.hasDebt ?? false;
+    final debtAmount = state.balance?.debtAmount ?? 0;
 
     ref.listen(selectedChildProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
@@ -71,9 +74,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       body: state.isLoading && state.balance == null
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: () => ref.read(paymentProvider.notifier).refresh(
-                    studentId: child?.id,
-                  ),
+              onRefresh: () => ref
+                  .read(paymentProvider.notifier)
+                  .refresh(studentId: child?.id),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
@@ -86,8 +89,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         balance: state.balance?.balance != null
                             ? '${state.balance!.balance} UZS'
                             : '0 UZS',
-                        lastUpdated:
-                            _formatLastUpdated(state.balance?.nextPaymentDate),
+                        lastUpdated: _formatLastUpdated(
+                          state.balance?.nextPaymentDate,
+                        ),
                       ),
                     ),
 
@@ -140,7 +144,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           const SizedBox(height: 24),
 
                           // ─── Payment Status ───
-                          if ((state.balance?.balance ?? 0) < 0)
+                          if (hasDebt)
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
@@ -173,7 +177,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          'Iltimos, ${(state.balance?.balance ?? 0).abs()} UZS to\'lov qiling',
+                                          'Iltimos, ${Formatters.formatCurrency(debtAmount.toDouble())} UZS to\'lov qiling',
                                           style: const TextStyle(
                                             fontSize: 13,
                                             color: Color(0xFFE65100),

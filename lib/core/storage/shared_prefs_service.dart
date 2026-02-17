@@ -11,51 +11,82 @@ class SharedPrefsService {
 
   static SharedPreferences get prefs {
     if (_prefs == null) {
-      throw StateError(
-          'SharedPrefsService.init() ni main.dart da chaqiring!');
+      throw StateError('SharedPrefsService.init() ni main.dart da chaqiring!');
     }
     return _prefs!;
   }
 
+  static bool get isInitialized => _prefs != null;
+
   // ─── String ───
   static Future<bool> setString(String key, String value) {
-    return prefs.setString(key, value);
+    final currentPrefs = _prefs;
+    if (currentPrefs == null) return Future.value(false);
+    return currentPrefs.setString(key, value);
   }
 
   static String? getString(String key) {
-    return prefs.getString(key);
+    return _prefs?.getString(key);
   }
 
   // ─── Bool ───
   static Future<bool> setBool(String key, bool value) {
-    return prefs.setBool(key, value);
+    final currentPrefs = _prefs;
+    if (currentPrefs == null) return Future.value(false);
+    return currentPrefs.setBool(key, value);
   }
 
   static bool? getBool(String key) {
-    return prefs.getBool(key);
+    return _prefs?.getBool(key);
   }
 
   // ─── Int ───
   static Future<bool> setInt(String key, int value) {
-    return prefs.setInt(key, value);
+    final currentPrefs = _prefs;
+    if (currentPrefs == null) return Future.value(false);
+    return currentPrefs.setInt(key, value);
   }
 
   static int? getInt(String key) {
-    return prefs.getInt(key);
+    return _prefs?.getInt(key);
   }
 
   // ─── Remove ───
   static Future<bool> remove(String key) {
-    return prefs.remove(key);
+    final currentPrefs = _prefs;
+    if (currentPrefs == null) return Future.value(false);
+    return currentPrefs.remove(key);
   }
 
   // ─── Clear All ───
   static Future<bool> clear() {
-    return prefs.clear();
+    final currentPrefs = _prefs;
+    if (currentPrefs == null) return Future.value(false);
+    return currentPrefs.clear();
   }
 
   // ─── Contains ───
   static bool containsKey(String key) {
-    return prefs.containsKey(key);
+    return _prefs?.containsKey(key) ?? false;
+  }
+
+  // ─── Keys ───
+  static Set<String> getKeys() {
+    return _prefs?.getKeys() ?? const <String>{};
+  }
+
+  // ─── Remove By Prefix ───
+  static Future<void> removeByPrefix(String prefix) async {
+    final currentPrefs = _prefs;
+    if (currentPrefs == null) return;
+
+    final keys = currentPrefs
+        .getKeys()
+        .where((key) => key.startsWith(prefix))
+        .toList();
+
+    for (final key in keys) {
+      await currentPrefs.remove(key);
+    }
   }
 }

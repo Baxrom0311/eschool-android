@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../providers/payment_provider.dart';
 import '../../widgets/payments/payment_method_card.dart';
@@ -26,11 +25,42 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
     super.dispose();
   }
 
-  void _handlePayment() {
+  Future<void> _handlePayment() async {
+    final digits = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final amount = int.tryParse(digits);
+
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('To\'lov summasini to\'g\'ri kiriting'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
+    final paymentData = await ref
+        .read(paymentProvider.notifier)
+        .createPayment(amount: amount, method: _selectedMethod);
+    if (!mounted) return;
+
+    if (paymentData == null) {
+      final error =
+          ref.read(paymentProvider).error ??
+          'Parent API da to\'lov yaratish qo\'llab-quvvatlanmaydi.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
+
+    final redirectUrl = paymentData['redirect_url']?.toString();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Parent API da to\'lov yaratish qo\'llab-quvvatlanmaydi.',
+          redirectUrl == null || redirectUrl.isEmpty
+              ? 'To\'lov yaratildi'
+              : 'To\'lov havolasi: $redirectUrl',
         ),
       ),
     );
@@ -38,23 +68,6 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(paymentProvider, (previous, next) {
-      if (next.error != null && next.error != previous?.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppColors.danger,
-          ),
-        );
-      }
-
-      if (previous?.isLoading == true &&
-          !next.isLoading &&
-          next.error == null) {
-        _showSuccessDialog();
-      }
-    });
-
     final paymentState = ref.watch(paymentProvider);
     final isLoading = paymentState.isLoading;
 
@@ -160,55 +173,6 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
                 height: 1.5,
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8FDF0),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_circle_rounded,
-                color: Colors.green,
-                size: 80,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'To\'lov muvaffaqiyatli!',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'To\'lov tizimiga yo\'naltirilmoqdasiz...',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Color(0xFF718096)),
-            ),
-            const SizedBox(height: 32),
-            CustomButton(
-              text: 'Yopish',
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.pop(); // Go back to main payments screen
-              },
-              borderRadius: 12,
-            ),
-            const SizedBox(height: 8),
           ],
         ),
       ),

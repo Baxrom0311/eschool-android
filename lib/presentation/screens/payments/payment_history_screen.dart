@@ -9,7 +9,8 @@ class PaymentHistoryScreen extends ConsumerStatefulWidget {
   const PaymentHistoryScreen({super.key});
 
   @override
-  ConsumerState<PaymentHistoryScreen> createState() => _PaymentHistoryScreenState();
+  ConsumerState<PaymentHistoryScreen> createState() =>
+      _PaymentHistoryScreenState();
 }
 
 class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
@@ -51,12 +52,12 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
     final state = ref.watch(paymentProvider);
     final transactions = state.payments;
     final isLoading = state.isLoading;
+    final showLoadMoreIndicator =
+        state.hasMore && isLoading && transactions.isNotEmpty;
 
     ref.listen(selectedChildProvider, (previous, next) {
       if (previous?.id != next?.id) {
-        ref
-            .read(paymentProvider.notifier)
-            .loadInitialData(studentId: next?.id);
+        ref.read(paymentProvider.notifier).loadInitialData(studentId: next?.id);
       }
     });
 
@@ -78,31 +79,41 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                   _FilterChip(label: 'Hammasi', isActive: true),
+                  _FilterChip(label: 'Hammasi', isActive: true),
                   SizedBox(width: 8),
                   _FilterChip(label: 'Muvaffaqiyatli', isActive: false),
                   SizedBox(width: 8),
-                   _FilterChip(label: 'Rad etilgan', isActive: false),
+                  _FilterChip(label: 'Rad etilgan', isActive: false),
                 ],
               ),
             ),
           ),
 
           // Transactions List
-          if (transactions.isEmpty && !isLoading)
-            const Expanded(child: Center(child: Text('To\'lovlar tarixi bo\'sh')))
+          if (transactions.isEmpty && isLoading)
+            const Expanded(child: Center(child: CircularProgressIndicator()))
+          else if (transactions.isEmpty && !isLoading)
+            const Expanded(
+              child: Center(child: Text('To\'lovlar tarixi bo\'sh')),
+            )
           else
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                itemCount: transactions.length + (state.hasMore ? 1 : 0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                itemCount:
+                    transactions.length + (showLoadMoreIndicator ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == transactions.length) {
-                    return const Center(child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(),
-                    ));
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
                   }
 
                   final tx = transactions[index];
@@ -112,7 +123,8 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                     elevation: 1,
                     margin: const EdgeInsets.only(bottom: 12),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: ListTile(
                       contentPadding: const EdgeInsets.all(16),
                       leading: Container(
@@ -125,12 +137,14 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                         ),
                         child: Icon(
                           isSuccess ? Icons.check_rounded : Icons.close_rounded,
-                          color: isSuccess ? AppColors.success : AppColors.danger,
+                          color: isSuccess
+                              ? AppColors.success
+                              : AppColors.danger,
                           size: 24,
                         ),
                       ),
                       title: Text(
-                        'To\'lov #${tx.id}', 
+                        'To\'lov #${tx.id}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -142,9 +156,11 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                         children: [
                           const SizedBox(height: 4),
                           Text(
-                            tx.createdAt, 
+                            tx.createdAt,
                             style: const TextStyle(
-                                fontSize: 12, color: AppColors.textSecondary),
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Row(
@@ -152,7 +168,9 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                               Text(
                                 tx.methodText,
                                 style: const TextStyle(
-                                    fontSize: 12, fontWeight: FontWeight.w600),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -176,8 +194,9 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                           color: isSuccess
                               ? AppColors.textPrimary
                               : AppColors.textSecondary,
-                          decoration:
-                              isSuccess ? null : TextDecoration.lineThrough,
+                          decoration: isSuccess
+                              ? null
+                              : TextDecoration.lineThrough,
                         ),
                       ),
                     ),

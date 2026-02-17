@@ -53,8 +53,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-
-
   Future<void> _completeAuthFlow({required String defaultError}) async {
     final authState = ref.read(authProvider);
     if (!mounted) return;
@@ -67,6 +65,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!authState.isAuthenticated) {
       _showError(defaultError);
       return;
+    }
+
+    if (authState.user != null) {
+      ref.read(userProvider.notifier).setUser(authState.user!);
     }
 
     await ref.read(userProvider.notifier).loadProfile();
@@ -400,8 +402,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   onTap: isLoading
                                       ? null
                                       : () => _showError(
-                                            'Google orqali kirish tez kunda ishga tushiriladi',
-                                          ),
+                                          'Google orqali kirish tez kunda ishga tushiriladi',
+                                        ),
                                   iconColor: AppColors.primaryBlue,
                                 ),
                               ),

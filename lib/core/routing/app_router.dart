@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/models/assignment_model.dart';
+import '../storage/secure_storage.dart';
 
 import 'route_names.dart';
 import '../../presentation/screens/splash/splash_screen.dart';
@@ -34,11 +35,39 @@ class AppRouter {
 
   static final GlobalKey<NavigatorState> _rootNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'root');
+  static final SecureStorageService _secureStorage = SecureStorageService();
+
+  static const Set<String> _publicRoutes = {
+    RouteNames.splash,
+    RouteNames.login,
+    RouteNames.register,
+    RouteNames.forgotPassword,
+  };
+
+  static Future<bool> _hasValidSession() async {
+    try {
+      final token = await _secureStorage.getAccessToken();
+      return token != null && token.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: RouteNames.splash,
     debugLogDiagnostics: kDebugMode,
+    redirect: (context, state) async {
+      final location = state.matchedLocation;
+      final isPublicRoute = _publicRoutes.contains(location);
+      final isAuthenticated = await _hasValidSession();
+
+      if (!isAuthenticated && !isPublicRoute) {
+        return RouteNames.login;
+      }
+
+      return null;
+    },
     routes: [
       // ─── Splash ───
       GoRoute(
@@ -95,9 +124,8 @@ class AppRouter {
       ),
       GoRoute(
         path: RouteNames.assignmentDetail,
-        builder: (context, state) => AssignmentDetailScreen(
-          assignment: state.extra as AssignmentModel?,
-        ),
+        builder: (context, state) =>
+            AssignmentDetailScreen(assignment: state.extra as AssignmentModel?),
       ),
       GoRoute(
         path: RouteNames.attendance,
@@ -135,9 +163,8 @@ class AppRouter {
       ),
       GoRoute(
         path: RouteNames.chatRoom,
-        builder: (context, state) => ChatRoomScreen(
-          chatData: state.extra as Map<String, dynamic>?,
-        ),
+        builder: (context, state) =>
+            ChatRoomScreen(chatData: state.extra as Map<String, dynamic>?),
       ),
 
       // ─── Notifications ───

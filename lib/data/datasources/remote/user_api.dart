@@ -19,7 +19,10 @@ class UserApi with ApiHelpers {
   /// children alohida endpointdan olinib birlashtiriladi.
   Future<UserModel> getProfile() async {
     try {
-      final profileResponse = await _client.get(ApiConstants.profile);
+      final profileResponse = await _client.get(
+        ApiConstants.profile,
+        options: Options(extra: {'clearSessionOn401': true}),
+      );
       final profileJson = _normalizeUserJson(asMap(profileResponse.data));
 
       List<ChildModel> children = const [];

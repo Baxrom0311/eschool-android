@@ -6,22 +6,15 @@ import 'package:flutter/foundation.dart';
 // Background message handler must be a top-level function
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-    try {
-      if (Firebase.apps.isEmpty) {
-        if (kIsWeb) {
-          // Web uchun options kerak, lekin bu fayl generatsiya qilinmagan bo'lsa
-          // bu yerda crash bo'lmasligi uchun try-catch bor.
-          // Agar rostakam options bo'lsa, uni shu yerga pass qilish kerak:
-          // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-          // Hozircha bo'sh qoldiramiz, keyinchalik to'g'irlash uchun.
-          log('Firebase initializeApp for WEB ignored (missing options)', name: 'FirebaseService');
-        } else {
-          await Firebase.initializeApp();
-        }
-      }
-    } catch (e) {
-      log('Background handler Firebase init error: $e', name: 'FirebaseService');
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
     }
+  } catch (e) {
+    log('Background handler Firebase init error: $e', name: 'FirebaseService');
+    return;
+  }
+
   if (kDebugMode) {
     log('Background message handled: ${message.messageId}');
   }
@@ -30,24 +23,30 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 class FirebaseService {
   static FirebaseMessaging? _firebaseMessaging;
   static bool _initialized = false;
+  static Future<void>? _initializing;
 
   static Future<void> init() async {
     if (_initialized) return;
+    if (_initializing != null) {
+      await _initializing;
+      return;
+    }
+
+    _initializing = _initInternal();
+    await _initializing;
+    _initializing = null;
+  }
+
+  static Future<void> _initInternal() async {
     try {
       if (Firebase.apps.isEmpty) {
-        if (kIsWeb) {
-           // Web da optionssiz init qilib bo'lmaydi.
-           // Userga xabar beramiz va davom etamiz (Firebase ishlmaydi).
-           log('Warning: Firebase options not found for Web. Firebase features will be disabled.', name: 'FirebaseService');
-           // Agar options bo'lsa:
-           // await Firebase.initializeApp(options: ...);
-        } else {
-           await Firebase.initializeApp();
-        }
+        await Firebase.initializeApp();
       }
 
       _firebaseMessaging = FirebaseMessaging.instance;
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
 
       // Request permission for notifications
       final settings = await _firebaseMessaging?.requestPermission(
@@ -71,12 +70,18 @@ class FirebaseService {
       _initialized = true;
     } catch (e) {
       // Firebase config bo'lmasa ilovani to'xtatmaymiz.
-      _debugLog('Firebase init error: $e');
+      _debugLog(
+        'Firebase init error: $e. Firebase config bo\'lmasa push funksiyalari ishlamaydi.',
+      );
     }
   }
 
   static Future<String?> getFCMToken() async {
     try {
+      if (!_initialized) {
+        await init();
+      }
+
       if (_firebaseMessaging == null) return null;
       final token = await _firebaseMessaging!.getToken();
       if (token != null && token.isNotEmpty) {

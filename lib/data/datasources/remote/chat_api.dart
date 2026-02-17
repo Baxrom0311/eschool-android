@@ -56,7 +56,12 @@ class ChatApi with ApiHelpers {
         final row = Map<String, dynamic>.from(raw);
         final senderId = toInt(row['sender_id']);
         final receiverId = toInt(row['receiver_id']);
-        final isMine = senderId != 0 && senderId != conversationId;
+        final isMine = _resolveMessageOwnership(
+          conversationId: conversationId,
+          senderId: senderId,
+          receiverId: receiverId,
+        );
+        final senderName = asMap(row['sender'])['name']?.toString();
         return MessageModel.fromJson({
           'id': toInt(row['id']) == 0
               ? row.toString().hashCode.abs()
@@ -64,8 +69,7 @@ class ChatApi with ApiHelpers {
           'content': (row['body'] ?? row['content'] ?? '').toString(),
           'type': 'text',
           'sender_id': senderId,
-          'sender_name': (asMap(row['sender'])['name'] ?? 'User $senderId')
-              .toString(),
+          'sender_name': senderName ?? (isMine ? 'Siz' : 'O\'qituvchi'),
           'is_mine': isMine,
           'created_at': (row['created_at'] ?? DateTime.now().toIso8601String())
               .toString(),
@@ -102,9 +106,15 @@ class ChatApi with ApiHelpers {
           : root;
 
       final senderId = toInt(message['sender_id']);
-      // Agar sender_id 0 bo'lsa, bu API tomondan to'ldirilmagan —
-      // biz yuborgan xabar ekanligini belgilaymiz.
-      final isMine = senderId == 0 || senderId != conversationId;
+      final receiverId = toInt(message['receiver_id']) == 0
+          ? conversationId
+          : toInt(message['receiver_id']);
+      final isMine = _resolveMessageOwnership(
+        conversationId: conversationId,
+        senderId: senderId,
+        receiverId: receiverId,
+      );
+      final senderName = asMap(message['sender'])['name']?.toString();
       return MessageModel.fromJson({
         'id': toInt(message['id']) == 0
             ? message.toString().hashCode.abs()
@@ -113,8 +123,7 @@ class ChatApi with ApiHelpers {
             .toString(),
         'type': type,
         'sender_id': senderId,
-        'sender_name': (asMap(message['sender'])['name'] ?? 'User $senderId')
-            .toString(),
+        'sender_name': senderName ?? (isMine ? 'Siz' : 'O\'qituvchi'),
         'is_mine': isMine,
         'created_at':
             (message['created_at'] ?? DateTime.now().toIso8601String())
@@ -126,6 +135,18 @@ class ChatApi with ApiHelpers {
     } on DioException catch (e) {
       throw handleDioError(e);
     }
+  }
+
+  bool _resolveMessageOwnership({
+    required int conversationId,
+    required int senderId,
+    required int receiverId,
+  }) {
+    if (senderId == conversationId) return false;
+    if (senderId != 0) return true;
+    if (receiverId == conversationId) return true;
+    if (receiverId != 0 && receiverId != conversationId) return false;
+    return false;
   }
 
   /// Fayl yuborish (rasm yoki hujjat)

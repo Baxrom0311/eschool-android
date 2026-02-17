@@ -15,11 +15,26 @@ val hasValidReleaseSigning = listOf(
     "keyPassword",
 ).all { !keyProperties.getProperty(it).isNullOrBlank() }
 
+val isReleaseTaskRequested = gradle.startParameter.taskNames.any {
+    it.contains("Release", ignoreCase = true)
+}
+
+if (isReleaseTaskRequested && !hasValidReleaseSigning) {
+    throw GradleException(
+        "Release signing is not configured. " +
+            "Please provide android/key.properties with storeFile, storePassword, keyAlias, keyPassword.",
+    )
+}
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 android {
@@ -53,10 +68,8 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (hasValidReleaseSigning) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
+            if (hasValidReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
             }
         }
     }

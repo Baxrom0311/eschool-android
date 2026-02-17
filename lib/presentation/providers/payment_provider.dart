@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/storage_keys.dart';
+import '../../core/storage/shared_prefs_service.dart';
 import '../../data/datasources/remote/payment_api.dart';
 import '../../data/models/payment_model.dart';
 import '../../data/repositories/payment_repository.dart';
@@ -50,14 +55,14 @@ class PaymentState {
   });
 
   const PaymentState.initial()
-      : balance = null,
-        payments = const [],
-        paymentMethods = const [],
-        isLoading = false,
-        error = null,
-        currentPage = 1,
-        hasMore = true,
-        selectedStudentId = null;
+    : balance = null,
+      payments = const [],
+      paymentMethods = const [],
+      isLoading = false,
+      error = null,
+      currentPage = 1,
+      hasMore = true,
+      selectedStudentId = null;
 
   PaymentState copyWith({
     BalanceInfo? balance,
@@ -92,44 +97,80 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
   final PaymentRepository _repository;
 
   PaymentNotifier({required PaymentRepository repository})
-      : _repository = repository,
-        super(const PaymentState.initial());
+    : _repository = repository,
+      super(const PaymentState.initial());
 
   /// Balans va to'lov usullarini yuklash
   Future<void> loadInitialData({int? studentId}) async {
-    state = state.copyWith(isLoading: true, error: null);
+    final cached = _readCache(studentId);
+    if (cached != null) {
+      state = cached.copyWith(
+        isLoading: true,
+        error: null,
+        selectedStudentId: studentId,
+      );
+    } else {
+      state = state.copyWith(isLoading: true, error: null);
+    }
 
     // Parallel yuklash — tezroq, typed tuple bilan runtime castlardan qochamiz.
-    final (
-      balanceResult,
-      historyResult,
-      methodsResult,
-    ) = await (
+    final (balanceResult, historyResult, methodsResult) = await (
       _repository.getBalance(studentId: studentId),
       _repository.getPaymentHistory(page: 1, studentId: studentId),
       _repository.getPaymentMethods(),
     ).wait;
 
     // Natijalarni tekshirish
-    BalanceInfo? balance;
-    List<PaymentModel> payments = [];
-    List<Map<String, dynamic>> methods = [];
+    BalanceInfo? balance = cached?.balance;
+    List<PaymentModel> payments = cached?.payments ?? [];
+    List<Map<String, dynamic>> methods = cached?.paymentMethods ?? [];
     String? error;
+    var hasFreshData = false;
 
     balanceResult.fold(
-      (f) => error = f.message,
-      (b) => balance = b,
+      (f) {
+        if (cached == null) {
+          error = f.message;
+        }
+      },
+      (b) {
+        hasFreshData = true;
+        balance = b;
+      },
     );
 
     historyResult.fold(
-      (f) => error ??= f.message,
-      (p) => payments = p,
+      (f) {
+        if (cached == null) {
+          error ??= f.message;
+        }
+      },
+      (p) {
+        hasFreshData = true;
+        payments = p;
+      },
     );
 
     methodsResult.fold(
-      (f) => error ??= f.message,
-      (m) => methods = m,
+      (f) {
+        if (cached == null) {
+          error ??= f.message;
+        }
+      },
+      (m) {
+        hasFreshData = true;
+        methods = m;
+      },
     );
+
+    if (!hasFreshData && cached != null) {
+      state = cached.copyWith(
+        isLoading: false,
+        error: null,
+        selectedStudentId: studentId,
+      );
+      return;
+    }
 
     state = state.copyWith(
       balance: balance,
@@ -141,6 +182,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
       hasMore: payments.length >= 20,
       selectedStudentId: studentId,
     );
+    unawaited(_saveCache(state));
   }
 
   /// Keyingi sahifani yuklash (infinite scroll)
@@ -156,10 +198,8 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
     );
 
     result.fold(
-      (failure) => state = state.copyWith(
-        isLoading: false,
-        error: failure.message,
-      ),
+      (failure) =>
+          state = state.copyWith(isLoading: false, error: failure.message),
       (newPayments) {
         state = state.copyWith(
           payments: [...state.payments, ...newPayments],
@@ -167,6 +207,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
           currentPage: nextPage,
           hasMore: newPayments.length >= 20,
         );
+        unawaited(_saveCache(state));
       },
     );
   }
@@ -185,10 +226,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
     return result.fold(
       (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          error: failure.message,
-        );
+        state = state.copyWith(isLoading: false, error: failure.message);
         return null;
       },
       (paymentData) {
@@ -203,10 +241,10 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
     final result = await _repository.getBalance(
       studentId: state.selectedStudentId,
     );
-    result.fold(
-      (_) {},
-      (balance) => state = state.copyWith(balance: balance),
-    );
+    result.fold((_) {}, (balance) {
+      state = state.copyWith(balance: balance);
+      unawaited(_saveCache(state));
+    });
   }
 
   /// Hammasini yangilash
@@ -219,6 +257,83 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  void clear() {
+    state = const PaymentState.initial();
+    unawaited(_clearCache());
+  }
+
+  PaymentState? _readCache(int? studentId) {
+    final raw = SharedPrefsService.getString(_cacheKey(studentId));
+    if (raw == null || raw.isEmpty) return null;
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      final map = Map<String, dynamic>.from(decoded);
+      final balanceRaw = map['balance'];
+      final paymentsRaw = map['payments'];
+      final methodsRaw = map['payment_methods'];
+
+      final balance = balanceRaw is Map
+          ? BalanceInfo.fromJson(Map<String, dynamic>.from(balanceRaw))
+          : null;
+      final payments = paymentsRaw is List
+          ? paymentsRaw
+                .whereType<Map>()
+                .map((e) => PaymentModel.fromJson(Map<String, dynamic>.from(e)))
+                .toList()
+          : const <PaymentModel>[];
+      final methods = methodsRaw is List
+          ? methodsRaw
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e))
+                .toList()
+          : const <Map<String, dynamic>>[];
+
+      return PaymentState(
+        balance: balance,
+        payments: payments,
+        paymentMethods: methods,
+        isLoading: false,
+        error: null,
+        currentPage: map['current_page'] is int
+            ? map['current_page'] as int
+            : 1,
+        hasMore: map['has_more'] is bool ? map['has_more'] as bool : true,
+        selectedStudentId: studentId,
+      );
+    } catch (_) {
+      unawaited(SharedPrefsService.remove(_cacheKey(studentId)));
+      return null;
+    }
+  }
+
+  Future<void> _saveCache(PaymentState current) async {
+    if (current.balance == null &&
+        current.payments.isEmpty &&
+        current.paymentMethods.isEmpty) {
+      return;
+    }
+
+    await SharedPrefsService.setString(
+      _cacheKey(current.selectedStudentId),
+      jsonEncode({
+        'balance': current.balance?.toJson(),
+        'payments': current.payments.map((e) => e.toJson()).toList(),
+        'payment_methods': current.paymentMethods,
+        'current_page': current.currentPage,
+        'has_more': current.hasMore,
+      }),
+    );
+  }
+
+  Future<void> _clearCache() async {
+    await SharedPrefsService.remove(_cacheKey(state.selectedStudentId));
+  }
+
+  String _cacheKey(int? studentId) =>
+      '${StorageKeys.paymentStateCachePrefix}${studentId ?? 0}';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -234,8 +349,9 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 ///   method: 'payme',
 /// );
 /// ```
-final paymentProvider =
-    StateNotifierProvider<PaymentNotifier, PaymentState>((ref) {
+final paymentProvider = StateNotifierProvider<PaymentNotifier, PaymentState>((
+  ref,
+) {
   final repository = ref.watch(paymentRepositoryProvider);
   return PaymentNotifier(repository: repository);
 });

@@ -40,26 +40,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final showMainAppBar = _currentIndex <= 1;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'E-School',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-        centerTitle: false,
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.push(RouteNames.notifications);
-            },
-            icon: const Icon(Icons.notifications_none_rounded),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+      appBar: showMainAppBar
+          ? AppBar(
+              title: Text(
+                _currentIndex == 0 ? 'E-School' : 'Ta\'lim',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0,
+              centerTitle: false,
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    context.push(RouteNames.notifications);
+                  },
+                  icon: const Icon(Icons.notifications_none_rounded),
+                ),
+                const SizedBox(width: 8),
+              ],
+            )
+          : null,
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

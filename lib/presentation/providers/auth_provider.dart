@@ -40,10 +40,7 @@ final authApiProvider = Provider<AuthApi>((ref) {
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final authApi = ref.watch(authApiProvider);
   final secureStorage = ref.watch(secureStorageProvider);
-  return AuthRepository(
-    authApi: authApi,
-    secureStorage: secureStorage,
-  );
+  return AuthRepository(authApi: authApi, secureStorage: secureStorage);
 });
 
 final googleSignInProvider = Provider<GoogleSignIn>((ref) {
@@ -75,10 +72,10 @@ class AuthState extends Equatable {
 
   /// Boshlang'ich holat — hech narsa yuklanmagan
   const AuthState.initial()
-      : user = null,
-        isLoading = false,
-        error = null,
-        isAuthenticated = false;
+    : user = null,
+      isLoading = false,
+      error = null,
+      isAuthenticated = false;
 
   /// Loading holati
   AuthState copyWithLoading() {
@@ -153,9 +150,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier({
     required AuthRepository repository,
     required GoogleSignIn googleSignIn,
-  })  : _repository = repository,
-        _googleSignIn = googleSignIn,
-        super(const AuthState.initial());
+  }) : _repository = repository,
+       _googleSignIn = googleSignIn,
+       super(const AuthState.initial());
 
   /// Ilova boshlanganda token mavjudligini tekshirish
   ///
@@ -169,6 +166,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         // User ma'lumotlari keyingi API chaqiruvda yuklanadi
       );
       updateFCMToken();
+    } else {
+      state = state.copyWithLogout();
     }
     return hasToken;
   }
@@ -185,13 +184,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       password: password,
     );
 
-    result.fold(
-      (failure) => state = state.copyWithError(failure.message),
-      (user) {
-        state = state.copyWithSuccess(user);
-        updateFCMToken();
-      },
-    );
+    result.fold((failure) => state = state.copyWithError(failure.message), (
+      user,
+    ) {
+      state = state.copyWithSuccess(user);
+      updateFCMToken();
+    });
   }
 
   /// Register — yangi hisob yaratish
@@ -321,8 +319,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   final googleSignIn = ref.watch(googleSignInProvider);
-  return AuthNotifier(
-    repository: repository,
-    googleSignIn: googleSignIn,
-  );
+  return AuthNotifier(repository: repository, googleSignIn: googleSignIn);
 });

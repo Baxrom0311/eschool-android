@@ -26,7 +26,6 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
       } else {
         ref.read(ratingProvider.notifier).loadSchoolRating();
       }
-      ref.read(ratingProvider.notifier).loadSchoolRating();
     });
   }
 

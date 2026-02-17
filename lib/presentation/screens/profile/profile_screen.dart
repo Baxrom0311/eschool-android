@@ -32,10 +32,7 @@ class ProfileScreen extends ConsumerWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  AppColors.primaryBlue,
-                  AppColors.secondaryBlue,
-                ],
+                colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
               ),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(32),
@@ -137,9 +134,7 @@ class ProfileScreen extends ConsumerWidget {
                   subtitle: 'Profilingizni tahrirlash',
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tez orada...'),
-                      ),
+                      const SnackBar(content: Text('Tez orada...')),
                     );
                   },
                 ),
@@ -227,19 +222,23 @@ class ProfileScreen extends ConsumerWidget {
   void _handleLogout(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Tizimdan chiqish'),
         content: const Text('Rostdan ham tizimdan chiqmoqchimisiz?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Bekor qilish'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(authProvider.notifier).logout();
-              context.go(RouteNames.login);
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await ref.read(authProvider.notifier).logout();
+              ref.read(userProvider.notifier).clear();
+              ref.read(paymentProvider.notifier).clear();
+              if (context.mounted) {
+                context.go(RouteNames.login);
+              }
             },
             child: const Text(
               'Chiqish',
@@ -281,11 +280,7 @@ class _StatCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: Colors.white,
-            size: 28,
-          ),
+          Icon(icon, color: Colors.white, size: 28),
           const SizedBox(height: 8),
           Text(
             label,
@@ -333,10 +328,7 @@ class _SettingsItem extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(
-          color: AppColors.border,
-          width: 1,
-        ),
+        side: const BorderSide(color: AppColors.border, width: 1),
       ),
       child: ListTile(
         onTap: onTap,
@@ -347,11 +339,7 @@ class _SettingsItem extends StatelessWidget {
             color: AppColors.primaryBlue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primaryBlue,
-            size: 24,
-          ),
+          child: Icon(icon, color: AppColors.primaryBlue, size: 24),
         ),
         title: Text(
           title,
@@ -363,19 +351,13 @@ class _SettingsItem extends StatelessWidget {
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
+          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
         ),
         trailing: const Icon(
           Icons.chevron_right_rounded,
           color: AppColors.textSecondary,
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 8,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }

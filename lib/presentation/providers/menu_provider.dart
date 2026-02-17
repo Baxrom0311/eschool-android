@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/storage_keys.dart';
+import '../../core/storage/shared_prefs_service.dart';
 import '../../data/datasources/remote/menu_api.dart';
 import '../../data/models/menu_model.dart';
 import '../../data/repositories/menu_repository.dart';
@@ -35,11 +40,11 @@ class MenuState {
   });
 
   const MenuState.initial()
-      : dailyMenu = const [],
-        weeklyMenu = const [],
-        isLoading = false,
-        error = null,
-        selectedDate = null;
+    : dailyMenu = const [],
+      weeklyMenu = const [],
+      isLoading = false,
+      error = null,
+      selectedDate = null;
 
   MenuState copyWith({
     List<MenuModel>? dailyMenu,
@@ -62,11 +67,22 @@ class MenuNotifier extends StateNotifier<MenuState> {
   final MenuRepository _repository;
 
   MenuNotifier({required MenuRepository repository})
-      : _repository = repository,
-        super(const MenuState.initial());
+    : _repository = repository,
+      super(const MenuState.initial());
 
   Future<void> loadDailyMenu({String? date, int? studentId}) async {
-    state = state.copyWith(isLoading: true, error: null, selectedDate: date);
+    final cacheKey = _dailyCacheKey(date, studentId);
+    final cached = _readMenuCache(cacheKey);
+    if (cached != null) {
+      state = state.copyWith(
+        dailyMenu: cached,
+        isLoading: true,
+        error: null,
+        selectedDate: date,
+      );
+    } else {
+      state = state.copyWith(isLoading: true, error: null, selectedDate: date);
+    }
 
     final result = await _repository.getDailyMenu(
       date: date,
@@ -74,13 +90,25 @@ class MenuNotifier extends StateNotifier<MenuState> {
     );
 
     result.fold(
-      (f) => state = state.copyWith(isLoading: false, error: f.message),
-      (menu) => state = state.copyWith(dailyMenu: menu, isLoading: false),
+      (f) => state = state.copyWith(
+        isLoading: false,
+        error: cached == null ? f.message : null,
+      ),
+      (menu) {
+        state = state.copyWith(dailyMenu: menu, isLoading: false);
+        unawaited(_saveMenuCache(cacheKey, menu));
+      },
     );
   }
 
   Future<void> loadWeeklyMenu({String? weekStart, int? studentId}) async {
-    state = state.copyWith(isLoading: true, error: null);
+    final cacheKey = _weeklyCacheKey(weekStart, studentId);
+    final cached = _readMenuCache(cacheKey);
+    if (cached != null) {
+      state = state.copyWith(weeklyMenu: cached, isLoading: true, error: null);
+    } else {
+      state = state.copyWith(isLoading: true, error: null);
+    }
 
     final result = await _repository.getWeeklyMenu(
       weekStart: weekStart,
@@ -88,10 +116,45 @@ class MenuNotifier extends StateNotifier<MenuState> {
     );
 
     result.fold(
-      (f) => state = state.copyWith(isLoading: false, error: f.message),
-      (menu) => state = state.copyWith(weeklyMenu: menu, isLoading: false),
+      (f) => state = state.copyWith(
+        isLoading: false,
+        error: cached == null ? f.message : null,
+      ),
+      (menu) {
+        state = state.copyWith(weeklyMenu: menu, isLoading: false);
+        unawaited(_saveMenuCache(cacheKey, menu));
+      },
     );
   }
+
+  List<MenuModel>? _readMenuCache(String key) {
+    final raw = SharedPrefsService.getString(key);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return null;
+      return decoded
+          .whereType<Map>()
+          .map((e) => MenuModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (_) {
+      unawaited(SharedPrefsService.remove(key));
+      return null;
+    }
+  }
+
+  Future<void> _saveMenuCache(String key, List<MenuModel> menu) async {
+    await SharedPrefsService.setString(
+      key,
+      jsonEncode(menu.map((e) => e.toJson()).toList()),
+    );
+  }
+
+  String _dailyCacheKey(String? date, int? studentId) =>
+      '${StorageKeys.dailyMenuCachePrefix}${studentId ?? 0}_${date ?? 'today'}';
+
+  String _weeklyCacheKey(String? weekStart, int? studentId) =>
+      '${StorageKeys.weeklyMenuCachePrefix}${studentId ?? 0}_${weekStart ?? 'current'}';
 }
 
 final menuProvider = StateNotifierProvider<MenuNotifier, MenuState>((ref) {
