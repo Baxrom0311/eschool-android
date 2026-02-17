@@ -1,0 +1,3490 @@
+openapi: 3.0.3
+info:
+  title: School API (Tenant)
+  version: 1.0.0
+  description: >
+    OpenAPI specification for central (portal) and tenant APIs.
+    Central endpoints live under /api on the central host. Tenant endpoints
+    live under /api on the tenant host (subdomain or custom domain).
+externalDocs:
+  description: Architecture
+  url: ./docs/architecture.md
+x-architecture: |
+  Central host: /api/portal/* and /api/super/*
+  Tenant host: /api/* (tenant)
+  Tenancy: domain/subdomain via Stancl Tenancy middleware.
+servers:
+  - url: http://{tenant_host}
+    description: Tenant (school) API host
+    variables:
+      tenant_host:
+        default: school.lvh.me:8000
+tags:
+  - name: Super Admin
+    description: Central super-admin endpoints
+  - name: Auth (Central)
+    description: Central auth helpers
+  - name: Portal Teacher
+    description: Central portal endpoints for teachers
+  - name: Portal Parent
+    description: Central portal endpoints for parents
+  - name: Auth (Tenant)
+    description: Tenant auth endpoints
+  - name: Teacher Lessons
+    description: Tenant teacher lessons endpoints
+  - name: Teacher
+    description: Tenant teacher endpoints
+  - name: Student Profile
+    description: Tenant student profile endpoints
+  - name: Parent
+    description: Tenant parent endpoints
+paths:
+  /api/login:
+    post:
+      tags: [Auth (Tenant)]
+      summary: Tenant login
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TenantLoginRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantLoginRequest'
+      responses:
+        '200':
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantLoginResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/logout:
+    post:
+      tags: [Auth (Tenant)]
+      summary: Tenant logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logged out
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /api/me:
+    get:
+      tags: [Auth (Tenant)]
+      summary: Tenant current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current tenant user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantUser'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /api/teacher/lessons/today:
+    get:
+      tags: [Teacher Lessons]
+      summary: Get teacher lessons for today
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/QuarterId'
+      responses:
+        '200':
+          description: Lessons for today
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherTodayResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/lessons/{entry}/start:
+    post:
+      tags: [Teacher Lessons]
+      summary: Start lesson session for timetable entry
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TimetableEntryId'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherLessonStartResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/lesson-sessions/{session}:
+    get:
+      tags: [Teacher Lessons]
+      summary: Get lesson session details
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LessonSessionId'
+      responses:
+        '200':
+          description: Lesson session data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherLessonSessionResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /api/teacher/lesson-sessions/{session}/save:
+    post:
+      tags: [Teacher Lessons]
+      summary: Save attendance and activity grades
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LessonSessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherLessonSaveRequest'
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusOkResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/lesson-sessions/{session}/close:
+    post:
+      tags: [Teacher Lessons]
+      summary: Close lesson session
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LessonSessionId'
+      responses:
+        '200':
+          description: Closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusOkResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/student/profile:
+    get:
+      tags: [Student Profile]
+      summary: Get student profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/YearId'
+      responses:
+        '200':
+          description: Student profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProfileResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/parent/children:
+    get:
+      tags: [Parent]
+      summary: List children for parent (tenant)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of children
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantChildrenResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/parent/children/{student}:
+    get:
+      tags: [Parent]
+      summary: Get child profile (tenant)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+        - $ref: '#/components/parameters/YearId'
+      responses:
+        '200':
+          description: Child profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProfileResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /api/parent/homeworks:
+    get:
+      tags: [Parent]
+      summary: List homeworks for parent children
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/YearId'
+      responses:
+        '200':
+          description: Homeworks by child
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentHomeworksResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/parent/homeworks/{homework}/submit:
+    post:
+      tags: [Parent]
+      summary: Submit homework for child
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/HomeworkId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ParentHomeworkSubmitRequest'
+      responses:
+        '201':
+          description: Homework submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentHomeworkSubmitResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/parent/timetable:
+    get:
+      tags: [Parent]
+      summary: Get timetable for parent children
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/YearId'
+        - name: quarter_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 7
+      responses:
+        '200':
+          description: Timetable data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentTimetableResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/parent/meals:
+    get:
+      tags: [Parent]
+      summary: Get meal reports for parent children
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/YearId'
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Meal reports
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentMealsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/parent/payments:
+    get:
+      tags: [Parent]
+      summary: Get payments for parent children
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/YearId'
+      responses:
+        '200':
+          description: Payments by child
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentPaymentsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/parent/chat/contacts:
+    get:
+      tags: [Parent]
+      summary: List chat contacts for parent
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Chat contacts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentChatContactsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/parent/chat/messages/{user}:
+    get:
+      tags: [Parent]
+      summary: Get chat messages with teacher
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Chat messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentChatMessagesResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/parent/chat/messages:
+    post:
+      tags: [Parent]
+      summary: Send chat message to teacher
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParentChatMessageRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ParentChatMessageRequest'
+      responses:
+        '201':
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentChatMessageResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/lesson-sessions/{session}/homework:
+    post:
+      tags: [Teacher]
+      summary: Save homework for lesson session
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LessonSessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherLessonHomeworkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherLessonHomeworkRequest'
+      responses:
+        '200':
+          description: Homework saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherLessonHomeworkResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/attendance:
+    get:
+      tags: [Teacher]
+      summary: List attendance sessions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/YearId'
+        - $ref: '#/components/parameters/QuarterId'
+      responses:
+        '200':
+          description: Attendance sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherAttendanceResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      tags: [Teacher]
+      summary: Create attendance session
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherAttendanceCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherAttendanceCreateRequest'
+      responses:
+        '201':
+          description: Attendance session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherAttendanceSessionResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/attendance/options:
+    get:
+      tags: [Teacher]
+      summary: Attendance form options
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/YearId'
+        - $ref: '#/components/parameters/QuarterId'
+      responses:
+        '200':
+          description: Attendance options
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherAttendanceOptionsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/attendance/{session}:
+    get:
+      tags: [Teacher]
+      summary: Get attendance session details
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AttendanceSessionId'
+      responses:
+        '200':
+          description: Attendance session detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherAttendanceSessionResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      tags: [Teacher]
+      summary: Update attendance session
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AttendanceSessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherAttendanceUpdateRequest'
+      responses:
+        '200':
+          description: Attendance saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusOkResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/homeworks:
+    get:
+      tags: [Teacher]
+      summary: List homework submissions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: group_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Homework submissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherHomeworksResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/homeworks/submissions/{submission}/grade:
+    post:
+      tags: [Teacher]
+      summary: Grade homework submission
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/HomeworkSubmissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherHomeworkGradeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherHomeworkGradeRequest'
+      responses:
+        '200':
+          description: Submission graded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherHomeworkGradeResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/chat/contacts:
+    get:
+      tags: [Teacher]
+      summary: List chat contacts for teacher
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Chat contacts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherChatContactsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/chat/messages/{user}:
+    get:
+      tags: [Teacher]
+      summary: Get chat messages with parent
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Chat messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherChatMessagesResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/chat/messages:
+    post:
+      tags: [Teacher]
+      summary: Send chat message to parent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherChatMessageRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherChatMessageRequest'
+      responses:
+        '201':
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherChatMessageResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/meals:
+    get:
+      tags: [Teacher]
+      summary: Get meal reports for class
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: group_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: meal_type
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Meal report details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherMealsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      tags: [Teacher]
+      summary: Save meal report
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherMealStoreRequest'
+      responses:
+        '201':
+          description: Meal report saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusOkResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/payments:
+    get:
+      tags: [Teacher]
+      summary: List students with payment info
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: group_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Payment list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherPaymentsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/payments/{student}:
+    get:
+      tags: [Teacher]
+      summary: Payment details for student
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherPaymentDetailsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      tags: [Teacher]
+      summary: Create payment for student
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherPaymentStoreRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherPaymentStoreRequest'
+      responses:
+        '201':
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherPaymentStoreResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/assessments:
+    get:
+      tags: [Teacher]
+      summary: List assessments
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/YearId'
+        - $ref: '#/components/parameters/QuarterId'
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Assessments list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherAssessmentsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      tags: [Teacher]
+      summary: Create assessment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherAssessmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherAssessmentRequest'
+      responses:
+        '201':
+          description: Assessment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherAssessmentResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/assessments/options:
+    get:
+      tags: [Teacher]
+      summary: Assessment form options
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/YearId'
+        - $ref: '#/components/parameters/QuarterId'
+      responses:
+        '200':
+          description: Assessment options
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherAssessmentOptionsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/assessments/{assessment}:
+    get:
+      tags: [Teacher]
+      summary: Get assessment details
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentId'
+      responses:
+        '200':
+          description: Assessment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherAssessmentResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    put:
+      tags: [Teacher]
+      summary: Update assessment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherAssessmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherAssessmentRequest'
+      responses:
+        '200':
+          description: Assessment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherAssessmentResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Teacher]
+      summary: Delete assessment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentId'
+      responses:
+        '200':
+          description: Assessment deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusOkResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/assessments/{assessment}/results:
+    get:
+      tags: [Teacher]
+      summary: Assessment results
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentId'
+      responses:
+        '200':
+          description: Assessment results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherAssessmentResultsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      tags: [Teacher]
+      summary: Save assessment results
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherAssessmentSaveResultsRequest'
+      responses:
+        '200':
+          description: Results saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusOkResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/subjects:
+    get:
+      tags: [Teacher]
+      summary: List teacher subjects
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Teacher subjects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherSubjectsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/subjects/{subject}:
+    get:
+      tags: [Teacher]
+      summary: Get subject topics and resources
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubjectId'
+      responses:
+        '200':
+          description: Subject details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherSubjectDetailResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/subjects/{subject}/topics:
+    post:
+      tags: [Teacher]
+      summary: Create topic with resources
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubjectId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherTopicStoreRequest'
+      responses:
+        '201':
+          description: Topic created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusOkResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/subjects/{subject}/topics/{topic}/resources:
+    post:
+      tags: [Teacher]
+      summary: Add resources to topic
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubjectId'
+        - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherTopicResourceStoreRequest'
+      responses:
+        '200':
+          description: Resources added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusOkResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/timetable:
+    get:
+      tags: [Teacher]
+      summary: Teacher timetable
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/QuarterId'
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 7
+      responses:
+        '200':
+          description: Teacher timetable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherTimetableResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/profile:
+    get:
+      tags: [Teacher]
+      summary: Get teacher profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Teacher profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherProfileResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      tags: [Teacher]
+      summary: Update teacher profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherProfileUpdateRequest'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherProfileUpdateResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/profile/coauthors:
+    get:
+      tags: [Teacher]
+      summary: Lookup coauthor by passport
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: passport_no
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Coauthor lookup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherCoauthorLookupResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/profile/works:
+    post:
+      tags: [Teacher]
+      summary: Create scientific work
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherProfileWorkStoreRequest'
+      responses:
+        '201':
+          description: Work created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherProfileWorkStoreResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/teacher/profile/works/{work}:
+    delete:
+      tags: [Teacher]
+      summary: Delete scientific work
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ScientificWorkId'
+      responses:
+        '200':
+          description: Work deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusOkResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/grades/quarter:
+    get:
+      tags: [Teacher]
+      summary: List quarter grades
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/YearId'
+        - $ref: '#/components/parameters/QuarterId'
+        - name: group_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: subject_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Quarter grades
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherQuarterGradesResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/teacher/grades/year:
+    get:
+      tags: [Teacher]
+      summary: List year grades
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/YearId'
+        - name: group_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: subject_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Year grades
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherYearGradesResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
+  parameters:
+    QuarterId:
+      name: quarter_id
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: Quarter id (defaults to current quarter when omitted)
+    YearId:
+      name: year_id
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: Academic year id (defaults to current year when omitted)
+    TimetableEntryId:
+      name: entry
+      in: path
+      required: true
+      schema:
+        type: integer
+    LessonSessionId:
+      name: session
+      in: path
+      required: true
+      schema:
+        type: integer
+    AttendanceSessionId:
+      name: session
+      in: path
+      required: true
+      schema:
+        type: integer
+    StudentId:
+      name: student
+      in: path
+      required: true
+      schema:
+        type: integer
+    UserId:
+      name: user
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: User id (teacher or parent)
+    HomeworkId:
+      name: homework
+      in: path
+      required: true
+      schema:
+        type: integer
+    HomeworkSubmissionId:
+      name: submission
+      in: path
+      required: true
+      schema:
+        type: integer
+    AssessmentId:
+      name: assessment
+      in: path
+      required: true
+      schema:
+        type: integer
+    SubjectId:
+      name: subject
+      in: path
+      required: true
+      schema:
+        type: integer
+    TopicId:
+      name: topic
+      in: path
+      required: true
+      schema:
+        type: integer
+    ScientificWorkId:
+      name: work
+      in: path
+      required: true
+      schema:
+        type: integer
+    TenantId:
+      name: tenant
+      in: path
+      required: true
+      schema:
+        type: string
+    PlanId:
+      name: plan
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    ForbiddenError:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    NotFoundError:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+  schemas:
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    CentralUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+    TenantUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          items:
+            type: string
+    TokenCreateRequest:
+      type: object
+      properties:
+        token_name:
+          type: string
+          maxLength: 100
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+    CentralLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        device_name:
+          type: string
+          maxLength: 100
+          nullable: true
+    TenantLoginRequest:
+      allOf:
+        - $ref: '#/components/schemas/CentralLoginRequest'
+    TenantLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/TenantUser'
+    TenantCreateRequest:
+      type: object
+      required:
+        - name
+        - subdomain
+        - plan_id
+        - director_name
+        - director_email
+        - director_password
+      properties:
+        name:
+          type: string
+        subdomain:
+          type: string
+          minLength: 3
+          maxLength: 40
+        plan_id:
+          type: integer
+        director_name:
+          type: string
+        director_email:
+          type: string
+          format: email
+        director_phone:
+          type: string
+          nullable: true
+        director_password:
+          type: string
+          minLength: 8
+    TenantCreateResponse:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+        domain:
+          type: string
+          description: Tenant domain (subdomain + base domain)
+    TeacherSchool:
+      type: object
+      properties:
+        membership_id:
+          type: integer
+        tenant_id:
+          type: string
+        tenant_user_id:
+          type: integer
+          nullable: true
+        school_name:
+          type: string
+        host:
+          type: string
+          nullable: true
+    TenantTokenInfo:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+        tenant_user_id:
+          type: integer
+        host:
+          type: string
+          nullable: true
+        token:
+          type: string
+    TenantTokenInfoForParent:
+      allOf:
+        - $ref: '#/components/schemas/TenantTokenInfo'
+        - type: object
+          properties:
+            student_id:
+              type: integer
+    TeacherLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/CentralUser'
+        schools:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherSchool'
+        tenant:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/TenantTokenInfo'
+    TeacherSchoolsResponse:
+      type: object
+      properties:
+        schools:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherSchool'
+    TeacherTenantTokenRequest:
+      type: object
+      required: [membership_id]
+      properties:
+        membership_id:
+          type: integer
+        device_name:
+          type: string
+          maxLength: 100
+          nullable: true
+    ParentChildCentral:
+      type: object
+      properties:
+        student_id:
+          type: integer
+        student_name:
+          type: string
+        student_email:
+          type: string
+          format: email
+          nullable: true
+        student_phone:
+          type: string
+          nullable: true
+        tenant_user_id:
+          type: integer
+        tenant_id:
+          type: string
+        school_name:
+          type: string
+        host:
+          type: string
+          nullable: true
+    ParentLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/CentralUser'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParentChildCentral'
+        tenant:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/TenantTokenInfoForParent'
+    ParentChildrenResponse:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParentChildCentral'
+    ParentTenantTokenRequest:
+      type: object
+      required: [tenant_id, student_id]
+      properties:
+        tenant_id:
+          type: string
+        student_id:
+          type: integer
+        device_name:
+          type: string
+          maxLength: 100
+          nullable: true
+    TimetableEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        quarter_id:
+          type: integer
+        subject_id:
+          type: integer
+        teacher_id:
+          type: integer
+        room_id:
+          type: integer
+          nullable: true
+        day_of_week:
+          type: integer
+        lesson_time_id:
+          type: integer
+        status:
+          type: integer
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        lessonTime:
+          $ref: '#/components/schemas/LessonTime'
+        subject:
+          $ref: '#/components/schemas/Subject'
+        room:
+          $ref: '#/components/schemas/Room'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+      additionalProperties: true
+    LessonTime:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        lesson_no:
+          type: integer
+        starts_at:
+          type: string
+        ends_at:
+          type: string
+        status:
+          type: integer
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+          nullable: true
+        hours_week:
+          type: integer
+          nullable: true
+        status:
+          type: integer
+    Room:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+          nullable: true
+        capacity:
+          type: integer
+          nullable: true
+        status:
+          type: integer
+    Group:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+          nullable: true
+        level:
+          type: integer
+          nullable: true
+        status:
+          type: integer
+    LessonSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        timetable_entry_id:
+          type: integer
+        academic_year_id:
+          type: integer
+        quarter_id:
+          type: integer
+        group_id:
+          type: integer
+        subject_id:
+          type: integer
+        teacher_id:
+          type: integer
+          nullable: true
+        room_id:
+          type: integer
+          nullable: true
+        lesson_date:
+          type: string
+          format: date
+        topic_id:
+          type: integer
+          nullable: true
+        status:
+          type: string
+        confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+        confirmed_by:
+          type: integer
+          nullable: true
+        teacher_note:
+          type: string
+          nullable: true
+        entry:
+          $ref: '#/components/schemas/TimetableEntry'
+      additionalProperties: true
+    LessonSessionRow:
+      type: object
+      properties:
+        id:
+          type: integer
+        lesson_session_id:
+          type: integer
+        student_id:
+          type: integer
+        att_status:
+          type: string
+          enum: [P, A, L, E]
+        activity_grade_5:
+          type: integer
+          nullable: true
+        activity_coin:
+          type: integer
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        student:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+        group:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+      additionalProperties: true
+    TeacherTodayResponse:
+      type: object
+      properties:
+        quarter_id:
+          type: integer
+        current_entry_id:
+          type: integer
+          nullable: true
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimetableEntry'
+    TeacherLessonStartResponse:
+      type: object
+      properties:
+        session_id:
+          type: integer
+    TeacherLessonSessionResponse:
+      type: object
+      properties:
+        grading_mode:
+          type: string
+          description: grade | coin
+        session:
+          $ref: '#/components/schemas/LessonSession'
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/LessonSessionRow'
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Topic'
+        homework:
+          $ref: '#/components/schemas/Homework'
+        homework_expired:
+          type: boolean
+    TeacherLessonSaveRequest:
+      type: object
+      required: [rows]
+      properties:
+        topic_id:
+          type: integer
+          nullable: true
+        rows:
+          type: array
+          items:
+            type: object
+            required: [id, att_status]
+            properties:
+              id:
+                type: integer
+              att_status:
+                type: string
+                enum: [P, A, L, E]
+              activity_grade_5:
+                type: integer
+                nullable: true
+              activity_coin:
+                type: integer
+                nullable: true
+              note:
+                type: string
+                nullable: true
+    StatusOkResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+    StudentProfileResponse:
+      type: object
+      properties:
+        student:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            email:
+              type: string
+              nullable: true
+            phone:
+              type: string
+              nullable: true
+        yearId:
+          type: integer
+        quarters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Quarter'
+        groupRow:
+          type: object
+          nullable: true
+          description: Group row from group_user join for the current year
+          additionalProperties: true
+        subjects:
+          type: object
+          description: Map of subject_id -> subject
+          additionalProperties:
+            $ref: '#/components/schemas/Subject'
+        qMap:
+          type: object
+          description: Map of subject_id -> quarter_number -> QuarterGrade
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: '#/components/schemas/QuarterGrade'
+        yMap:
+          type: object
+          description: Map of subject_id -> YearGrade
+          additionalProperties:
+            $ref: '#/components/schemas/YearGrade'
+        lessonMarks:
+          type: array
+          items:
+            $ref: '#/components/schemas/LessonMark'
+        summary:
+          type: object
+          description: Aggregated averages by subject and mark type
+          additionalProperties: true
+    Quarter:
+      type: object
+      properties:
+        id:
+          type: integer
+        academic_year_id:
+          type: integer
+        number:
+          type: integer
+        name:
+          type: string
+        starts_at:
+          type: string
+          format: date
+        ends_at:
+          type: string
+          format: date
+        is_current:
+          type: boolean
+    QuarterGrade:
+      type: object
+      properties:
+        id:
+          type: integer
+        academic_year_id:
+          type: integer
+        quarter_id:
+          type: integer
+        group_id:
+          type: integer
+        subject_id:
+          type: integer
+        student_id:
+          type: integer
+        percent:
+          type: number
+          format: float
+        grade_5:
+          type: integer
+          nullable: true
+        calculated_at:
+          type: string
+          format: date-time
+          nullable: true
+        quarter:
+          $ref: '#/components/schemas/Quarter'
+        subject:
+          $ref: '#/components/schemas/Subject'
+      additionalProperties: true
+    YearGrade:
+      type: object
+      properties:
+        id:
+          type: integer
+        academic_year_id:
+          type: integer
+        group_id:
+          type: integer
+        subject_id:
+          type: integer
+        student_id:
+          type: integer
+        percent:
+          type: number
+          format: float
+        grade_5:
+          type: integer
+          nullable: true
+        calculated_at:
+          type: string
+          format: date-time
+          nullable: true
+        subject:
+          $ref: '#/components/schemas/Subject'
+      additionalProperties: true
+    LessonMark:
+      type: object
+      properties:
+        id:
+          type: integer
+        lesson_session_id:
+          type: integer
+        student_id:
+          type: integer
+        type:
+          type: string
+          description: classwork | homework | participation
+        score:
+          type: number
+          format: float
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        session:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+    TenantChildrenResponse:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantChild'
+    TenantChild:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+    AcademicYear:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        is_current:
+          type: boolean
+        starts_at:
+          type: string
+          format: date
+        ends_at:
+          type: string
+          format: date
+    HomeworkSubmissionFile:
+      type: object
+      properties:
+        id:
+          type: integer
+        file_path:
+          type: string
+        original_name:
+          type: string
+        mime:
+          type: string
+        size:
+          type: integer
+    HomeworkSubmission:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        grade_5:
+          type: integer
+          nullable: true
+        coin:
+          type: integer
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/HomeworkSubmissionFile'
+      additionalProperties: true
+    Homework:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        assigned_at:
+          type: string
+          format: date
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        subject:
+          $ref: '#/components/schemas/Subject'
+        group:
+          $ref: '#/components/schemas/Group'
+        teacher:
+          $ref: '#/components/schemas/TenantUser'
+        submissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/HomeworkSubmission'
+      additionalProperties: true
+    ParentHomeworksResponse:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantChild'
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        grading_mode:
+          type: string
+          description: grade | coin
+        homeworks_by_child:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/Homework'
+    ParentHomeworkSubmitRequest:
+      type: object
+      required: [student_id, files]
+      properties:
+        student_id:
+          type: integer
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+        note:
+          type: string
+          maxLength: 255
+    ParentHomeworkSubmitResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        submission_id:
+          type: integer
+    TimetableMark:
+      type: object
+      properties:
+        grade_5:
+          type: integer
+          nullable: true
+        coin:
+          type: integer
+          nullable: true
+    ParentTimetableResponse:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantChild'
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        current_quarter:
+          $ref: '#/components/schemas/Quarter'
+        dates:
+          type: array
+          items:
+            type: string
+            format: date
+        grading_mode:
+          type: string
+        schedule_by_child:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimetableEntry'
+        marks_by_child:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/TimetableMark'
+        group_ids_by_child:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: integer
+    MealReportMedia:
+      type: object
+      properties:
+        id:
+          type: integer
+        meal_type:
+          type: string
+        file_path:
+          type: string
+        original_name:
+          type: string
+        mime:
+          type: string
+        size:
+          type: integer
+    MealReport:
+      type: object
+      properties:
+        id:
+          type: integer
+        group_id:
+          type: integer
+        academic_year_id:
+          type: integer
+        meal_date:
+          type: string
+          format: date
+        note:
+          type: string
+          nullable: true
+        breakfast_name:
+          type: string
+          nullable: true
+        breakfast_recipe:
+          type: string
+          nullable: true
+        lunch_name:
+          type: string
+          nullable: true
+        lunch_recipe:
+          type: string
+          nullable: true
+        afternoon_tea_name:
+          type: string
+          nullable: true
+        afternoon_tea_recipe:
+          type: string
+          nullable: true
+        dinner_name:
+          type: string
+          nullable: true
+        dinner_recipe:
+          type: string
+          nullable: true
+        media:
+          type: array
+          items:
+            $ref: '#/components/schemas/MealReportMedia'
+      additionalProperties: true
+    ParentMealsResponse:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantChild'
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        date:
+          type: string
+          format: date
+        meal_types:
+          type: array
+          items:
+            type: string
+        meals_by_child:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              group:
+                $ref: '#/components/schemas/Group'
+              report:
+                $ref: '#/components/schemas/MealReport'
+    StudentPayment:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        group_id:
+          type: integer
+        academic_year_id:
+          type: integer
+        pay_type:
+          type: string
+        payment_method:
+          type: string
+          nullable: true
+        period_year:
+          type: integer
+          nullable: true
+        period_month:
+          type: integer
+          nullable: true
+        amount:
+          type: number
+          format: float
+        paid_at:
+          type: string
+          format: date
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        group:
+          $ref: '#/components/schemas/Group'
+        year:
+          $ref: '#/components/schemas/AcademicYear'
+      additionalProperties: true
+    ParentPaymentsResponse:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantChild'
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        payments_by_child:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/StudentPayment'
+    ChatContact:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        unread_count:
+          type: integer
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        body:
+          type: string
+        sender_id:
+          type: integer
+        receiver_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+      additionalProperties: true
+    ParentChatContactsResponse:
+      type: object
+      properties:
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatContact'
+    ParentChatMessagesResponse:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+    ParentChatMessageRequest:
+      type: object
+      required: [receiver_id, body]
+      properties:
+        receiver_id:
+          type: integer
+        body:
+          type: string
+          maxLength: 2000
+    ParentChatMessageResponse:
+      type: object
+      properties:
+        message:
+          $ref: '#/components/schemas/ChatMessage'
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+    AttendanceRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        attendance_session_id:
+          type: integer
+        student_id:
+          type: integer
+        status:
+          type: string
+        note:
+          type: string
+          nullable: true
+        student:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+      additionalProperties: true
+    AttendanceSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        quarter_id:
+          type: integer
+        group_id:
+          type: integer
+        subject_id:
+          type: integer
+        teacher_id:
+          type: integer
+          nullable: true
+        room_id:
+          type: integer
+          nullable: true
+        lesson_no:
+          type: integer
+        group:
+          $ref: '#/components/schemas/Group'
+        subject:
+          $ref: '#/components/schemas/Subject'
+        teacher:
+          $ref: '#/components/schemas/TenantUser'
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceRecord'
+      additionalProperties: true
+    TeacherAttendanceResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        year_id:
+          type: integer
+        quarters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Quarter'
+        quarter_id:
+          type: integer
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceSession'
+    TeacherAttendanceOptionsResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        year_id:
+          type: integer
+        quarters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Quarter'
+        quarter_id:
+          type: integer
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+        teachers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantUser'
+        rooms:
+          type: array
+          items:
+            $ref: '#/components/schemas/Room'
+    TeacherAttendanceCreateRequest:
+      type: object
+      required: [date, quarter_id, group_id, subject_id, lesson_no]
+      properties:
+        date:
+          type: string
+          format: date
+        quarter_id:
+          type: integer
+        group_id:
+          type: integer
+        subject_id:
+          type: integer
+        teacher_id:
+          type: integer
+          nullable: true
+        room_id:
+          type: integer
+          nullable: true
+        lesson_no:
+          type: integer
+    TeacherAttendanceSessionResponse:
+      type: object
+      properties:
+        session:
+          $ref: '#/components/schemas/AttendanceSession'
+    TeacherAttendanceUpdateRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: object
+          additionalProperties:
+            type: string
+        note:
+          type: object
+          additionalProperties:
+            type: string
+    TeacherLessonHomeworkRequest:
+      type: object
+      required: [title, due_at]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+    TeacherLessonHomeworkResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        homework:
+          $ref: '#/components/schemas/Homework'
+    TeacherHomeworksResponse:
+      type: object
+      properties:
+        submissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/HomeworkSubmission'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        group_id:
+          type: integer
+        date:
+          type: string
+          nullable: true
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        grading_mode:
+          type: string
+    TeacherHomeworkGradeRequest:
+      type: object
+      required: [grading_mode]
+      properties:
+        grading_mode:
+          type: string
+          description: grade | coin
+        grade_5:
+          type: integer
+          nullable: true
+        coin:
+          type: integer
+          nullable: true
+        note:
+          type: string
+          nullable: true
+    TeacherHomeworkGradeResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        submission:
+          $ref: '#/components/schemas/HomeworkSubmission'
+    TeacherChatContactsResponse:
+      type: object
+      properties:
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatContact'
+    TeacherChatMessagesResponse:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+    TeacherChatMessageRequest:
+      type: object
+      required: [receiver_id, body]
+      properties:
+        receiver_id:
+          type: integer
+        body:
+          type: string
+          maxLength: 2000
+    TeacherChatMessageResponse:
+      type: object
+      properties:
+        message:
+          $ref: '#/components/schemas/ChatMessage'
+    TeacherMealsResponse:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        group:
+          $ref: '#/components/schemas/Group'
+        group_id:
+          type: integer
+        report:
+          $ref: '#/components/schemas/MealReport'
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        today:
+          type: string
+          format: date
+        meal_types:
+          type: array
+          items:
+            type: string
+        selected_type:
+          type: string
+        selected_name:
+          type: string
+          nullable: true
+        selected_recipe:
+          type: string
+          nullable: true
+        media_by_type:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/MealReportMedia'
+    TeacherMealStoreRequest:
+      type: object
+      required: [group_id, meal_type, meal_name]
+      properties:
+        group_id:
+          type: integer
+        meal_type:
+          type: string
+        meal_name:
+          type: string
+        recipe:
+          type: string
+          nullable: true
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+    TeacherPaymentStudent:
+      type: object
+      properties:
+        student_id:
+          type: integer
+        student_name:
+          type: string
+        student_phone:
+          type: string
+          nullable: true
+        group_id:
+          type: integer
+        group_name:
+          type: string
+    TeacherPaymentsResponse:
+      type: object
+      properties:
+        students:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherPaymentStudent'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        group_id:
+          type: integer
+        search:
+          type: string
+          nullable: true
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        paid_student_ids:
+          type: array
+          items:
+            type: integer
+        month:
+          type: integer
+        year:
+          type: integer
+    TeacherPaymentDetailsResponse:
+      type: object
+      properties:
+        student:
+          $ref: '#/components/schemas/TenantUser'
+        group:
+          $ref: '#/components/schemas/Group'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentPayment'
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        default_amount:
+          type: number
+          format: float
+        monthly_fee:
+          type: number
+          format: float
+        discount_amount:
+          type: number
+          format: float
+        discount_reasons:
+          type: array
+          items:
+            type: string
+    TeacherPaymentStoreRequest:
+      type: object
+      required: [pay_type, payment_method, amount, paid_at]
+      properties:
+        pay_type:
+          type: string
+          enum: [monthly, yearly]
+        payment_method:
+          type: string
+          enum: [cash, card, p2p, terminal]
+        amount:
+          type: number
+          format: float
+        paid_at:
+          type: string
+          format: date
+        period_year:
+          type: integer
+          nullable: true
+        period_month:
+          type: integer
+          nullable: true
+        note:
+          type: string
+          nullable: true
+    TeacherPaymentStoreResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        payment_id:
+          type: integer
+    Assessment:
+      type: object
+      properties:
+        id:
+          type: integer
+        quarter_id:
+          type: integer
+        group_id:
+          type: integer
+        subject_id:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+          nullable: true
+        max_score:
+          type: integer
+        weight:
+          type: number
+          format: float
+        held_at:
+          type: string
+          format: date
+          nullable: true
+        quarter:
+          $ref: '#/components/schemas/Quarter'
+        group:
+          $ref: '#/components/schemas/Group'
+        subject:
+          $ref: '#/components/schemas/Subject'
+    AssessmentResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        assessment_id:
+          type: integer
+        student_id:
+          type: integer
+        score:
+          type: number
+          format: float
+          nullable: true
+        graded_by:
+          type: integer
+          nullable: true
+        comment:
+          type: string
+          nullable: true
+        student:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+    TeacherAssessmentsResponse:
+      type: object
+      properties:
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        year_id:
+          type: integer
+        quarters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Quarter'
+        quarter_id:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assessment'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    TeacherAssessmentOptionsResponse:
+      type: object
+      properties:
+        year_id:
+          type: integer
+        quarters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Quarter'
+        quarter_id:
+          type: integer
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+    TeacherAssessmentRequest:
+      type: object
+      required: [quarter_id, group_id, subject_id, type, max_score, weight]
+      properties:
+        quarter_id:
+          type: integer
+        group_id:
+          type: integer
+        subject_id:
+          type: integer
+        type:
+          type: string
+          enum: [exam, quiz, oral, project]
+        title:
+          type: string
+          nullable: true
+        max_score:
+          type: integer
+        weight:
+          type: number
+          format: float
+        held_at:
+          type: string
+          format: date
+          nullable: true
+    TeacherAssessmentResponse:
+      type: object
+      properties:
+        assessment:
+          $ref: '#/components/schemas/Assessment'
+        quarters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Quarter'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+        year_id:
+          type: integer
+    TeacherAssessmentResultsResponse:
+      type: object
+      properties:
+        assessment:
+          $ref: '#/components/schemas/Assessment'
+        students:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+        existing:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AssessmentResult'
+    TeacherAssessmentSaveResultsRequest:
+      type: object
+      required: [score]
+      properties:
+        score:
+          type: object
+          additionalProperties:
+            type: number
+            format: float
+        comment:
+          type: object
+          additionalProperties:
+            type: string
+    TeacherSubjectItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        groups:
+          type: array
+          items:
+            type: string
+        group_subject_ids:
+          type: array
+          items:
+            type: integer
+    TeacherSubjectsResponse:
+      type: object
+      properties:
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherSubjectItem'
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+    TeacherSubjectGroup:
+      type: object
+      properties:
+        group_subject_id:
+          type: integer
+        group_id:
+          type: integer
+        group_name:
+          type: string
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Topic'
+    TeacherSubjectDetailResponse:
+      type: object
+      properties:
+        subject:
+          $ref: '#/components/schemas/Subject'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherSubjectGroup'
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+    TopicResource:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          nullable: true
+        file_path:
+          type: string
+        url:
+          type: string
+          nullable: true
+    Topic:
+      type: object
+      properties:
+        id:
+          type: integer
+        group_subject_id:
+          type: integer
+        title:
+          type: string
+        order_no:
+          type: integer
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        resources_count:
+          type: integer
+          nullable: true
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicResource'
+      additionalProperties: true
+    TeacherTopicStoreRequest:
+      type: object
+      required: [group_subject_id, title, resources]
+      properties:
+        group_subject_id:
+          type: integer
+        title:
+          type: string
+        order_no:
+          type: integer
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        resources:
+          type: array
+          items:
+            type: string
+            format: binary
+    TeacherTopicResourceStoreRequest:
+      type: object
+      required: [resources]
+      properties:
+        resources:
+          type: array
+          items:
+            type: string
+            format: binary
+    TeacherTimetableResponse:
+      type: object
+      properties:
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+        current_quarter:
+          $ref: '#/components/schemas/Quarter'
+        dates:
+          type: array
+          items:
+            type: string
+            format: date
+        schedule_by_date:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/TimetableEntry'
+    TeacherProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        university:
+          type: string
+          nullable: true
+        graduation_date:
+          type: string
+          format: date
+          nullable: true
+        specialization:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        achievements:
+          type: string
+          nullable: true
+        photo_path:
+          type: string
+          nullable: true
+        diploma_path:
+          type: string
+          nullable: true
+        passport_path:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          nullable: true
+        diploma_url:
+          type: string
+          nullable: true
+        passport_url:
+          type: string
+          nullable: true
+    TeacherProfileAuthor:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    TeacherProfileWork:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        published_at:
+          type: string
+          format: date
+          nullable: true
+        published_place:
+          type: string
+          nullable: true
+        file_path:
+          type: string
+          nullable: true
+        file_url:
+          type: string
+          nullable: true
+        created_by:
+          type: integer
+        authors:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherProfileAuthor'
+    TeacherProfileUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        passport_no:
+          type: string
+          nullable: true
+    TeacherProfileResponse:
+      type: object
+      properties:
+        teacher:
+          $ref: '#/components/schemas/TeacherProfileUser'
+        profile:
+          $ref: '#/components/schemas/TeacherProfile'
+        works:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherProfileWork'
+        can_edit:
+          type: boolean
+    TeacherProfileUpdateRequest:
+      type: object
+      properties:
+        university:
+          type: string
+          nullable: true
+        graduation_date:
+          type: string
+          format: date
+          nullable: true
+        specialization:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          enum: [male, female]
+          nullable: true
+        achievements:
+          type: string
+          nullable: true
+        photo:
+          type: string
+          format: binary
+          nullable: true
+        diploma:
+          type: string
+          format: binary
+          nullable: true
+        passport_copy:
+          type: string
+          format: binary
+          nullable: true
+    TeacherProfileUpdateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        profile:
+          $ref: '#/components/schemas/TeacherProfile'
+    TeacherProfileWorkStoreRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        published_at:
+          type: string
+          format: date
+          nullable: true
+        published_place:
+          type: string
+          nullable: true
+        work_file:
+          type: string
+          format: binary
+          nullable: true
+        coauthors:
+          type: array
+          items:
+            type: integer
+    TeacherProfileWorkStoreResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        work:
+          $ref: '#/components/schemas/TeacherProfileWork'
+    TeacherLookupUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        passport_no:
+          type: string
+          nullable: true
+    TeacherCoauthorLookupResponse:
+      type: object
+      properties:
+        teachers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherLookupUser'
+    TeacherQuarterGradesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuarterGrade'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        quarters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Quarter'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+        year_id:
+          type: integer
+        quarter_id:
+          type: integer
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+    TeacherYearGradesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/YearGrade'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+        year_id:
+          type: integer
+        current_year:
+          $ref: '#/components/schemas/AcademicYear'
+
+
+
+
+

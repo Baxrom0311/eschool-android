@@ -8,6 +8,10 @@ class SecureStorageService {
   SecureStorageService()
       : _storage = const FlutterSecureStorage(
           aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+          mOptions: MacOsOptions(accessibility: KeychainAccessibility.first_unlock),
+          webOptions: WebOptions(dbName: 'school_app_auth', publicKey: 'school_app_secret'),
+          // Linux va Windows uchun ham kerak bo'lsa qo'shish mumkin
         );
 
   // ─── Access Token ───

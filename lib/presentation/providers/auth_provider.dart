@@ -46,9 +46,13 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   );
 });
 
-/// GoogleSignIn instance
 final googleSignInProvider = Provider<GoogleSignIn>((ref) {
-  return GoogleSignIn(scopes: ['email', 'profile']);
+  return GoogleSignIn(
+    scopes: ['email', 'profile'],
+    // Web uchun clientId talab qilinadi.
+    // TODO: 'YOUR_WEB_CLIENT_ID' ni Google Cloud Console dan olgan haqiqiy ID ga almashtiring.
+    clientId: kIsWeb ? 'YOUR_WEB_CLIENT_ID' : null,
+  );
 });
 
 // ═══════════════════════════════════════════════════════════════

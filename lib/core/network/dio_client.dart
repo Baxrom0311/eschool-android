@@ -47,6 +47,11 @@ class DioClient {
               await _secureStorage.clearAll();
             }
           }
+          
+          if (kIsWeb && error.type == DioExceptionType.connectionError) {
+             // Web da CORS yoki Network xatosi ko'pincha connectionError yoki unknown bo'ladi.
+             debugPrint('WEB NETWORK ERROR: ${error.message}. This might be a CORS issue if calling external API from localhost.');
+          }
           handler.next(error);
         },
       ),
