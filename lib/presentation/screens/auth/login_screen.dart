@@ -28,6 +28,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -37,8 +38,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    final authState = ref.read(authProvider);
+    if (_isSubmitting || authState.isLoading) return;
+
+    if (authState.isAuthenticated) {
+      await _completeAuthFlow(defaultError: 'Kirish amalga oshmadi');
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
+    setState(() => _isSubmitting = true);
 
     try {
       await ref
@@ -50,6 +60,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await _completeAuthFlow(defaultError: 'Kirish amalga oshmadi');
     } catch (e) {
       _showError('Kirish amalga oshmadi: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -101,6 +115,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final size = MediaQuery.of(context).size;
     final topHeight = size.height * 0.4;
     final isLoading = ref.watch(authProvider).isLoading;
+    final isBusy = isLoading || _isSubmitting;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -124,69 +139,80 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               child: SafeArea(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-                      child: Row(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            'Login',
-                            style: TextStyle(
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+                            child: Row(
+                              children: [
+                                const Text(
+                                  'Login',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  'Asosiy ekran',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.75),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            width: 88,
+                            height: 88,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: const Icon(
+                              Icons.school_rounded,
+                              size: 52,
                               color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const Spacer(),
-                          Text(
-                            'Asosiy ekran',
+                          const SizedBox(height: 18),
+                          const Text(
+                            'Xush kelibsiz!',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.75),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 42,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              height: 1.05,
                             ),
                           ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Tizimga kirish uchun\nma\'lumotlaringizni kiriting',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 17,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontWeight: FontWeight.w500,
+                              height: 1.35,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
                         ],
                       ),
                     ),
-                    const Spacer(),
-                    Container(
-                      width: 88,
-                      height: 88,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: const Icon(
-                        Icons.school_rounded,
-                        size: 52,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    const Text(
-                      'Xush kelibsiz!',
-                      style: TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        height: 1.05,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Tizimga kirish uchun\nma\'lumotlaringizni kiriting',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 17,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w500,
-                        height: 1.35,
-                      ),
-                    ),
-                    const Spacer(flex: 2),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -276,7 +302,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             controller: _passwordController,
                             obscureText: !_isPasswordVisible,
                             textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => _handleLogin(),
+                            onFieldSubmitted: (_) {
+                              if (!isBusy) {
+                                _handleLogin();
+                              }
+                            },
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Parol kiriting';
@@ -321,7 +351,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           SizedBox(
                             height: 56,
                             child: ElevatedButton(
-                              onPressed: isLoading ? null : _handleLogin,
+                              onPressed: isBusy ? null : _handleLogin,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primaryBlue,
                                 foregroundColor: Colors.white,
@@ -331,7 +361,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   borderRadius: BorderRadius.circular(18),
                                 ),
                               ),
-                              child: isLoading
+                              child: isBusy
                                   ? const SizedBox(
                                       width: 22,
                                       height: 22,
@@ -399,7 +429,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: _AuthOptionCard(
                                   label: 'Google',
                                   icon: Icons.g_mobiledata_rounded,
-                                  onTap: isLoading
+                                  onTap: isBusy
                                       ? null
                                       : () => _showError(
                                           'Google orqali kirish tez kunda ishga tushiriladi',
@@ -412,7 +442,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: _AuthOptionCard(
                                   label: 'QR Kod',
                                   icon: Icons.qr_code_2_rounded,
-                                  onTap: isLoading ? null : _handleQrLogin,
+                                  onTap: isBusy ? null : _handleQrLogin,
                                   iconColor: AppColors.textPrimary,
                                 ),
                               ),

@@ -29,14 +29,29 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
 
-  // Tab screens
-  final List<Widget> _screens = [
-    const _HomeTabScreen(),
-    const _EducationTabScreen(),
-    const DailyMenuScreen(),
-    const PaymentsScreen(),
-    const ProfileScreen(),
+  // Tabs are lazily instantiated to avoid firing all tab API calls on startup.
+  late final List<Widget Function()> _screenBuilders = [
+    () => const _HomeTabScreen(),
+    () => const _EducationTabScreen(),
+    () => const DailyMenuScreen(),
+    () => const PaymentsScreen(),
+    () => const ProfileScreen(),
   ];
+  late final List<Widget?> _loadedScreens;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadedScreens = List<Widget?>.filled(_screenBuilders.length, null);
+    _loadedScreens[0] = _screenBuilders[0]();
+  }
+
+  void _onTabSelected(int index) {
+    setState(() {
+      _currentIndex = index;
+      _loadedScreens[index] ??= _screenBuilders[index]();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,14 +79,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             )
           : null,
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: List<Widget>.generate(
+          _screenBuilders.length,
+          (index) => _loadedScreens[index] ?? const SizedBox.shrink(),
+        ),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: _onTabSelected,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primaryBlue,
         unselectedItemColor: AppColors.textSecondary,
@@ -131,7 +148,6 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
     if (child == null) return;
 
     final now = DateTime.now();
-    final month = '${now.year}-${now.month.toString().padLeft(2, '0')}';
 
     // We use ref.read(...notifier) to trigger shared async logic.
     // Ensure providers are kept alive if needed, but autoDispose is fine
@@ -143,10 +159,9 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
 
     ref.read(scheduleProvider.notifier).loadSchedule(child.id);
     ref.read(scheduleProvider.notifier).selectDay(now.weekday);
-    ref
-        .read(attendanceProvider.notifier)
-        .loadAttendance(child.id, month: month);
-    ref.read(gradesProvider.notifier).loadGrades(child.id);
+    // Backenddagi /api/parent/children/{id} endpoint vaqtincha nosoz bo'lgani
+    // uchun Home ochilganda grades/attendance prefetch qilmaymiz.
+    // Tegishli ekran ochilganda ular alohida yuklanadi.
     ref.read(ratingProvider.notifier).loadChildRating(child.id);
   }
 

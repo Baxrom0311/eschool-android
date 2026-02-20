@@ -35,7 +35,10 @@ class AuthApi with ApiHelpers {
           'password': password,
           'device_name': 'android_app',
         },
-        options: Options(contentType: Headers.formUrlEncodedContentType),
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+          extra: {'skipAuth': true},
+        ),
       );
 
       final root = asMap(response.data);

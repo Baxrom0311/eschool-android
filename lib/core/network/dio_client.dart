@@ -34,6 +34,13 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          final skipAuth = options.extra['skipAuth'] == true;
+          if (skipAuth) {
+            options.headers.remove('Authorization');
+            handler.next(options);
+            return;
+          }
+
           final token = await _secureStorage.getAccessToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';

@@ -19,30 +19,29 @@ class GradesScreen extends ConsumerStatefulWidget {
 
 class _GradesScreenState extends ConsumerState<GradesScreen> {
   // Key to preserve scroll position if needed, though simpler just to reload data
-  
-  void _loadGradesForSelectedChild() {
+  int? _lastLoadedChildId;
+
+  void _loadGradesForSelectedChild({bool force = false}) {
     final selectedChild = ref.read(selectedChildProvider);
     if (selectedChild == null) return;
 
-    final currentData = ref.read(gradesProvider).valueOrNull;
+    final gradesState = ref.read(gradesProvider);
+    final currentData = gradesState.valueOrNull;
     final quarter = currentData?.selectedQuarter ?? 1;
-    
-    ref.read(gradesProvider.notifier).loadGrades(
-          selectedChild.id,
-          quarter: quarter,
-        );
-  }
 
-  void _loadAttendanceForSelectedChild() {
-    final selectedChild = ref.read(selectedChildProvider);
-    if (selectedChild == null) return;
+    final hasAnyData =
+        currentData != null &&
+        (currentData.grades.isNotEmpty || currentData.summary.isNotEmpty);
+    if (!force &&
+        _lastLoadedChildId == selectedChild.id &&
+        (gradesState.isLoading || (hasAnyData && !gradesState.hasError))) {
+      return;
+    }
 
-    final now = DateTime.now();
-    final month = '${now.year}-${now.month.toString().padLeft(2, '0')}';
-    ref.read(attendanceProvider.notifier).loadAttendance(
-          selectedChild.id,
-          month: month,
-        );
+    _lastLoadedChildId = selectedChild.id;
+    ref
+        .read(gradesProvider.notifier)
+        .loadGrades(selectedChild.id, quarter: quarter);
   }
 
   @override
@@ -50,7 +49,6 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadGradesForSelectedChild();
-      _loadAttendanceForSelectedChild();
     });
   }
 
@@ -86,14 +84,16 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
     ref.listen(selectedChildProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
         _loadGradesForSelectedChild();
-        _loadAttendanceForSelectedChild();
       }
     });
 
     return Scaffold(
       body: gradesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Xatolik: $err')),
+        error: (err, stack) => _GradesErrorView(
+          message: err.toString(),
+          onRetry: _loadGradesForSelectedChild,
+        ),
         data: (gradesData) {
           final grades = gradesData.grades;
           final summary = gradesData.summary;
@@ -104,18 +104,22 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
 
           // Calculate stats
           final double gpaFromSummary = summary.isNotEmpty
-              ? summary.fold<double>(0.0, (sum, item) => sum + item.averageGrade) /
-                  summary.length
+              ? summary.fold<double>(
+                      0.0,
+                      (sum, item) => sum + item.averageGrade,
+                    ) /
+                    summary.length
               : 0.0;
           final double gpaFromGrades = grades.isNotEmpty
               ? grades.fold<double>(0.0, (sum, item) => sum + item.grade) /
-                  grades.length
+                    grades.length
               : 0.0;
           final fallbackGpa = userState.selectedChild?.averageGrade ?? 0.0;
-          final double gpa = (gpaFromSummary > 0
-                  ? gpaFromSummary
-                  : (gpaFromGrades > 0 ? gpaFromGrades : fallbackGpa))
-              .clamp(0.0, 5.0);
+          final double gpa =
+              (gpaFromSummary > 0
+                      ? gpaFromSummary
+                      : (gpaFromGrades > 0 ? gpaFromGrades : fallbackGpa))
+                  .clamp(0.0, 5.0);
 
           final attendanceRate = (() {
             final attData = attendanceAsync.valueOrNull;
@@ -123,7 +127,10 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
             if (summary != null && summary.totalDays > 0) {
               return summary.attendancePercentage.round().clamp(0, 100);
             }
-            return (userState.selectedChild?.attendancePercentage ?? 0).clamp(0, 100);
+            return (userState.selectedChild?.attendancePercentage ?? 0).clamp(
+              0,
+              100,
+            );
           })();
 
           final summaryBySubject = <String, SubjectGradeSummary>{
@@ -167,15 +174,18 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
                       child: Center(
                         child: CircleAvatar(
                           radius: 16,
-                          backgroundImage: userState.selectedChild!.avatarUrl != null
-                              ? NetworkImage(userState.selectedChild!.avatarUrl!)
+                          backgroundImage:
+                              userState.selectedChild!.avatarUrl != null
+                              ? NetworkImage(
+                                  userState.selectedChild!.avatarUrl!,
+                                )
                               : null,
                           child: userState.selectedChild!.avatarUrl == null
                               ? Text(userState.selectedChild!.fullName[0])
                               : null,
                         ),
                       ),
-                    )
+                    ),
                 ],
               ),
 
@@ -210,43 +220,86 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
               SliverPadding(
                 padding: const EdgeInsets.all(16),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      // Note: We are only showing individual grades here?
-                      // The original code iterated over state.grades.
-                      // Usually you'd want to show Subjects (Summary) or Grades timeline.
-                      // Sticking to original logic: show list of grades.
-                      final grade = grades[index];
-                      final summaryItem =
-                          summaryBySubject[grade.subjectName.toLowerCase()];
-                      
-                      final averagePercent = summaryItem != null
-                          ? ((summaryItem.averageGrade / 5) * 100).round()
-                          : ((grade.grade / 5) * 100).round();
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    // Note: We are only showing individual grades here?
+                    // The original code iterated over state.grades.
+                    // Usually you'd want to show Subjects (Summary) or Grades timeline.
+                    // Sticking to original logic: show list of grades.
+                    final grade = grades[index];
+                    final summaryItem =
+                        summaryBySubject[grade.subjectName.toLowerCase()];
 
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: GradeCard(
-                          name: grade.subjectName,
-                          teacher:
-                              grade.teacherName ??
-                              summaryItem?.teacherName ??
-                              'O\'qituvchi',
-                          grade: grade.grade,
-                          attendance: attendanceRate,
-                          average: averagePercent.clamp(0, 100),
-                          icon: _subjectIcon(grade.subjectName),
-                          color: _gradeColor(grade.grade),
-                        ),
-                      );
-                    },
-                    childCount: grades.length,
-                  ),
+                    final averagePercent = summaryItem != null
+                        ? ((summaryItem.averageGrade / 5) * 100).round()
+                        : ((grade.grade / 5) * 100).round();
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GradeCard(
+                        name: grade.subjectName,
+                        teacher:
+                            grade.teacherName ??
+                            summaryItem?.teacherName ??
+                            'O\'qituvchi',
+                        grade: grade.grade,
+                        attendance: attendanceRate,
+                        average: averagePercent.clamp(0, 100),
+                        icon: _subjectIcon(grade.subjectName),
+                        color: _gradeColor(grade.grade),
+                      ),
+                    );
+                  }, childCount: grades.length),
                 ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _GradesErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _GradesErrorView({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Backend xatoligi',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SelectableText(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onRetry,
+              child: const Text('Qayta urinish'),
+            ),
+          ],
+        ),
       ),
     );
   }

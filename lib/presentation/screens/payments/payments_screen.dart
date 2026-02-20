@@ -18,8 +18,27 @@ class PaymentsScreen extends ConsumerStatefulWidget {
 }
 
 class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
-  void _loadPaymentDataForSelectedChild() {
+  int? _lastLoadedStudentId;
+
+  void _loadPaymentDataForSelectedChild({bool force = false}) {
     final studentId = ref.read(selectedChildProvider)?.id;
+    final paymentState = ref.read(paymentProvider);
+    final hasData =
+        paymentState.selectedStudentId == studentId &&
+        (paymentState.balance != null ||
+            paymentState.payments.isNotEmpty ||
+            paymentState.paymentMethods.isNotEmpty) &&
+        paymentState.error == null;
+    if (!force &&
+        paymentState.isLoading &&
+        paymentState.selectedStudentId == studentId) {
+      return;
+    }
+    if (!force && _lastLoadedStudentId == studentId && hasData) {
+      return;
+    }
+
+    _lastLoadedStudentId = studentId;
     ref.read(paymentProvider.notifier).loadInitialData(studentId: studentId);
   }
 

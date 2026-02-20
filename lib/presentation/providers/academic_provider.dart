@@ -13,6 +13,13 @@ import '../../data/models/schedule_model.dart';
 import '../../data/repositories/academic_repository.dart';
 import 'auth_provider.dart';
 
+bool _isBackendSchemaError(Object error) {
+  final message = error.toString().toLowerCase();
+  return message.contains('sqlstate') ||
+      message.contains('unknown column') ||
+      message.contains('groups.academic_year');
+}
+
 // ═══════════════════════════════════════════════════════════════
 // DEPENDENCY PROVIDERS
 // ═══════════════════════════════════════════════════════════════
@@ -72,22 +79,15 @@ class GradesNotifier extends AutoDisposeAsyncNotifier<GradesData> {
     }
 
     try {
-      // Parallel fetch
-      final (gradesResult, summaryResult) = await (
-        repository.getGrades(childId, quarter: targetQuarter),
-        repository.getGradeSummary(childId),
-      ).wait;
-
-      // Throw/Unwrap errors if any failure occurred
+      final gradesResult = await repository.getGrades(
+        childId,
+        quarter: targetQuarter,
+      );
       final grades = gradesResult.fold(
         (l) => throw Exception(l.message),
         (r) => r,
       );
-
-      final summary = summaryResult.fold(
-        (l) => throw Exception(l.message),
-        (r) => r,
-      );
+      final summary = _buildSummaryFromGrades(grades);
 
       final data = GradesData(
         grades: grades,
@@ -97,12 +97,37 @@ class GradesNotifier extends AutoDisposeAsyncNotifier<GradesData> {
       state = AsyncValue.data(data);
       unawaited(_saveGradesCache(childId, data));
     } catch (e, st) {
-      if (cached != null) {
+      if (cached != null && !_isBackendSchemaError(e)) {
         state = AsyncValue.data(cached);
         return;
       }
       state = AsyncValue.error(e, st);
     }
+  }
+
+  List<SubjectGradeSummary> _buildSummaryFromGrades(List<GradeModel> grades) {
+    final bySubject = <String, List<int>>{};
+    final teacherBySubject = <String, String?>{};
+
+    for (final grade in grades) {
+      final subject = grade.subjectName.trim();
+      if (subject.isEmpty) continue;
+      bySubject.putIfAbsent(subject, () => <int>[]).add(grade.grade);
+      teacherBySubject.putIfAbsent(subject, () => grade.teacherName);
+    }
+
+    return bySubject.entries.map((entry) {
+      final values = entry.value;
+      final average = values.isEmpty
+          ? 0.0
+          : values.reduce((a, b) => a + b) / values.length;
+      return SubjectGradeSummary(
+        subjectName: entry.key,
+        averageGrade: average,
+        totalGrades: values.length,
+        teacherName: teacherBySubject[entry.key],
+      );
+    }).toList();
   }
 
   void selectQuarter(int quarter) {
@@ -211,7 +236,7 @@ class ScheduleNotifier extends AutoDisposeAsyncNotifier<ScheduleData> {
       state = AsyncValue.data(data);
       unawaited(_saveScheduleCache(childId, data));
     } catch (e, st) {
-      if (cached != null) {
+      if (cached != null && !_isBackendSchemaError(e)) {
         state = AsyncValue.data(cached);
         return;
       }
@@ -520,31 +545,52 @@ class AttendanceNotifier extends AutoDisposeAsyncNotifier<AttendanceData> {
     }
 
     try {
-      final (recordsResult, summaryResult) = await (
-        repository.getAttendance(childId, month: month),
-        repository.getAttendanceSummary(childId),
-      ).wait;
-
+      final recordsResult = await repository.getAttendance(
+        childId,
+        month: month,
+      );
       final records = recordsResult.fold(
         (l) => throw Exception(l.message),
         (r) => r,
       );
-
-      final summary = summaryResult.fold(
-        (l) => throw Exception(l.message),
-        (r) => r,
-      );
+      final summary = _buildSummaryFromRecords(records);
 
       final data = AttendanceData(records: records, summary: summary);
       state = AsyncValue.data(data);
       unawaited(_saveAttendanceCache(cacheKey, data));
     } catch (e, st) {
-      if (cached != null) {
+      if (cached != null && !_isBackendSchemaError(e)) {
         state = AsyncValue.data(cached);
         return;
       }
       state = AsyncValue.error(e, st);
     }
+  }
+
+  AttendanceSummary _buildSummaryFromRecords(List<AttendanceModel> records) {
+    final total = records.length;
+    final present = records
+        .where((e) => e.status == AttendanceStatus.present)
+        .length;
+    final absent = records
+        .where((e) => e.status == AttendanceStatus.absent)
+        .length;
+    final late = records
+        .where((e) => e.status == AttendanceStatus.late_)
+        .length;
+    final excused = records
+        .where((e) => e.status == AttendanceStatus.excused)
+        .length;
+    final percentage = total == 0 ? 0.0 : (present * 100.0) / total;
+
+    return AttendanceSummary(
+      totalDays: total,
+      presentDays: present,
+      absentDays: absent,
+      lateDays: late,
+      excusedDays: excused,
+      attendancePercentage: percentage,
+    );
   }
 
   AttendanceData? _readAttendanceCache(String key) {

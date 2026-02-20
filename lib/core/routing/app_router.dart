@@ -66,6 +66,13 @@ class AppRouter {
         return RouteNames.login;
       }
 
+      if (isAuthenticated &&
+          (location == RouteNames.login ||
+              location == RouteNames.register ||
+              location == RouteNames.forgotPassword)) {
+        return RouteNames.home;
+      }
+
       return null;
     },
     routes: [

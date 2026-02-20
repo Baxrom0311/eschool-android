@@ -58,14 +58,15 @@ class AcademicApi with ApiHelpers {
 
   Future<List<SubjectGradeSummary>> getGradeSummary(int childId) async {
     try {
-      final root = await _getChildProfile(childId);
-      final rows = _extractQuarterGradeRows(root);
+      final grades = await getGrades(childId);
       final bySubject = <String, List<int>>{};
+      final teacherBySubject = <String, String?>{};
 
-      for (final row in rows) {
-        final subject = _subjectNameFromGradeRow(row);
+      for (final grade in grades) {
+        final subject = grade.subjectName;
         if (subject.isEmpty) continue;
-        bySubject.putIfAbsent(subject, () => <int>[]).add(_resolveGrade(row));
+        bySubject.putIfAbsent(subject, () => <int>[]).add(grade.grade);
+        teacherBySubject.putIfAbsent(subject, () => grade.teacherName);
       }
 
       return bySubject.entries.map((entry) {
@@ -77,6 +78,7 @@ class AcademicApi with ApiHelpers {
           'subject_name': entry.key,
           'average_grade': average,
           'total_grades': grades.length,
+          'teacher_name': teacherBySubject[entry.key],
         });
       }).toList();
     } on DioException catch (e) {
@@ -108,9 +110,7 @@ class AcademicApi with ApiHelpers {
             : toInt(entry['day_of_week']);
 
         return ScheduleModel.fromJson({
-          'id': toInt(entry['id']) == 0
-              ? stableId(entry)
-              : toInt(entry['id']),
+          'id': toInt(entry['id']) == 0 ? stableId(entry) : toInt(entry['id']),
           'subject_name': (subject['name'] ?? 'Fan').toString(),
           'teacher_name': (teacher['name'] ?? 'O\'qituvchi').toString(),
           'start_time': (lessonTime['starts_at'] ?? '').toString(),
@@ -303,9 +303,7 @@ class AcademicApi with ApiHelpers {
         final status = _statusFromLessonMark(type, mark['score']);
         attendance.add(
           AttendanceModel.fromJson({
-            'id': toInt(mark['id']) == 0
-                ? stableId(mark)
-                : toInt(mark['id']),
+            'id': toInt(mark['id']) == 0 ? stableId(mark) : toInt(mark['id']),
             'date': date,
             'status': status,
             'subject_name': asMap(session['subject'])['name']?.toString(),

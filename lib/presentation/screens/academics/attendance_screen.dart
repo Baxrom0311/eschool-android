@@ -30,10 +30,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     if (selectedChild != null) {
       // Format month as "yyyy-MM"
       final monthStr = "${date.year}-${date.month.toString().padLeft(2, '0')}";
-      ref.read(attendanceProvider.notifier).loadAttendance(
-            selectedChild.id,
-            month: monthStr,
-          );
+      ref
+          .read(attendanceProvider.notifier)
+          .loadAttendance(selectedChild.id, month: monthStr);
     }
   }
 
@@ -41,6 +40,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   Widget build(BuildContext context) {
     final attendanceAsync = ref.watch(attendanceProvider);
     final attendanceData = attendanceAsync.valueOrNull;
+    final hasError = attendanceAsync.hasError;
+    final errorMessage = attendanceAsync.error?.toString();
     final summary = attendanceData?.summary;
     final records = attendanceData?.records ?? [];
     final isLoading = attendanceAsync.isLoading;
@@ -57,12 +58,27 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         // Handle parse error
       }
     }
-    
+
     ref.listen(selectedChildProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
         _loadAttendance(_focusedDay);
       }
     });
+
+    if (hasError && attendanceData == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Davomat statistikasi'),
+          backgroundColor: AppColors.primaryBlue,
+          foregroundColor: Colors.white,
+        ),
+        body: _AttendanceErrorView(
+          message: errorMessage ?? 'Noma\'lum backend xatoligi',
+          onRetry: () => _loadAttendance(_focusedDay),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -74,6 +90,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            if (hasError && errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: _InlineErrorBanner(message: errorMessage),
+              ),
             // ─── Stats Row ───
             Padding(
               padding: const EdgeInsets.all(20),
@@ -123,8 +144,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               ),
               child: Stack(
                 children: [
-                   TableCalendar(
-                    firstDay: DateTime.now().subtract(const Duration(days: 365)),
+                  TableCalendar(
+                    firstDay: DateTime.now().subtract(
+                      const Duration(days: 365),
+                    ),
                     lastDay: DateTime.now().add(const Duration(days: 30)),
                     focusedDay: _focusedDay,
                     headerStyle: const HeaderStyle(
@@ -140,13 +163,17 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                     ),
                     onPageChanged: (focusedDay) {
                       setState(() {
-                         _focusedDay = focusedDay;
+                        _focusedDay = focusedDay;
                       });
                       _loadAttendance(focusedDay);
                     },
                     calendarBuilders: CalendarBuilders(
                       defaultBuilder: (context, day, focusedDay) {
-                        final normalizedDay = DateTime(day.year, day.month, day.day);
+                        final normalizedDay = DateTime(
+                          day.year,
+                          day.month,
+                          day.day,
+                        );
                         final status = attendanceMap[normalizedDay];
                         if (status != null) {
                           return _buildDayMarker(day, status);
@@ -154,9 +181,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                         return null;
                       },
                       todayBuilder: (context, day, focusedDay) {
-                        final normalizedDay = DateTime(day.year, day.month, day.day);
+                        final normalizedDay = DateTime(
+                          day.year,
+                          day.month,
+                          day.day,
+                        );
                         final status = attendanceMap[normalizedDay];
-                         if (status != null) {
+                        if (status != null) {
                           return _buildDayMarker(day, status);
                         }
                         return _buildDayMarker(day, null, isToday: true);
@@ -165,9 +196,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                   ),
                   if (isLoading)
                     const Positioned.fill(
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
                 ],
               ),
@@ -191,10 +220,14 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     );
   }
 
-  Widget _buildDayMarker(DateTime day, AttendanceStatus? status, {bool isToday = false}) {
+  Widget _buildDayMarker(
+    DateTime day,
+    AttendanceStatus? status, {
+    bool isToday = false,
+  }) {
     Color color = Colors.transparent;
     Color textColor = AppColors.textPrimary;
-    
+
     if (status != null) {
       switch (status) {
         case AttendanceStatus.present:
@@ -210,16 +243,16 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           textColor = Colors.amber[800]!;
           break;
         case AttendanceStatus.excused:
-           color = Colors.blueGrey;
-           textColor = Colors.blueGrey;
+          color = Colors.blueGrey;
+          textColor = Colors.blueGrey;
           break;
       }
     } else if (isToday) {
-       color = AppColors.primaryBlue;
-       textColor = AppColors.primaryBlue;
+      color = AppColors.primaryBlue;
+      textColor = AppColors.primaryBlue;
     } else {
       // Default handler for Today builder if we hit here without data
-      return const SizedBox.shrink(); 
+      return const SizedBox.shrink();
     }
 
     return Container(
@@ -232,9 +265,79 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       ),
       child: Text(
         day.day.toString(),
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: textColor,
+        style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+      ),
+    );
+  }
+}
+
+class _AttendanceErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _AttendanceErrorView({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Backend xatoligi',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SelectableText(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onRetry,
+              child: const Text('Qayta urinish'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InlineErrorBanner extends StatelessWidget {
+  final String message;
+
+  const _InlineErrorBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: SelectableText(
+        message,
+        style: const TextStyle(
+          fontSize: 12,
+          color: AppColors.textPrimary,
+          height: 1.35,
         ),
       ),
     );
@@ -299,10 +402,7 @@ class _LegendItem extends StatelessWidget {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 8),
         Text(

@@ -195,7 +195,7 @@ void main() {
       final state = container.read(attendanceProvider);
       expect(state.hasValue, true);
       expect(state.value!.records.length, 1);
-      expect(state.value!.summary?.presentDays, 20);
+      expect(state.value!.summary?.presentDays, 1);
     });
   });
 }

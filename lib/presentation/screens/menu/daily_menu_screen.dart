@@ -19,6 +19,7 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
+  int? _lastLoadedStudentId;
 
   @override
   void initState() {
@@ -27,9 +28,21 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
     Future.microtask(_loadWeeklyMenuForSelectedChild);
   }
 
-  void _loadWeeklyMenuForSelectedChild() {
+  void _loadWeeklyMenuForSelectedChild({bool force = false}) {
     final selectedChild = ref.read(selectedChildProvider);
-    ref.read(menuProvider.notifier).loadWeeklyMenu(studentId: selectedChild?.id);
+    final studentId = selectedChild?.id;
+    final menuState = ref.read(menuProvider);
+    final hasWeeklyData =
+        menuState.weeklyMenu.isNotEmpty &&
+        menuState.error == null &&
+        _lastLoadedStudentId == studentId;
+
+    if (!force && (menuState.isLoading || hasWeeklyData)) {
+      return;
+    }
+
+    _lastLoadedStudentId = studentId;
+    ref.read(menuProvider.notifier).loadWeeklyMenu(studentId: studentId);
   }
 
   int _mealOrder(MealType mealType) {
@@ -54,16 +67,18 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
     });
 
     // Tanlangan sana uchun barcha meal lar
-    final dailyMenus = state.weeklyMenu.where((menu) {
-      if (menu.date.isEmpty) return false;
-      try {
-        final menuDate = DateTime.parse(menu.date);
-        return isSameDay(menuDate, _selectedDay ?? _focusedDay);
-      } catch (_) {
-        return false;
-      }
-    }).toList()
-      ..sort((a, b) => _mealOrder(a.mealType).compareTo(_mealOrder(b.mealType)));
+    final dailyMenus =
+        state.weeklyMenu.where((menu) {
+          if (menu.date.isEmpty) return false;
+          try {
+            final menuDate = DateTime.parse(menu.date);
+            return isSameDay(menuDate, _selectedDay ?? _focusedDay);
+          } catch (_) {
+            return false;
+          }
+        }).toList()..sort(
+          (a, b) => _mealOrder(a.mealType).compareTo(_mealOrder(b.mealType)),
+        );
 
     final meals = dailyMenus
         .expand(
@@ -140,13 +155,19 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
-                  leftChevronIcon:
-                      const Icon(Icons.chevron_left, color: Colors.white),
-                  rightChevronIcon:
-                      const Icon(Icons.chevron_right, color: Colors.white),
+                  leftChevronIcon: const Icon(
+                    Icons.chevron_left,
+                    color: Colors.white,
+                  ),
+                  rightChevronIcon: const Icon(
+                    Icons.chevron_right,
+                    color: Colors.white,
+                  ),
                   formatButtonTextStyle: const TextStyle(color: Colors.white),
                   formatButtonDecoration: BoxDecoration(
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
@@ -175,32 +196,31 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
             child: state.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : state.error != null
-                    ? Center(child: Text(state.error!))
-                    : meals.isEmpty
-                        ? const Center(
-                            child: Text('Tanlangan kun uchun menyu mavjud emas'),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                            itemCount: meals.length,
-                            itemBuilder: (context, index) {
-                              final meal = meals[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 20),
-                                child: MealCard(
-                                  title: meal['title'] as String,
-                                  time: meal['time'] as String,
-                                  calories: meal['calories'] as String,
-                                  imageUrl: meal['imageUrl'] as String,
-                                  ingredients: meal['ingredients'] as List<String>,
-                                ),
-                              );
-                            },
-                          ),
+                ? Center(child: Text(state.error!))
+                : meals.isEmpty
+                ? const Center(
+                    child: Text('Tanlangan kun uchun menyu mavjud emas'),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                    itemCount: meals.length,
+                    itemBuilder: (context, index) {
+                      final meal = meals[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: MealCard(
+                          title: meal['title'] as String,
+                          time: meal['time'] as String,
+                          calories: meal['calories'] as String,
+                          imageUrl: meal['imageUrl'] as String,
+                          ingredients: meal['ingredients'] as List<String>,
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
-
 }

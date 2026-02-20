@@ -102,6 +102,19 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
   /// Balans va to'lov usullarini yuklash
   Future<void> loadInitialData({int? studentId}) async {
+    // Prevent duplicate initial loads for the same child while data is fresh.
+    if (state.isLoading && state.selectedStudentId == studentId) return;
+    final hasData =
+        state.balance != null ||
+        state.payments.isNotEmpty ||
+        state.paymentMethods.isNotEmpty;
+    if (!state.isLoading &&
+        state.selectedStudentId == studentId &&
+        state.error == null &&
+        hasData) {
+      return;
+    }
+
     final cached = _readCache(studentId);
     if (cached != null) {
       state = cached.copyWith(
@@ -110,7 +123,11 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
         selectedStudentId: studentId,
       );
     } else {
-      state = state.copyWith(isLoading: true, error: null);
+      state = state.copyWith(
+        isLoading: true,
+        error: null,
+        selectedStudentId: studentId,
+      );
     }
 
     // Parallel yuklash — tezroq, typed tuple bilan runtime castlardan qochamiz.
