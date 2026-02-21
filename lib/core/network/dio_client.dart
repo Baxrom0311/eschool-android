@@ -9,6 +9,7 @@ import '../storage/secure_storage.dart';
 class DioClient {
   late final Dio _dio;
   final SecureStorageService _secureStorage;
+  bool _isClearingSession = false;
 
   DioClient(this._secureStorage) {
     _dio = Dio(
@@ -49,12 +50,25 @@ class DioClient {
         },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            final shouldClearSession =
-                error.requestOptions.extra['clearSessionOn401'] == true;
-            // Optional endpointlar 401 qaytarishi mumkin.
-            // Sessiyani faqat explicit belgilangan so'rovlar uchun tozalaymiz.
-            if (shouldClearSession) {
-              await _secureStorage.clearAll();
+            final requestOptions = error.requestOptions;
+            final explicitRule = requestOptions.extra['clearSessionOn401'];
+            final skipAuth = requestOptions.extra['skipAuth'] == true;
+            final hasAuthHeader =
+                requestOptions.headers['Authorization'] != null;
+
+            // Default: auth bilan yuborilgan request 401 olsa sessiyani tozalaymiz.
+            // Istisno uchun `clearSessionOn401: false` berilishi mumkin.
+            final shouldClearSession = explicitRule is bool
+                ? explicitRule
+                : (!skipAuth && hasAuthHeader);
+
+            if (shouldClearSession && !_isClearingSession) {
+              _isClearingSession = true;
+              try {
+                await _secureStorage.clearAll();
+              } finally {
+                _isClearingSession = false;
+              }
             }
           }
 

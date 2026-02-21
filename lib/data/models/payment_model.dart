@@ -79,12 +79,10 @@ class PaymentModel extends Equatable {
 
   /// Formatlangan summa: "1 500 000 so'm"
   String get formattedAmount {
-    final formatted = amount
-        .toString()
-        .replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]} ',
-        );
+    final formatted = amount.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]} ',
+    );
     return '$formatted so\'m';
   }
 
@@ -123,15 +121,15 @@ class PaymentModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        amount,
-        status,
-        method,
-        description,
-        transactionId,
-        contractNumber,
-        createdAt,
-      ];
+    id,
+    amount,
+    status,
+    method,
+    description,
+    transactionId,
+    contractNumber,
+    createdAt,
+  ];
 }
 
 /// Balans modeli — joriy balans va shartnoma ma'lumotlari
@@ -151,12 +149,16 @@ class BalanceInfo extends Equatable {
   @JsonKey(name: 'debt_amount', defaultValue: 0)
   final int debtAmount;
 
+  @JsonKey(name: 'has_financial_data', defaultValue: true)
+  final bool hasFinancialData;
+
   const BalanceInfo({
     required this.balance,
     required this.monthlyFee,
     this.contractNumber,
     this.nextPaymentDate,
     this.debtAmount = 0,
+    this.hasFinancialData = true,
   });
 
   factory BalanceInfo.fromJson(Map<String, dynamic> json) =>
@@ -167,31 +169,28 @@ class BalanceInfo extends Equatable {
   bool get hasDebt => debtAmount > 0;
 
   String get formattedBalance {
-    final formatted = balance
-        .toString()
-        .replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]} ',
-        );
+    final formatted = balance.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]} ',
+    );
     return '$formatted so\'m';
   }
 
   String get formattedMonthlyFee {
-    final formatted = monthlyFee
-        .toString()
-        .replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]} ',
-        );
+    final formatted = monthlyFee.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]} ',
+    );
     return '$formatted so\'m';
   }
 
   @override
   List<Object?> get props => [
-        balance,
-        monthlyFee,
-        contractNumber,
-        nextPaymentDate,
-        debtAmount,
-      ];
+    balance,
+    monthlyFee,
+    contractNumber,
+    nextPaymentDate,
+    debtAmount,
+    hasFinancialData,
+  ];
 }

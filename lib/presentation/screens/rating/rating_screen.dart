@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/rating_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../../data/models/rating_model.dart';
+import '../../../data/models/child_model.dart';
 import '../../../core/constants/app_colors.dart';
 
 /// Rating Screen - Class and School student rankings
@@ -19,19 +20,29 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      final child = ref.read(userProvider).selectedChild;
-      if (child?.classId != null) {
-        ref.read(ratingProvider.notifier).loadClassRating(child!.classId!);
-      } else {
-        ref.read(ratingProvider.notifier).loadSchoolRating();
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSelectedTabData();
     });
+  }
+
+  void _loadSelectedTabData({ChildModel? selectedChild}) {
+    final child = selectedChild ?? ref.read(selectedChildProvider);
+    if (_selectedTab == 0 && child?.classId != null) {
+      ref.read(ratingProvider.notifier).loadClassRating(child!.classId!);
+      return;
+    }
+    ref.read(ratingProvider.notifier).loadSchoolRating();
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(ratingProvider);
+    ref.listen(selectedChildProvider, (previous, next) {
+      if (previous?.id != next?.id) {
+        _loadSelectedTabData(selectedChild: next);
+      }
+    });
+
     final currentList = _selectedTab == 0
         ? state.classRating
         : state.schoolRating;
@@ -197,12 +208,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
       child: GestureDetector(
         onTap: () {
           setState(() => _selectedTab = index);
-          final child = ref.read(userProvider).selectedChild;
-          if (index == 0 && child?.classId != null) {
-            ref.read(ratingProvider.notifier).loadClassRating(child!.classId!);
-          } else {
-            ref.read(ratingProvider.notifier).loadSchoolRating();
-          }
+          _loadSelectedTabData();
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),

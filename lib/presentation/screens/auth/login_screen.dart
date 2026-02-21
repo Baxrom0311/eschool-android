@@ -4,13 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/route_names.dart';
+import '../../../core/utils/validators.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 
 /// Login Screen - Parent app auth entrypoint.
 ///
 /// Includes:
-/// - email/phone login
+/// - email login
 /// - forgot password action
 /// - Google sign in action
 /// - QR login action (API-level unavailable fallback)
@@ -239,25 +240,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildSectionLabel('LOGIN YOKI TELEFON'),
+                          _buildSectionLabel('EMAIL'),
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _loginController,
-                            keyboardType: TextInputType.text,
+                            keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Login yoki email kiriting';
-                              }
-                              if (value.trim().length < 3) {
-                                return 'Kiritilgan qiymat juda qisqa';
-                              }
-                              return null;
-                            },
+                            validator: Validators.email,
                             decoration: InputDecoration(
-                              hintText: 'Masalan: azizbek_01',
+                              hintText: 'Masalan: parent11@ranch.local',
                               prefixIcon: const Icon(
-                                Icons.person_outline_rounded,
+                                Icons.alternate_email_rounded,
                                 color: AppColors.textHint,
                               ),
                               filled: true,

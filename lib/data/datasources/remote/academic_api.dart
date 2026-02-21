@@ -58,15 +58,55 @@ class AcademicApi with ApiHelpers {
 
   Future<List<SubjectGradeSummary>> getGradeSummary(int childId) async {
     try {
-      final grades = await getGrades(childId);
-      final bySubject = <String, List<int>>{};
-      final teacherBySubject = <String, String?>{};
+      final root = await _getChildProfile(childId);
 
-      for (final grade in grades) {
-        final subject = grade.subjectName;
+      final yMapRaw = root['yMap'];
+      final subjectsRaw = root['subjects'];
+      final subjects = subjectsRaw is Map
+          ? Map<String, dynamic>.from(subjectsRaw)
+          : <String, dynamic>{};
+
+      final yearRows = <Map<String, dynamic>>[];
+      if (yMapRaw is Map) {
+        for (final value in yMapRaw.values) {
+          final row = asMap(value);
+          if (row.isNotEmpty) yearRows.add(row);
+        }
+      }
+
+      if (yearRows.isNotEmpty) {
+        return yearRows.map((row) {
+          final subjectId = toInt(row['subject_id']);
+          final subject = asMap(row['subject']);
+          final subjectFromMap = asMap(subjects[subjectId.toString()]);
+
+          final subjectName =
+              (subject['name'] ??
+                      subjectFromMap['name'] ??
+                      row['subject_name'] ??
+                      'Fan')
+                  .toString();
+          final grade5 = _resolveGrade(row);
+
+          return SubjectGradeSummary.fromJson({
+            'subject_name': subjectName,
+            'average_grade': grade5 > 0 ? grade5.toDouble() : 0.0,
+            'total_grades': 1,
+            'teacher_name': null,
+          });
+        }).toList();
+      }
+
+      // Fallback: yMap bo'lmasa qMap asosida summary quramiz.
+      final quarterRows = _extractQuarterGradeRows(root);
+      final bySubject = <String, List<int>>{};
+
+      for (final row in quarterRows) {
+        final subject = _subjectNameFromGradeRow(row);
         if (subject.isEmpty) continue;
-        bySubject.putIfAbsent(subject, () => <int>[]).add(grade.grade);
-        teacherBySubject.putIfAbsent(subject, () => grade.teacherName);
+        final grade = _resolveGrade(row);
+        if (grade <= 0) continue;
+        bySubject.putIfAbsent(subject, () => <int>[]).add(grade);
       }
 
       return bySubject.entries.map((entry) {
@@ -78,7 +118,7 @@ class AcademicApi with ApiHelpers {
           'subject_name': entry.key,
           'average_grade': average,
           'total_grades': grades.length,
-          'teacher_name': teacherBySubject[entry.key],
+          'teacher_name': null,
         });
       }).toList();
     } on DioException catch (e) {
@@ -147,6 +187,7 @@ class AcademicApi with ApiHelpers {
         queryParameters: {'student_id': childId},
       );
       final root = asMap(response.data);
+      final gradingMode = _normalizeGradingMode(root['grading_mode']);
       var homeworks = _extractHomeworks(root, childId: childId);
 
       if (status != null && status.isNotEmpty) {
@@ -159,7 +200,9 @@ class AcademicApi with ApiHelpers {
             .toList();
       }
 
-      return homeworks.map(_mapAssignment).toList()
+      return homeworks
+          .map((homework) => _mapAssignment(homework, gradingMode: gradingMode))
+          .toList()
         ..sort((a, b) => b.dueDate.compareTo(a.dueDate));
     } on DioException catch (e) {
       throw handleDioError(e);
@@ -170,6 +213,7 @@ class AcademicApi with ApiHelpers {
     try {
       final response = await _client.get(ApiConstants.parentHomeworks);
       final root = asMap(response.data);
+      final gradingMode = _normalizeGradingMode(root['grading_mode']);
       final homeworks = _extractHomeworks(root);
 
       final match = homeworks.cast<Map<String, dynamic>?>().firstWhere(
@@ -183,7 +227,7 @@ class AcademicApi with ApiHelpers {
         );
       }
 
-      return _mapAssignment(match);
+      return _mapAssignment(match, gradingMode: gradingMode);
     } on DioException catch (e) {
       throw handleDioError(e);
     }
@@ -468,7 +512,10 @@ class AcademicApi with ApiHelpers {
     return result;
   }
 
-  AssignmentModel _mapAssignment(Map<String, dynamic> homework) {
+  AssignmentModel _mapAssignment(
+    Map<String, dynamic> homework, {
+    required String gradingMode,
+  }) {
     final subject = asMap(homework['subject']);
     final teacher = asMap(homework['teacher']);
     final submissions = homework['submissions'] is List
@@ -494,6 +541,11 @@ class AcademicApi with ApiHelpers {
     }).toList();
 
     final normalizedStatus = _normalizeAssignmentStatus(homework['status']);
+    final grade5 = toNullableInt(firstSubmission['grade_5']);
+    final coin = toNullableInt(firstSubmission['coin']);
+    final resolvedGrade = gradingMode == 'coin'
+        ? (coin ?? grade5)
+        : (grade5 ?? coin);
     return AssignmentModel.fromJson({
       'id': toInt(homework['id']),
       'title': (homework['title'] ?? '').toString(),
@@ -503,7 +555,7 @@ class AcademicApi with ApiHelpers {
       'status': normalizedStatus,
       'due_date': (homework['due_at'] ?? '').toString(),
       'created_at': (homework['assigned_at'] ?? '').toString(),
-      'grade': toNullableInt(firstSubmission['grade_5']),
+      'grade': resolvedGrade,
       'teacher_comment': firstSubmission['note']?.toString(),
       'attachments': const <Map<String, dynamic>>[],
       'submitted_files': submittedFiles,
@@ -527,6 +579,11 @@ class AcademicApi with ApiHelpers {
       default:
         return 'pending';
     }
+  }
+
+  String _normalizeGradingMode(dynamic value) {
+    final raw = (value ?? '').toString().toLowerCase();
+    return raw == 'coin' ? 'coin' : 'grade';
   }
 
   int? _resolveHomeworkChildIdFromPayload(

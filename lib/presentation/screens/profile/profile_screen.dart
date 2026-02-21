@@ -16,6 +16,7 @@ class ProfileScreen extends ConsumerWidget {
     final userState = ref.watch(userProvider);
     final paymentState = ref.watch(paymentProvider);
     final user = userState.user;
+    final hasFinancialData = paymentState.balance?.hasFinancialData ?? false;
 
     // Initial data load if needed
     // Note: Splash screen already loads profile, but balance might need refresh
@@ -94,9 +95,9 @@ class ProfileScreen extends ConsumerWidget {
                             child: _StatCard(
                               icon: Icons.account_balance_wallet_rounded,
                               label: 'Balans',
-                              value: paymentState.balance != null
+                              value: hasFinancialData
                                   ? '${Formatters.formatCurrency(paymentState.balance!.balance.toDouble())} UZS'
-                                  : '--- UZS',
+                                  : '---',
                             ),
                           ),
                         ),

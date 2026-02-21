@@ -70,7 +70,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     final state = ref.watch(paymentProvider);
     final userState = ref.watch(userProvider);
     final child = userState.selectedChild;
-    final hasDebt = state.balance?.hasDebt ?? false;
+    final hasFinancialData = state.balance?.hasFinancialData ?? false;
+    final hasDebt = hasFinancialData && (state.balance?.hasDebt ?? false);
     final debtAmount = state.balance?.debtAmount ?? 0;
 
     ref.listen(selectedChildProvider, (previous, next) {
@@ -105,9 +106,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       color: AppColors.primaryBlue,
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       child: BalanceHeader(
-                        balance: state.balance?.balance != null
-                            ? '${state.balance!.balance} UZS'
-                            : '0 UZS',
+                        balance: hasFinancialData
+                            ? '${state.balance?.balance ?? 0} UZS'
+                            : 'Ma\'lumot yo\'q',
                         lastUpdated: _formatLastUpdated(
                           state.balance?.nextPaymentDate,
                         ),
@@ -147,13 +148,13 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                   },
                                 if (child != null)
                                   {'label': 'Sinf', 'value': child.className},
-                                {
-                                  'label': 'Balans',
-                                  'value':
-                                      state.balance?.formattedBalance ??
-                                      '0 so\'m',
-                                },
-                                if (state.balance?.monthlyFee != null)
+                                if (hasFinancialData && state.balance != null)
+                                  {
+                                    'label': 'Balans',
+                                    'value': state.balance!.formattedBalance,
+                                  },
+                                if (hasFinancialData &&
+                                    (state.balance?.monthlyFee ?? 0) > 0)
                                   {
                                     'label': 'Oylik to\'lov',
                                     'value': state.balance!.formattedMonthlyFee,

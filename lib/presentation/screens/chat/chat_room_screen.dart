@@ -22,16 +22,26 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
 class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  static const double _paginationThreshold = 200;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_handleScroll);
     if (widget.chatData != null && widget.chatData!['id'] != null) {
       Future.microtask(() {
         ref
             .read(chatRoomProvider.notifier)
             .openConversation(widget.chatData!['id']);
       });
+    }
+  }
+
+  void _handleScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= (position.maxScrollExtent - _paginationThreshold)) {
+      ref.read(chatRoomProvider.notifier).loadMore();
     }
   }
 
@@ -58,6 +68,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   @override
   void dispose() {
     ref.read(chatRoomProvider.notifier).closeConversation();
+    _scrollController.removeListener(_handleScroll);
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -67,6 +78,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(chatRoomProvider);
     final messages = state.messages;
+    final showTopLoader = state.isLoading && messages.isNotEmpty;
 
     final chatName = widget.chatData?['name'] ?? 'Chat';
     final isOnline = widget.chatData?['isOnline'] ?? false;
@@ -133,8 +145,20 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                     controller: _scrollController,
                     reverse: true, // Messages usually start from bottom
                     padding: const EdgeInsets.all(20),
-                    itemCount: messages.length,
+                    itemCount: messages.length + (showTopLoader ? 1 : 0),
                     itemBuilder: (context, index) {
+                      if (showTopLoader && index == messages.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
                       final msg = messages[index];
                       return MessageBubble(
                         text: msg.content ?? '',

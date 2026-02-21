@@ -27,12 +27,21 @@ class PaymentApi with ApiHelpers {
       final data = asMap(response.data);
       final allPayments = _extractPaymentRows(data, studentId: studentId);
 
+      final hasFinancialData =
+          data.containsKey('balance') ||
+          data.containsKey('monthly_fee') ||
+          data.containsKey('default_amount') ||
+          data.containsKey('debt_amount') ||
+          data.containsKey('contract_number');
+
       final monthlyFee = toInt(data['monthly_fee'] ?? data['default_amount']);
       final balance = toInt(data['balance']);
       final explicitDebt = toInt(data['debt_amount']);
-      final debt = explicitDebt > 0
-          ? explicitDebt
-          : (monthlyFee > balance ? (monthlyFee - balance) : 0);
+      final debt = hasFinancialData
+          ? (explicitDebt > 0
+                ? explicitDebt
+                : (monthlyFee > balance ? (monthlyFee - balance) : 0))
+          : 0;
 
       return BalanceInfo.fromJson({
         'balance': balance,
@@ -40,6 +49,7 @@ class PaymentApi with ApiHelpers {
         'contract_number': data['contract_number']?.toString(),
         'next_payment_date': _latestPaidDate(allPayments),
         'debt_amount': debt,
+        'has_financial_data': hasFinancialData,
       });
     } on DioException catch (e) {
       throw handleDioError(e);
@@ -61,11 +71,12 @@ class PaymentApi with ApiHelpers {
         },
       );
       final root = asMap(response.data);
-      var payments = _extractPaymentRows(
-        root,
-        studentId: studentId,
-      ).map(_mapPaymentRow).toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      var payments =
+          _extractPaymentRows(
+              root,
+              studentId: studentId,
+            ).map(_mapPaymentRow).toList()
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       if (status != null && status.isNotEmpty) {
         final normalized = status.toLowerCase();
@@ -184,7 +195,7 @@ class PaymentApi with ApiHelpers {
       'id': toInt(row['id']) == 0
           ? row.toString().hashCode.abs()
           : toInt(row['id']),
-      'amount': toInt(row['amount']),
+      'amount': _toAmountInt(row['amount']),
       'status': status,
       'method': method,
       'description': description,
@@ -219,6 +230,12 @@ class PaymentApi with ApiHelpers {
       default:
         return 'pending';
     }
+  }
+
+  int _toAmountInt(dynamic value) {
+    final amount = toNullableDouble(value);
+    if (amount == null) return toInt(value);
+    return amount.round();
   }
 
   String? _latestPaidDate(List<Map<String, dynamic>> rows) {

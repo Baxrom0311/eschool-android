@@ -39,20 +39,34 @@ class MenuApi with ApiHelpers {
   /// Haftalik menyu
   ///
   /// Parent OAS da haftalik endpoint yo'q, shu sabab bir hafta uchun
-  /// kunlik endpoint ketma-ket chaqiriladi.
-  Future<List<MenuModel>> getWeeklyMenu({String? weekStart, int? studentId}) async {
+  /// kunlik endpoint parallel chaqiriladi.
+  Future<List<MenuModel>> getWeeklyMenu({
+    String? weekStart,
+    int? studentId,
+  }) async {
     try {
       final start = _parseDate(weekStart) ?? _startOfWeek(DateTime.now());
-      final result = <MenuModel>[];
-      for (var i = 0; i < 7; i++) {
+
+      final dailyRequests = List.generate(7, (i) async {
         final day = start.add(Duration(days: i));
         final date = _formatDate(day);
         try {
           final daily = await getDailyMenu(date: date, studentId: studentId);
-          result.addAll(daily);
+          return MapEntry(i, daily);
         } catch (_) {
           // Bir kunlik menyu xatosi butun haftalik yuklashni to'xtatmaydi.
+          return MapEntry(i, const <MenuModel>[]);
         }
+      });
+
+      final dailyResults = await Future.wait(dailyRequests);
+      final indexed =
+          dailyResults.where((entry) => entry.value.isNotEmpty).toList()
+            ..sort((a, b) => a.key.compareTo(b.key));
+
+      final result = <MenuModel>[];
+      for (final entry in indexed) {
+        result.addAll(entry.value);
       }
       return result;
     } on DioException catch (e) {

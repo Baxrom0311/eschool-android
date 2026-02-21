@@ -87,7 +87,11 @@ class GradesNotifier extends AutoDisposeAsyncNotifier<GradesData> {
         (l) => throw Exception(l.message),
         (r) => r,
       );
-      final summary = _buildSummaryFromGrades(grades);
+      final summaryResult = await repository.getGradeSummary(childId);
+      final summary = summaryResult.fold(
+        (_) => _buildSummaryFromGrades(grades),
+        (rows) => rows.isNotEmpty ? rows : _buildSummaryFromGrades(grades),
+      );
 
       final data = GradesData(
         grades: grades,
