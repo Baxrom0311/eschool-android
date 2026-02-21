@@ -167,20 +167,17 @@ class MenuApi with ApiHelpers {
         recipe: report['lunch_recipe']?.toString(),
         mediaItems: lunchMedia,
       );
-
-      final snackName = [
-        report['afternoon_tea_name']?.toString(),
-        report['dinner_name']?.toString(),
-      ].whereType<String>().where((e) => e.isNotEmpty).join(' / ');
-      final snackRecipe = [
-        report['afternoon_tea_recipe']?.toString(),
-        report['dinner_recipe']?.toString(),
-      ].whereType<String>().where((e) => e.isNotEmpty).join('\n');
       addMeal(
-        mealType: MealType.snack,
-        name: snackName.isEmpty ? null : snackName,
-        recipe: snackRecipe.isEmpty ? null : snackRecipe,
-        mediaItems: [...teaMedia, ...dinnerMedia],
+        mealType: MealType.afternoonTea,
+        name: report['afternoon_tea_name']?.toString(),
+        recipe: report['afternoon_tea_recipe']?.toString(),
+        mediaItems: teaMedia,
+      );
+      addMeal(
+        mealType: MealType.dinner,
+        name: report['dinner_name']?.toString(),
+        recipe: report['dinner_recipe']?.toString(),
+        mediaItems: dinnerMedia,
       );
     }
 
@@ -200,6 +197,10 @@ class MenuApi with ApiHelpers {
         return 'breakfast';
       case MealType.lunch:
         return 'lunch';
+      case MealType.afternoonTea:
+        return 'afternoon_tea';
+      case MealType.dinner:
+        return 'dinner';
       case MealType.snack:
         return 'snack';
     }

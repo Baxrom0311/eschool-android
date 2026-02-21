@@ -42,7 +42,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final scheduleAsync = ref.watch(scheduleProvider);
-    
+
     // Extract data if available
     final scheduleData = scheduleAsync.valueOrNull;
     final schedule = scheduleData?.todaySchedule ?? [];
@@ -67,10 +67,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  AppColors.primaryBlue,
-                  AppColors.secondaryBlue,
-                ],
+                colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
               ),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(32),
@@ -100,10 +97,12 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                       children: List.generate(7, (index) {
                         // Current week starting from Monday
                         final now = DateTime.now();
-                        final firstDayOfWeek =
-                            now.subtract(Duration(days: now.weekday - 1));
+                        final firstDayOfWeek = now.subtract(
+                          Duration(days: now.weekday - 1),
+                        );
                         final day = firstDayOfWeek.add(Duration(days: index));
-                        final isSelected = day.day == _selectedDate.day &&
+                        final isSelected =
+                            day.day == _selectedDate.day &&
                             day.month == _selectedDate.month;
                         final isToday =
                             day.day == now.day && day.month == now.month;
@@ -128,9 +127,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                             child: Column(
                               children: [
                                 Text(
-                                  DateFormat('E', 'uz')
-                                      .format(day)
-                                      .toUpperCase(),
+                                  DateFormat(
+                                    'E',
+                                    'uz',
+                                  ).format(day).toUpperCase(),
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -164,11 +164,13 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
           // ─── Schedule List ───
           if (isLoading && schedule.isEmpty)
-             const Expanded(child: Center(child: CircularProgressIndicator()))
+            const Expanded(child: Center(child: CircularProgressIndicator()))
           else if (hasError && schedule.isEmpty)
-             Expanded(child: Center(child: Text('Xatolik: ${scheduleAsync.error}')))
+            Expanded(
+              child: Center(child: Text('Xatolik: ${scheduleAsync.error}')),
+            )
           else if (schedule.isEmpty)
-             const Expanded(child: Center(child: Text('Darslar mavjud emas')))
+            const Expanded(child: Center(child: Text('Darslar mavjud emas')))
           else
             Expanded(
               child: ListView.builder(
@@ -176,7 +178,8 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 itemCount: schedule.length,
                 itemBuilder: (context, index) {
                   final item = schedule[index];
-                  final isToday = _selectedDate.day == DateTime.now().day &&
+                  final isToday =
+                      _selectedDate.day == DateTime.now().day &&
                       _selectedDate.month == DateTime.now().month &&
                       _selectedDate.year == DateTime.now().year;
                   final isNow = isToday && item.isActive;
@@ -187,6 +190,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                     subjectName: item.subjectName,
                     room: item.roomNumber ?? '',
                     teacherName: item.teacherName,
+                    markText: item.markText,
                     isNow: isNow,
                   );
                 },

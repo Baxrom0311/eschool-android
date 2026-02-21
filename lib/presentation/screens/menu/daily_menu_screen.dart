@@ -51,8 +51,12 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
         return 0;
       case MealType.lunch:
         return 1;
-      case MealType.snack:
+      case MealType.afternoonTea:
         return 2;
+      case MealType.dinner:
+        return 3;
+      case MealType.snack:
+        return 4;
     }
   }
 

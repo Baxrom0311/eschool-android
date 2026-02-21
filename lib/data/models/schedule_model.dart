@@ -36,6 +36,14 @@ class ScheduleModel extends Equatable {
   @JsonKey(name: 'room_number')
   final String? roomNumber;
 
+  /// Ushbu dars uchun qo'yilgan baho/coin (agar mavjud bo'lsa)
+  @JsonKey(name: 'mark_value')
+  final int? markValue;
+
+  /// Baho rejimi: grade | coin
+  @JsonKey(name: 'mark_mode')
+  final String? markMode;
+
   const ScheduleModel({
     required this.id,
     required this.subjectName,
@@ -45,6 +53,8 @@ class ScheduleModel extends Equatable {
     required this.dayOfWeek,
     required this.lessonNumber,
     this.roomNumber,
+    this.markValue,
+    this.markMode,
   });
 
   factory ScheduleModel.fromJson(Map<String, dynamic> json) =>
@@ -87,12 +97,24 @@ class ScheduleModel extends Equatable {
     return nowMin >= startH * 60 + startM && nowMin <= endH * 60 + endM;
   }
 
+  /// UI uchun baho/coin matni
+  String? get markText {
+    final value = markValue;
+    if (value == null || value <= 0) return null;
+    if ((markMode ?? '').toLowerCase() == 'coin') {
+      return '$value coin';
+    }
+    return value.toString();
+  }
+
   @override
   List<Object?> get props => [
-        id,
-        subjectName,
-        teacherName,
-        dayOfWeek,
-        lessonNumber,
-      ];
+    id,
+    subjectName,
+    teacherName,
+    dayOfWeek,
+    lessonNumber,
+    markValue,
+    markMode,
+  ];
 }

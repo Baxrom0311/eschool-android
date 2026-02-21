@@ -195,7 +195,7 @@ class PaymentApi with ApiHelpers {
       'id': toInt(row['id']) == 0
           ? row.toString().hashCode.abs()
           : toInt(row['id']),
-      'amount': _toAmountInt(row['amount']),
+      'amount': _toAmountDouble(row['amount']),
       'status': status,
       'method': method,
       'description': description,
@@ -232,10 +232,10 @@ class PaymentApi with ApiHelpers {
     }
   }
 
-  int _toAmountInt(dynamic value) {
+  double _toAmountDouble(dynamic value) {
     final amount = toNullableDouble(value);
-    if (amount == null) return toInt(value);
-    return amount.round();
+    if (amount != null) return amount;
+    return toInt(value).toDouble();
   }
 
   String? _latestPaidDate(List<Map<String, dynamic>> rows) {

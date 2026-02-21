@@ -32,8 +32,8 @@ enum PaymentMethod {
 class PaymentModel extends Equatable {
   final int id;
 
-  /// To'lov summasi (so'mda)
-  final int amount;
+  /// To'lov summasi (so'mda, tiyin aniqligi bilan)
+  final double amount;
 
   /// To'lov holati
   final PaymentStatus status;
@@ -79,11 +79,19 @@ class PaymentModel extends Equatable {
 
   /// Formatlangan summa: "1 500 000 so'm"
   String get formattedAmount {
-    final formatted = amount.toString().replaceAllMapped(
+    final hasFraction = (amount % 1).abs() > 0.000001;
+    final amountText = hasFraction
+        ? amount.toStringAsFixed(2)
+        : amount.toStringAsFixed(0);
+    final parts = amountText.split('.');
+    final formattedInteger = parts.first.replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]} ',
     );
-    return '$formatted so\'m';
+    if (parts.length > 1 && parts[1] != '00') {
+      return '$formattedInteger.${parts[1]} so\'m';
+    }
+    return '$formattedInteger so\'m';
   }
 
   /// Holat rangi uchun helper

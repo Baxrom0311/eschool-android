@@ -136,6 +136,7 @@ class AcademicApi with ApiHelpers {
       );
       final root = asMap(response.data);
       final entries = _extractScheduleEntries(root, childId);
+      final gradingMode = _normalizeGradingMode(root['grading_mode']);
 
       return entries.map((entry) {
         final lessonTime = asMap(entry['lessonTime']);
@@ -143,6 +144,12 @@ class AcademicApi with ApiHelpers {
         final teacher = asMap(entry['teacher']);
         final room = asMap(entry['room']);
         final dateKey = entry['_date']?.toString();
+        final mark = _resolveScheduleMark(
+          root,
+          childId: childId,
+          entry: entry,
+          dateKey: dateKey,
+        );
 
         final fallbackDay = _weekdayFromDate(dateKey);
         final dayOfWeek = toInt(entry['day_of_week']) == 0
@@ -163,6 +170,8 @@ class AcademicApi with ApiHelpers {
                 1,
           ),
           'room_number': room['name']?.toString(),
+          'mark_value': _resolveTimetableMarkValue(mark, gradingMode),
+          'mark_mode': gradingMode,
         });
       }).toList()..sort((a, b) {
         final dayCompare = a.dayOfWeek.compareTo(b.dayOfWeek);
@@ -440,6 +449,81 @@ class AcademicApi with ApiHelpers {
 
     _appendScheduleContainer(result, root['entries']);
     return result;
+  }
+
+  Map<String, dynamic>? _resolveScheduleMark(
+    Map<String, dynamic> root, {
+    required int childId,
+    required Map<String, dynamic> entry,
+    String? dateKey,
+  }) {
+    final marksRaw = root['marks_by_child'];
+    if (marksRaw is! Map) return null;
+
+    final byChild = Map<String, dynamic>.from(marksRaw);
+    final childMarks =
+        byChild[childId.toString()] ??
+        (byChild.isNotEmpty ? byChild.values.first : null);
+    if (childMarks == null) return null;
+
+    final entryId = toInt(entry['id']);
+    if (entryId <= 0) return null;
+
+    if (dateKey != null && dateKey.isNotEmpty) {
+      final dateContainer = asMap(asMap(childMarks)[dateKey]);
+      final markFromDate = _extractMarkForEntry(dateContainer, entryId);
+      if (markFromDate != null) return markFromDate;
+    }
+
+    return _extractMarkForEntry(childMarks, entryId);
+  }
+
+  Map<String, dynamic>? _extractMarkForEntry(dynamic container, int entryId) {
+    if (container is Map) {
+      final map = Map<String, dynamic>.from(container);
+
+      final direct = asMap(map[entryId.toString()]);
+      if (_isTimetableMark(direct)) return direct;
+
+      for (final value in map.values) {
+        final mark = _extractMarkForEntry(value, entryId);
+        if (mark != null) return mark;
+      }
+      return null;
+    }
+
+    if (container is List) {
+      for (final item in container.whereType<Map>()) {
+        final row = Map<String, dynamic>.from(item);
+        final rowEntryId = toInt(
+          row['timetable_entry_id'] ?? row['entry_id'] ?? row['id'],
+        );
+        if (rowEntryId == entryId && _isTimetableMark(row)) {
+          return row;
+        }
+
+        final nested = _extractMarkForEntry(row, entryId);
+        if (nested != null) return nested;
+      }
+    }
+
+    return null;
+  }
+
+  bool _isTimetableMark(Map<String, dynamic> row) {
+    return row.containsKey('grade_5') || row.containsKey('coin');
+  }
+
+  int? _resolveTimetableMarkValue(
+    Map<String, dynamic>? row,
+    String gradingMode,
+  ) {
+    if (row == null || row.isEmpty) return null;
+    final grade5 = toNullableInt(row['grade_5']);
+    final coin = toNullableInt(row['coin']);
+    final value = gradingMode == 'coin' ? (coin ?? grade5) : (grade5 ?? coin);
+    if (value == null || value <= 0) return null;
+    return value;
   }
 
   void _appendScheduleContainer(

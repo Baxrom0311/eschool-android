@@ -77,6 +77,7 @@ class _ScheduleItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final time = '${classItem.startTime} - ${classItem.endTime}';
     final isActive = classItem.isActive;
+    final markText = classItem.markText;
 
     return Container(
       width: 200,
@@ -116,15 +117,43 @@ class _ScheduleItem extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            classItem.subjectName,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isActive ? Colors.white : AppColors.textPrimary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  classItem.subjectName,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isActive ? Colors.white : AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (markText != null && markText.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : AppColors.success.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    markText,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: isActive ? Colors.white : AppColors.success,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const Spacer(),
           Row(

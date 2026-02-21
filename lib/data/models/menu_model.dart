@@ -9,6 +9,11 @@ enum MealType {
   breakfast,
   @JsonValue('lunch')
   lunch,
+  @JsonValue('afternoon_tea')
+  afternoonTea,
+  @JsonValue('dinner')
+  dinner,
+  // Legacy cache/support.
   @JsonValue('snack')
   snack,
 }
@@ -53,8 +58,12 @@ class MenuModel extends Equatable {
         return 'Nonushta';
       case MealType.lunch:
         return 'Tushlik';
-      case MealType.snack:
+      case MealType.afternoonTea:
         return 'Poldnik';
+      case MealType.dinner:
+        return 'Kechki ovqat';
+      case MealType.snack:
+        return 'Tamaddi';
     }
   }
 
