@@ -55,39 +55,9 @@ class AuthApi with ApiHelpers {
     }
   }
 
-  /// Register — yangi foydalanuvchi ro'yxatdan o'tkazish
-  /// (Note: Not currently supported in Tenant API)
-  ///
-  /// [fullName] — to'liq ism
-  /// [phone] — telefon raqam (+998 format)
-  /// [password] — parol (kamida 6 belgi)
-  /// [email] — ixtiyoriy email
-  Future<AuthResponse> register({
-    required String fullName,
-    required String phone,
-    required String password,
-    String? email,
-  }) async {
-    final _ = (fullName, phone, password, email);
-    throw const ServerException(
-      message:
-          'Tenant API bo\'yicha ro\'yxatdan o\'tish endpointi mavjud emas. '
-          'Hisoblar administrator tomonidan yaratiladi.',
-      statusCode: 405,
-    );
-  }
 
-  /// Google Sign In — Google ID token orqali kirish
-  ///
-  /// [idToken] — Google Sign In dan olingan ID token
-  Future<AuthResponse> googleSignIn({required String idToken}) async {
-    final _ = idToken;
-    throw const ServerException(
-      message:
-          'Tenant API bo\'yicha Google orqali kirish endpointi mavjud emas.',
-      statusCode: 405,
-    );
-  }
+
+
 
   /// Logout — sessiyani tugatish
   ///
@@ -118,19 +88,82 @@ class AuthApi with ApiHelpers {
     }
   }
 
-  /// Parolni tiklash — telefon raqamga SMS yuborish
+  /// Parolni tiklash — telefon raqamga SMS kod yuborish
   ///
-  /// [phone] — ro'yxatdan o'tgan telefon raqam
+  /// POST /api/forgot-password
+  /// Body: { "phone": "+998901234567" }
   Future<void> forgotPassword({required String phone}) async {
-    final _ = phone;
-    throw const ServerException(
-      message:
-          'Tenant API bo\'yicha parol tiklash endpointi mavjud emas. '
-          'Administratorga murojaat qiling.',
-      statusCode: 405,
-    );
+    try {
+      await _client.post(
+        ApiConstants.forgotPassword,
+        data: {'phone': phone},
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+          extra: {'skipAuth': true},
+        ),
+      );
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
   }
 
+  /// Parolni tiklash — SMS kod bilan parolni yangilash
+  ///
+  /// POST /api/reset-password
+  /// Body: { "phone": "...", "code": "123456", "password": "...", "password_confirmation": "..." }
+  Future<void> resetPassword({
+    required String phone,
+    required String code,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      await _client.post(
+        ApiConstants.resetPassword,
+        data: {
+          'phone': phone,
+          'code': code,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+          extra: {'skipAuth': true},
+        ),
+      );
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
+  }
+
+  /// QR Kod orqali login
+  ///
+  /// POST /api/qr-login
+  /// Body: { "qr_token": "..." }
+  Future<AuthResponse> qrLogin({required String qrToken}) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.qrLogin,
+        data: {'qr_token': qrToken},
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+          extra: {'skipAuth': true},
+        ),
+      );
+
+      final root = asMap(response.data);
+      final normalized = _normalizeAuthResponse(root);
+      if ((normalized['token'] as String).isEmpty) {
+        throw const ServerException(
+          message: 'QR Login javobida token topilmadi',
+          statusCode: 500,
+        );
+      }
+      return AuthResponse.fromJson(normalized);
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
+  }
   Map<String, dynamic> _normalizeAuthResponse(Map<String, dynamic> raw) {
     final user = asMap(raw['user']);
     final roles = user['roles'] is List

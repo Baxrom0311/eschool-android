@@ -233,12 +233,14 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
   Future<Map<String, dynamic>?> createPayment({
     required int amount,
     required String method,
+    int? studentId,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _repository.createPayment(
       amount: amount,
       method: method,
+      studentId: studentId ?? state.selectedStudentId,
     );
 
     return result.fold(
@@ -366,7 +368,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 ///   method: 'payme',
 /// );
 /// ```
-final paymentProvider = StateNotifierProvider<PaymentNotifier, PaymentState>((
+final paymentProvider = StateNotifierProvider.autoDispose<PaymentNotifier, PaymentState>((
   ref,
 ) {
   final repository = ref.watch(paymentRepositoryProvider);

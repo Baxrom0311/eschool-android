@@ -10,8 +10,9 @@ class DioClient {
   late final Dio _dio;
   final SecureStorageService _secureStorage;
   bool _isClearingSession = false;
+  final VoidCallback? onUnauthorized;
 
-  DioClient(this._secureStorage) {
+  DioClient(this._secureStorage, {this.onUnauthorized}) {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
@@ -53,24 +54,50 @@ class DioClient {
             final requestOptions = error.requestOptions;
             final explicitRule = requestOptions.extra['clearSessionOn401'];
             final skipAuth = requestOptions.extra['skipAuth'] == true;
+            final isRefreshReq = requestOptions.path == '/api/refresh';
             final hasAuthHeader =
                 requestOptions.headers['Authorization'] != null;
 
-            // Default: auth bilan yuborilgan request 401 olsa sessiyani tozalaymiz.
-            // Istisno uchun `clearSessionOn401: false` berilishi mumkin.
             final shouldClearSession = explicitRule is bool
                 ? explicitRule
-                : (!skipAuth && hasAuthHeader);
+                : (!skipAuth && hasAuthHeader && !isRefreshReq);
 
-            if (shouldClearSession && !_isClearingSession) {
-              _isClearingSession = true;
-              try {
-                await _secureStorage.clearAll();
-              } finally {
-                _isClearingSession = false;
+            if (shouldClearSession) {
+              if (!_isClearingSession) {
+                _isClearingSession = true;
+                
+                try {
+                  // Attempt silent refresh
+                  final oldToken = await _secureStorage.getAccessToken();
+                  final dioRefresh = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+                  
+                  final refreshRes = await dioRefresh.post(
+                    '/api/refresh',
+                    options: Options(headers: {'Authorization': 'Bearer $oldToken'}),
+                  );
+                  
+                  if (refreshRes.statusCode == 200) {
+                    final newToken = refreshRes.data['token'];
+                    await _secureStorage.saveAccessToken(newToken);
+                    _isClearingSession = false;
+                    
+                    // Replay failed request
+                    requestOptions.headers['Authorization'] = 'Bearer $newToken';
+                    final response = await _dio.fetch(requestOptions);
+                    return handler.resolve(response);
+                  }
+                } catch (e) {
+                  // Refresh failed, proceed to local logout
+                  await _secureStorage.clearAll();
+                  onUnauthorized?.call();
+                } finally {
+                  _isClearingSession = false;
+                }
               }
             }
           }
+
+
 
           if (kIsWeb && error.type == DioExceptionType.connectionError) {
             // Web da CORS yoki Network xatosi ko'pincha connectionError yoki unknown bo'ladi.

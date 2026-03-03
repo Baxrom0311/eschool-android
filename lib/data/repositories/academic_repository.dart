@@ -54,10 +54,11 @@ class AcademicRepository {
       );
 
   Future<Either<Failure, AssignmentModel>> getAssignmentDetails(
-    int assignmentId,
-  ) =>
+    int assignmentId, {
+    required int childId,
+  }) =>
       safeApiCall(
-        () => _academicApi.getAssignmentDetails(assignmentId),
+        () => _academicApi.getAssignmentDetails(assignmentId, childId),
         errorMessage: 'Topshiriq tafsilotlarini yuklashda xatolik',
       );
 

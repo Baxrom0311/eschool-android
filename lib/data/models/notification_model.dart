@@ -24,7 +24,7 @@ enum NotificationType {
 /// Bildirishnoma modeli
 @JsonSerializable()
 class NotificationModel extends Equatable {
-  final int id;
+  final String id;
 
   /// Sarlavha
   final String title;

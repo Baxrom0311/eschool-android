@@ -96,6 +96,8 @@ class UserNotifier extends StateNotifier<UserState> {
     final cachedUser = _readCachedUser();
     if (cachedUser == null) return;
 
+    SharedPrefsService.setUserScope(cachedUser.id);
+
     final selectedChild = _resolveSelectedChild(cachedUser.children);
     state = state.copyWith(
       user: cachedUser,
@@ -110,6 +112,7 @@ class UserNotifier extends StateNotifier<UserState> {
   Future<void> loadProfile() async {
     final cachedUser = _readCachedUser();
     if (cachedUser != null && state.user == null) {
+      SharedPrefsService.setUserScope(cachedUser.id);
       state = state.copyWith(
         user: cachedUser,
         children: cachedUser.children,
@@ -143,6 +146,7 @@ class UserNotifier extends StateNotifier<UserState> {
         );
       },
       (user) {
+        SharedPrefsService.setUserScope(user.id);
         final selectedChild = _resolveSelectedChild(user.children);
 
         state = state.copyWith(
@@ -228,8 +232,37 @@ class UserNotifier extends StateNotifier<UserState> {
     );
   }
 
+  /// Parol o'zgartirish
+  ///
+  /// Muvaffaqiyatli bo'lsa `null`, xatolik bo'lsa xabar qaytaradi.
+  Future<String?> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await _repository.changePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+      confirmPassword: confirmPassword,
+    );
+
+    return result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, error: failure.message);
+        return failure.message;
+      },
+      (_) {
+        state = state.copyWith(isLoading: false);
+        return null; // muvaffaqiyatli
+      },
+    );
+  }
+
   /// Auth dan kelgan user ni set qilish
   void setUser(UserModel user) {
+    SharedPrefsService.setUserScope(user.id);
     final children = user.children;
     final selectedChild = children.isNotEmpty ? children.first : null;
 
@@ -249,7 +282,9 @@ class UserNotifier extends StateNotifier<UserState> {
   /// Tizimdan chiqqanda state ni tozalash
   void clear() {
     state = const UserState.initial();
-    unawaited(_clearCachedProfile());
+    unawaited(_clearCachedProfile().then((_) {
+      SharedPrefsService.setUserScope(null);
+    }));
   }
 
   ChildModel? _resolveSelectedChild(List<ChildModel> children) {

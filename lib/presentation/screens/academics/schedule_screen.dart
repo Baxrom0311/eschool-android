@@ -28,9 +28,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   void _loadSchedule() {
     final selectedChild = ref.read(selectedChildProvider);
     if (selectedChild != null) {
-      ref.read(scheduleProvider.notifier).loadSchedule(selectedChild.id);
-      // Select the current weekday in the provider (1-based)
+      // Select the current weekday in the provider (1-based) first to avoid overwriting AsyncLoading state!
       ref.read(scheduleProvider.notifier).selectDay(_selectedDate.weekday);
+      ref.read(scheduleProvider.notifier).loadSchedule(selectedChild.id);
     }
   }
 

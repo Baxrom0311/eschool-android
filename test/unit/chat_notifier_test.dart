@@ -3,10 +3,13 @@ import 'package:parent_school_app/presentation/providers/chat_provider.dart';
 import 'package:parent_school_app/data/repositories/chat_repository.dart';
 import 'package:parent_school_app/data/models/chat_model.dart';
 import 'package:parent_school_app/core/error/failures.dart';
+import 'package:parent_school_app/core/storage/outbox_service.dart';
+import 'package:parent_school_app/data/models/user_model.dart';
 import 'package:dartz/dartz.dart';
+import 'package:mocktail/mocktail.dart';
 
 // Mock ChatRepository
-class MockChatRepository implements ChatRepository {
+class MockChatRepository extends Mock implements ChatRepository {
   bool shouldReturnError = false;
 
   @override
@@ -70,15 +73,29 @@ class MockChatRepository implements ChatRepository {
   }
 }
 
+class MockOutboxService extends Mock implements OutboxService {}
+
 void main() {
   late MockChatRepository mockRepository;
+  late MockOutboxService mockOutbox;
   late ConversationsNotifier conversationsNotifier;
   late ChatRoomNotifier chatRoomNotifier;
+  
+  final mockUser = const UserModel(
+    id: 1, 
+    fullName: 'Test User', 
+    phone: '998901234567',
+  );
 
   setUp(() {
     mockRepository = MockChatRepository();
+    mockOutbox = MockOutboxService();
     conversationsNotifier = ConversationsNotifier(repository: mockRepository);
-    chatRoomNotifier = ChatRoomNotifier(repository: mockRepository);
+    chatRoomNotifier = ChatRoomNotifier(
+      repository: mockRepository,
+      outbox: mockOutbox,
+      currentUser: mockUser,
+    );
   });
 
   group('ConversationsNotifier Tests', () {

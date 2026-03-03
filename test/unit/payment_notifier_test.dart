@@ -55,7 +55,7 @@ class MockPaymentRepository implements PaymentRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> createPayment({required int amount, required String method}) async {
+  Future<Either<Failure, Map<String, dynamic>>> createPayment({required int amount, required String method, int? studentId}) async {
     if (shouldReturnError) {
       return const Left(ServerFailure('Payment creation failed'));
     }

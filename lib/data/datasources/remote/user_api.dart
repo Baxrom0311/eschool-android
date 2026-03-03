@@ -1,7 +1,8 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
-import '../../../core/error/exceptions.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/child_model.dart';
 import '../../models/user_model.dart';
@@ -44,28 +45,76 @@ class UserApi with ApiHelpers {
   }
 
   /// Profilni yangilash
+  ///
+  /// POST /api/parent/profile
+  /// Body: { "name": "...", "email": "...", "phone": "..." }
   Future<UserModel> updateProfile({
     String? fullName,
     String? email,
     String? phone,
     bool? notificationsEnabled,
   }) async {
-    final _ = (fullName, email, phone, notificationsEnabled);
-    throw const ServerException(
-      message:
-          'Tenant Parent API bo\'yicha profilni yangilash endpointi mavjud emas.',
-      statusCode: 405,
-    );
+    try {
+      final body = <String, dynamic>{};
+      if (fullName != null) body['name'] = fullName;
+      if (email != null) body['email'] = email;
+      if (phone != null) body['phone'] = phone;
+
+      await _client.post(ApiConstants.parentUpdateProfile, data: body);
+
+      // Yangilangan profilni qaytarish uchun getProfile() chaqiramiz
+      return getProfile();
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
   }
 
   /// Avatar yuklash
+  ///
+  /// POST /api/parent/avatar
+  /// Body: multipart file "avatar"
   Future<String> uploadAvatar(String filePath) async {
-    final _ = filePath;
-    throw const ServerException(
-      message:
-          'Tenant Parent API bo\'yicha avatar yuklash endpointi mavjud emas.',
-      statusCode: 405,
-    );
+    try {
+      final formData = FormData.fromMap({
+        'avatar': await MultipartFile.fromFile(
+          filePath,
+          filename: filePath.split(Platform.pathSeparator).last,
+        ),
+      });
+
+      final response = await _client.post(
+        ApiConstants.parentUploadAvatar,
+        data: formData,
+      );
+
+      final data = asMap(response.data);
+      return (data['avatar_url'] ?? '').toString();
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
+  }
+
+  /// Parol o'zgartirish
+  ///
+  /// POST /api/parent/password
+  /// Body: { "current_password": "...", "password": "...", "password_confirmation": "..." }
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      await _client.post(
+        ApiConstants.parentChangePassword,
+        data: {
+          'current_password': currentPassword,
+          'password': newPassword,
+          'password_confirmation': confirmPassword,
+        },
+      );
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
   }
 
   /// Farzandlar ro'yxatini olish

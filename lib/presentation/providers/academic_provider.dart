@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/storage_keys.dart';
 import '../../core/storage/shared_prefs_service.dart';
+import '../../core/storage/local_cache_service.dart';
 import '../../data/datasources/remote/academic_api.dart';
 import '../../data/models/assignment_model.dart';
 import '../../data/models/attendance_model.dart';
@@ -12,6 +13,7 @@ import '../../data/models/grade_model.dart';
 import '../../data/models/schedule_model.dart';
 import '../../data/repositories/academic_repository.dart';
 import 'auth_provider.dart';
+import 'user_provider.dart';
 
 bool _isBackendSchemaError(Object error) {
   final message = error.toString().toLowerCase();
@@ -26,7 +28,8 @@ bool _isBackendSchemaError(Object error) {
 
 final academicApiProvider = Provider<AcademicApi>((ref) {
   final dioClient = ref.watch(dioClientProvider);
-  return AcademicApi(dioClient);
+  final localCache = ref.watch(localCacheServiceProvider);
+  return AcademicApi(dioClient, localCache);
 });
 
 final academicRepositoryProvider = Provider<AcademicRepository>((ref) {
@@ -137,9 +140,10 @@ class GradesNotifier extends AutoDisposeAsyncNotifier<GradesData> {
   void selectQuarter(int quarter) {
     if (state.value != null) {
       state = AsyncValue.data(state.value!.copyWith(selectedQuarter: quarter));
-      // Note: Typically you'd re-fetch here if the data depends on the quarter,
-      // but the original code just updated the state.
-      // If re-fetch is needed, call loadGrades(childId, quarter: quarter).
+      final childId = ref.read(userProvider).selectedChild?.id;
+      if (childId != null) {
+        loadGrades(childId, quarter: quarter);
+      }
     }
   }
 
@@ -391,8 +395,22 @@ class AssignmentsNotifier extends AutoDisposeAsyncNotifier<AssignmentsData> {
       );
     }
 
+    final childId = _lastChildId ?? ref.read(userProvider).selectedChild?.id;
+    if (childId == null) {
+      if (cachedDetails == null) {
+        state = AsyncValue.error(
+          Exception('Farzand tanlanmagan'),
+          StackTrace.current,
+        );
+      }
+      return;
+    }
+
     final repository = ref.read(academicRepositoryProvider);
-    final result = await repository.getAssignmentDetails(assignmentId);
+    final result = await repository.getAssignmentDetails(
+      assignmentId,
+      childId: childId,
+    );
 
     result.fold(
       (l) {

@@ -61,3 +61,11 @@ pubspec.lock
 # Dev task files (optional - remove if you want to track these)
 # dev1_tasks.md
 # dev2_tasks.md
+
+# Debug/log output — should not be tracked
+err.txt
+test_output*.txt
+test_output*.log
+dump_output.log
+hi.md
+tenant

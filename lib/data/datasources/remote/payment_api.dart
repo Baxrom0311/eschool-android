@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
-import '../../../core/error/exceptions.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/payment_model.dart';
 import 'api_helpers.dart';
@@ -68,6 +67,8 @@ class PaymentApi with ApiHelpers {
         ApiConstants.paymentHistory,
         queryParameters: {
           if (studentId != null && studentId > 0) 'student_id': studentId,
+          'page': page,
+          'per_page': perPage,
         },
       );
       final root = asMap(response.data);
@@ -75,8 +76,7 @@ class PaymentApi with ApiHelpers {
           _extractPaymentRows(
               root,
               studentId: studentId,
-            ).map(_mapPaymentRow).toList()
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            ).map(_mapPaymentRow).toList();
 
       if (status != null && status.isNotEmpty) {
         final normalized = status.toLowerCase();
@@ -85,29 +85,51 @@ class PaymentApi with ApiHelpers {
             .toList();
       }
 
-      final start = (page - 1) * perPage;
-      if (start >= payments.length) return const [];
-      final end = (start + perPage).clamp(0, payments.length);
-      return payments.sublist(start, end);
+      return payments;
     } on DioException catch (e) {
       throw handleDioError(e);
     }
   }
 
-  /// Yangi to'lov yaratish (PayMe/Click ga yo'naltirish uchun URL olish)
+  /// Yangi to'lov yaratish (PayMe/Click/Paynet ga yo'naltirish uchun URL olish)
   ///
-  /// Parent Tenant OAS bo'yicha to'lov yaratish endpointi yo'q.
+  /// POST /api/parent/payments/create
+  /// Body: { "student_id": 5, "amount": 450000 }
+  /// Response: { "transaction_id": 123, "click_url": "...", "payme_url": "...", "paynet_url": "..." }
   Future<Map<String, dynamic>> createPayment({
     required int amount,
     required String method,
+    int? studentId,
   }) async {
-    final _ = (amount, method);
-    throw const ServerException(
-      message:
-          'Parent API bo\'yicha to\'lov yaratish endpointi mavjud emas. '
-          'To\'lovlar maktab tomonidan kiritiladi.',
-      statusCode: 405,
-    );
+    try {
+      final response = await _client.post(
+        ApiConstants.createPayment,
+        data: {
+          'student_id': studentId ?? 0,
+          'amount': amount,
+        },
+      );
+
+      final data = asMap(response.data);
+
+      // method bo'yicha tegishli URL ni tanlash
+      final urlKey = switch (method) {
+        'click' => 'click_url',
+        'payme' => 'payme_url',
+        'paynet' => 'paynet_url',
+        _ => 'click_url',
+      };
+
+      return {
+        'transaction_id': data['transaction_id'],
+        'redirect_url': data[urlKey]?.toString() ?? '',
+        'click_url': data['click_url']?.toString() ?? '',
+        'payme_url': data['payme_url']?.toString() ?? '',
+        'paynet_url': data['paynet_url']?.toString() ?? '',
+      };
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
   }
 
   /// To'lov usullarini olish (mavjud PayMe/Click/naqd)

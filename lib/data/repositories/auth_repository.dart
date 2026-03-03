@@ -40,57 +40,14 @@ class AuthRepository {
           username: username,
           password: password,
         );
-        await _secureStorage.saveTokens(
-          accessToken: response.accessToken,
-          refreshToken: '',
-        );
+        await _secureStorage.saveAccessToken(response.accessToken);
         return response.user;
       },
       errorMessage: 'Kirish amalga oshmadi',
     );
   }
 
-  /// Register — yangi hisob yaratish
-  Future<Either<Failure, UserModel>> register({
-    required String fullName,
-    required String phone,
-    required String password,
-    String? email,
-  }) {
-    return safeApiCall(
-      () async {
-        final response = await _authApi.register(
-          fullName: fullName,
-          phone: phone,
-          password: password,
-          email: email,
-        );
-        await _secureStorage.saveTokens(
-          accessToken: response.accessToken,
-          refreshToken: '',
-        );
-        return response.user;
-      },
-      errorMessage: 'Ro\'yxatdan o\'tishda xatolik',
-    );
-  }
 
-  /// Google Sign In — Google orqali kirish
-  Future<Either<Failure, UserModel>> googleSignIn({
-    required String idToken,
-  }) {
-    return safeApiCall(
-      () async {
-        final response = await _authApi.googleSignIn(idToken: idToken);
-        await _secureStorage.saveTokens(
-          accessToken: response.accessToken,
-          refreshToken: '',
-        );
-        return response.user;
-      },
-      errorMessage: 'Google kirish xatoligi',
-    );
-  }
 
   /// Logout — tizimdan chiqish
   ///
@@ -133,5 +90,19 @@ class AuthRepository {
   Future<bool> hasValidToken() async {
     final token = await _secureStorage.getAccessToken();
     return token != null && token.isNotEmpty;
+  }
+
+  /// QR Kod orqali login
+  Future<Either<Failure, UserModel>> qrLogin({
+    required String qrToken,
+  }) {
+    return safeApiCall(
+      () async {
+        final response = await _authApi.qrLogin(qrToken: qrToken);
+        await _secureStorage.saveAccessToken(response.accessToken);
+        return response.user;
+      },
+      errorMessage: 'QR kod orqali kirish amalga oshmadi',
+    );
   }
 }

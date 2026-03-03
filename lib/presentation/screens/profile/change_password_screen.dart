@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../providers/user_provider.dart';
+
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
 
@@ -24,16 +26,34 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   }
 
   Future<void> _submit() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      // TODO: Implement change password logic in UserProvider/Repository
-      await Future.delayed(const Duration(seconds: 1)); // Simulating
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Parol o\'zgartirish hali ishlamaydi (API kerak)')),
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    final error = await ref.read(userProvider.notifier).changePassword(
+          currentPassword: _currentController.text,
+          newPassword: _newController.text,
+          confirmPassword: _confirmController.text,
         );
-      }
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor: Colors.red.shade600,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Parol muvaffaqiyatli o\'zgartirildi!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pop();
     }
   }
 
@@ -58,14 +78,16 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 controller: _newController,
                 decoration: const InputDecoration(labelText: 'Yangi parol'),
                 obscureText: true,
-                validator: (v) => v != null && v.length < 6 ? 'Eng kamida 6 ta belgi' : null,
+                validator: (v) =>
+                    v != null && v.length < 8 ? 'Eng kamida 8 ta belgi' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _confirmController,
                 decoration: const InputDecoration(labelText: 'Parolni tasdiqlang'),
                 obscureText: true,
-                validator: (v) => v != _newController.text ? 'Parollar mos kelmadi' : null,
+                validator: (v) =>
+                    v != _newController.text ? 'Parollar mos kelmadi' : null,
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -73,7 +95,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submit,
                   child: _isLoading
-                      ? const CircularProgressIndicator()
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Text('Saqlash'),
                 ),
               ),

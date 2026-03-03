@@ -4,7 +4,6 @@ import 'package:parent_school_app/data/repositories/auth_repository.dart';
 import 'package:parent_school_app/data/models/user_model.dart';
 import 'package:parent_school_app/core/error/failures.dart';
 import 'package:dartz/dartz.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 // Mock Classes
 class MockAuthRepository implements AuthRepository {
@@ -19,8 +18,7 @@ class MockAuthRepository implements AuthRepository {
     if (_shouldFail) {
       return const Left(ServerFailure('Login failed'));
     }
-    // username is treated as phone in this app context often, or just map it to phone/fullName
-    return Right(UserModel(id: 1, phone: username, fullName: 'Test User', role: 'parent', email: 'test@example.com'));
+    return const Right(UserModel(id: 1, phone: '+998901234567', fullName: 'Test User', role: 'parent'));
   }
 
   @override
@@ -32,37 +30,30 @@ class MockAuthRepository implements AuthRepository {
     return const Right(null);
   }
 
-  // Unused methods for this test
   @override
   Future<Either<Failure, void>> forgotPassword({required String phone}) async => const Right(null);
-  
-  @override
-  Future<Either<Failure, UserModel>> register({required String fullName, required String phone, required String password, String? email}) async => Right(UserModel(id: 2, phone: phone, fullName: fullName, role: 'parent', email: email));
 
   @override
-  Future<Either<Failure, UserModel>> googleSignIn({required String idToken}) async => const Right(UserModel(id: 3, phone: '+998901234567', fullName: 'Google User', role: 'parent'));
+  Future<Either<Failure, void>> resetPassword({required String phone, required String code, required String password, required String passwordConfirmation}) async => const Right(null);
 
   @override
   Future<Either<Failure, void>> updateFCMToken(String token) async => const Right(null);
+
+  @override
+  Future<Either<Failure, UserModel>> qrLogin({required String qrToken}) async => 
+    const Right(UserModel(id: 4, phone: '+998900000000', fullName: 'QR User', role: 'parent'));
 }
 
-// Fake GoogleSignIn (minimal implementation)
-class FakeGoogleSignIn implements GoogleSignIn {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
+
 
 void main() {
   late AuthNotifier authNotifier;
   late MockAuthRepository mockRepository;
-  late FakeGoogleSignIn fakeGoogleSignIn;
 
   setUp(() {
     mockRepository = MockAuthRepository();
-    fakeGoogleSignIn = FakeGoogleSignIn();
     authNotifier = AuthNotifier(
       repository: mockRepository,
-      googleSignIn: fakeGoogleSignIn,
     );
   });
 

@@ -99,9 +99,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _handleQrLogin() {
-    _showError(
-      'QR orqali kirish hozircha yoqilmagan. Tenant API hozir faqat email/parol loginni qo\'llab-quvvatlaydi.',
-    );
+    context.push(RouteNames.qrLogin);
   }
 
   void _showError(String message) {
@@ -442,37 +440,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ],
                           ),
                           const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                'Hisobingiz yo\'qmi? ',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () => _showError(
-                                  'Ro\'yxatdan o\'tish tez kunda ishga tushiriladi',
-                                ),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: const Text(
-                                  'Ro\'yxatdan o\'ting',
-                                  style: TextStyle(
-                                    color: AppColors.primaryBlue,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          const Text(
+                            'Hisob administrator tomonidan yaratiladi',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColors.textHint,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),

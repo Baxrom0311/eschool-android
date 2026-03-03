@@ -38,7 +38,7 @@ class NotificationApi with ApiHelpers {
   }
 
   /// Bildirishnomani o'qilgan deb belgilash
-  Future<void> markAsRead(int notificationId) async {
+  Future<void> markAsRead(String notificationId) async {
     try {
       await _client.post(ApiConstants.markAsRead(notificationId));
     } on DioException catch (e) {

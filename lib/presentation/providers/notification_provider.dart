@@ -148,7 +148,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   }
 
   /// O'qilgan deb belgilash
-  Future<void> markAsRead(int notificationId) async {
+  Future<void> markAsRead(String notificationId) async {
     try {
       await _api.markAsRead(notificationId);
       state = state.copyWith(

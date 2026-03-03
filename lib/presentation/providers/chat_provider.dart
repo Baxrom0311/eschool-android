@@ -8,7 +8,10 @@ import '../../core/storage/shared_prefs_service.dart';
 import '../../data/datasources/remote/chat_api.dart';
 import '../../data/models/chat_model.dart';
 import '../../data/repositories/chat_repository.dart';
+import '../../core/storage/outbox_service.dart';
+import '../../data/models/user_model.dart';
 import 'auth_provider.dart';
+import 'user_provider.dart';
 
 // ─── Dependency Providers ───
 
@@ -124,7 +127,7 @@ class ConversationsNotifier extends StateNotifier<ConversationsState> {
 }
 
 final conversationsProvider =
-    StateNotifierProvider<ConversationsNotifier, ConversationsState>((ref) {
+    StateNotifierProvider.autoDispose<ConversationsNotifier, ConversationsState>((ref) {
       final repository = ref.watch(chatRepositoryProvider);
       return ConversationsNotifier(repository: repository);
     });
@@ -184,10 +187,17 @@ class ChatRoomState {
 
 class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
   final ChatRepository _repository;
+  final OutboxService _outbox;
+  final UserModel? _currentUser;
 
-  ChatRoomNotifier({required ChatRepository repository})
-    : _repository = repository,
-      super(const ChatRoomState.initial());
+  ChatRoomNotifier({
+    required ChatRepository repository,
+    required OutboxService outbox,
+    required UserModel? currentUser,
+  })  : _repository = repository,
+        _outbox = outbox,
+        _currentUser = currentUser,
+        super(const ChatRoomState.initial());
 
   /// Suhbatni ochish va xabarlarni yuklash
   Future<void> openConversation(int conversationId) async {
@@ -272,6 +282,10 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
 
     return result.fold(
       (f) {
+        if (_isNetworkError(f.message)) {
+          _queueOfflineMessage(content, 'text', null);
+          return true;
+        }
         state = state.copyWith(isSending: false, error: f.message);
         return false;
       },
@@ -297,6 +311,10 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
 
     return result.fold(
       (f) {
+        if (_isNetworkError(f.message)) {
+          _queueOfflineMessage('Fayl', 'file', filePath);
+          return true;
+        }
         state = state.copyWith(isSending: false, error: f.message);
         return false;
       },
@@ -315,6 +333,38 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
   /// Suhbatni yopish
   void closeConversation() {
     state = const ChatRoomState.initial();
+  }
+
+  void _queueOfflineMessage(String content, String type, String? filePath) {
+    if (_currentUser == null || state.conversationId == null) return;
+    
+    final outboxMsg = OutboxMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      conversationId: state.conversationId!,
+      content: content,
+      type: type,
+      filePath: filePath,
+      queuedAt: DateTime.now(),
+    );
+    unawaited(_outbox.queueMessage(outboxMsg));
+
+    final dummy = _outbox.createDummyMessage(
+      outboxMsg, 
+      _currentUser.id, 
+      _currentUser.fullName,
+    );
+
+    state = state.copyWith(
+      messages: [dummy, ...state.messages],
+      isSending: false,
+      error: null,
+    );
+    unawaited(_saveRoomCache(state));
+  }
+
+  bool _isNetworkError(String error) {
+    final lower = error.toLowerCase();
+    return lower.contains('network') || lower.contains('aloqa') || lower.contains('internet') || lower.contains('connection');
   }
 
   ChatRoomState? _readRoomCache(int conversationId) {
@@ -370,9 +420,15 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
       '${StorageKeys.chatMessagesCachePrefix}$conversationId';
 }
 
-final chatRoomProvider = StateNotifierProvider<ChatRoomNotifier, ChatRoomState>(
+final chatRoomProvider = StateNotifierProvider.autoDispose<ChatRoomNotifier, ChatRoomState>(
   (ref) {
     final repository = ref.watch(chatRepositoryProvider);
-    return ChatRoomNotifier(repository: repository);
+    final outbox = ref.watch(outboxServiceProvider);
+    final currentUser = ref.watch(userProvider).user;
+    return ChatRoomNotifier(
+      repository: repository,
+      outbox: outbox,
+      currentUser: currentUser,
+    );
   },
 );

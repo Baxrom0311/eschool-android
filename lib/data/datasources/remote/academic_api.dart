@@ -8,6 +8,7 @@ import '../../models/attendance_model.dart';
 import '../../models/grade_model.dart';
 import '../../models/schedule_model.dart';
 import 'api_helpers.dart';
+import '../../../core/storage/local_cache_service.dart';
 
 /// Academic API — baholar, jadval, topshiriqlar, davomat
 ///
@@ -15,8 +16,9 @@ import 'api_helpers.dart';
 /// Shu qatlamda ular UI ishlatayotgan modellarga transform qilinadi.
 class AcademicApi with ApiHelpers {
   final DioClient _client;
+  final LocalCacheService _cache;
 
-  AcademicApi(this._client);
+  AcademicApi(this._client, this._cache);
 
   // ─── Baholar ───
 
@@ -129,14 +131,32 @@ class AcademicApi with ApiHelpers {
   // ─── Jadval ───
 
   Future<List<ScheduleModel>> getSchedule(int childId) async {
+    final cacheKey = 'schedule_$childId';
     try {
       final response = await _client.get(
         ApiConstants.schedule(childId),
         queryParameters: {'student_id': childId, 'days': 7},
       );
       final root = asMap(response.data);
-      final entries = _extractScheduleEntries(root, childId);
-      final gradingMode = _normalizeGradingMode(root['grading_mode']);
+      
+      // Save schedule to local cache
+      await _cache.save(cacheKey, root);
+
+      return _parseSchedule(root, childId);
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionError || e.type == DioExceptionType.unknown) {
+        final cachedData = await _cache.read(cacheKey);
+        if (cachedData != null) {
+          return _parseSchedule(asMap(cachedData), childId);
+        }
+      }
+      throw handleDioError(e);
+    }
+  }
+
+  List<ScheduleModel> _parseSchedule(Map<String, dynamic> root, int childId) {
+    final entries = _extractScheduleEntries(root, childId);
+    final gradingMode = _normalizeGradingMode(root['grading_mode']);
 
       return entries.map((entry) {
         final lessonTime = asMap(entry['lessonTime']);
@@ -173,15 +193,9 @@ class AcademicApi with ApiHelpers {
           'mark_value': _resolveTimetableMarkValue(mark, gradingMode),
           'mark_mode': gradingMode,
         });
-      }).toList()..sort((a, b) {
-        final dayCompare = a.dayOfWeek.compareTo(b.dayOfWeek);
-        if (dayCompare != 0) return dayCompare;
-        return a.lessonNumber.compareTo(b.lessonNumber);
-      });
-    } on DioException catch (e) {
-      throw handleDioError(e);
+      }).toList();
     }
-  }
+
 
   // ─── Topshiriqlar ───
 
@@ -218,25 +232,24 @@ class AcademicApi with ApiHelpers {
     }
   }
 
-  Future<AssignmentModel> getAssignmentDetails(int assignmentId) async {
+  Future<AssignmentModel> getAssignmentDetails(int assignmentId, int childId) async {
     try {
-      final response = await _client.get(ApiConstants.parentHomeworks);
+      final response = await _client.get(
+        ApiConstants.parentHomeworkDetails(assignmentId),
+        queryParameters: {'student_id': childId},
+      );
       final root = asMap(response.data);
       final gradingMode = _normalizeGradingMode(root['grading_mode']);
-      final homeworks = _extractHomeworks(root);
+      final homeworkData = asMap(root['homework']);
 
-      final match = homeworks.cast<Map<String, dynamic>?>().firstWhere(
-        (item) => toInt(item?['id']) == assignmentId,
-        orElse: () => null,
-      );
-      if (match == null) {
+      if (homeworkData.isEmpty) {
         throw const ServerException(
           message: 'Topshiriq topilmadi',
           statusCode: 404,
         );
       }
 
-      return _mapAssignment(match, gradingMode: gradingMode);
+      return _mapAssignment(homeworkData, gradingMode: gradingMode);
     } on DioException catch (e) {
       throw handleDioError(e);
     }

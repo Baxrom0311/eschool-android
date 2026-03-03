@@ -24,15 +24,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   final ScrollController _scrollController = ScrollController();
   static const double _paginationThreshold = 200;
 
+  late final ChatRoomNotifier _chatNotifier;
+
   @override
   void initState() {
     super.initState();
+    _chatNotifier = ref.read(chatRoomProvider.notifier);
     _scrollController.addListener(_handleScroll);
     if (widget.chatData != null && widget.chatData!['id'] != null) {
       Future.microtask(() {
-        ref
-            .read(chatRoomProvider.notifier)
-            .openConversation(widget.chatData!['id']);
+        _chatNotifier.openConversation(widget.chatData!['id']);
       });
     }
   }
@@ -41,7 +42,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     if (position.pixels >= (position.maxScrollExtent - _paginationThreshold)) {
-      ref.read(chatRoomProvider.notifier).loadMore();
+      _chatNotifier.loadMore();
     }
   }
 
@@ -49,9 +50,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     final content = _controller.text.trim();
     if (content.isEmpty) return;
 
-    final success = await ref
-        .read(chatRoomProvider.notifier)
-        .sendMessage(content);
+    final success = await _chatNotifier.sendMessage(content);
     if (!mounted) return;
 
     if (success) {
@@ -67,7 +66,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
 
   @override
   void dispose() {
-    ref.read(chatRoomProvider.notifier).closeConversation();
+    if (_chatNotifier.mounted) {
+      Future.microtask(() {
+        if (_chatNotifier.mounted) {
+          _chatNotifier.closeConversation();
+        }
+      });
+    }
     _scrollController.removeListener(_handleScroll);
     _controller.dispose();
     _scrollController.dispose();

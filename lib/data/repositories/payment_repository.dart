@@ -40,9 +40,14 @@ class PaymentRepository {
   Future<Either<Failure, Map<String, dynamic>>> createPayment({
     required int amount,
     required String method,
+    int? studentId,
   }) =>
       safeApiCall(
-        () => _paymentApi.createPayment(amount: amount, method: method),
+        () => _paymentApi.createPayment(
+          amount: amount,
+          method: method,
+          studentId: studentId,
+        ),
         errorMessage: 'To\'lov yaratishda xatolik',
       );
 

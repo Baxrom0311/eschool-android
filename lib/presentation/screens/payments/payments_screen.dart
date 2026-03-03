@@ -215,14 +215,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           CustomButton(
                             text: 'Hozir to\'lash',
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Parent API da to\'lov yaratish endpointi mavjud emas. '
-                                    'To\'lovlar maktab tomonidan kiritiladi.',
-                                  ),
-                                ),
-                              );
+                              context.push(RouteNames.paymentMethod);
                             },
                             height: 56,
                             borderRadius: 16,

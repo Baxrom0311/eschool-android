@@ -80,6 +80,18 @@ class MockUserRepository implements UserRepository {
   // Unused in these tests
   @override
   Future<Either<Failure, List<ChildModel>>> getChildren() async => const Right([]);
+
+  @override
+  Future<Either<Failure, void>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    if (shouldReturnError) {
+      return const Left(ServerFailure('Password change failed'));
+    }
+    return const Right(null);
+  }
 }
 
 void main() {

@@ -2,7 +2,6 @@ import 'dart:developer';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../core/services/firebase_service.dart';
 import '../../core/network/dio_client.dart';
@@ -25,9 +24,16 @@ final secureStorageProvider = Provider<SecureStorageService>((ref) {
 });
 
 /// DioClient instance — HTTP so'rovlar uchun
-final dioClientProvider = Provider<DioClient>((ref) {
+final Provider<DioClient> dioClientProvider = Provider<DioClient>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
-  return DioClient(secureStorage);
+  return DioClient(secureStorage, onUnauthorized: () {
+    // 401 Unauthorized sodir bo'lganda AuthNotifier holatini yangilash
+    Future.microtask(() {
+      try {
+        ref.read(authProvider.notifier).clearLocalSession();
+      } catch (_) {}
+    });
+  });
 });
 
 /// AuthApi instance — auth endpointlari uchun
@@ -43,14 +49,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(authApi: authApi, secureStorage: secureStorage);
 });
 
-final googleSignInProvider = Provider<GoogleSignIn>((ref) {
-  return GoogleSignIn(
-    scopes: ['email', 'profile'],
-    // Web uchun clientId talab qilinadi.
-    // TODO: 'YOUR_WEB_CLIENT_ID' ni Google Cloud Console dan olgan haqiqiy ID ga almashtiring.
-    clientId: kIsWeb ? 'YOUR_WEB_CLIENT_ID' : null,
-  );
-});
+
 
 // ═══════════════════════════════════════════════════════════════
 // AUTH STATE — immutable state klassi
@@ -145,13 +144,10 @@ class AuthState extends Equatable {
 /// boshqaradi va [AuthState] ni yangilaydi.
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
-  final GoogleSignIn _googleSignIn;
 
   AuthNotifier({
     required AuthRepository repository,
-    required GoogleSignIn googleSignIn,
   }) : _repository = repository,
-       _googleSignIn = googleSignIn,
        super(const AuthState.initial());
 
   /// Ilova boshlanganda token mavjudligini tekshirish
@@ -192,71 +188,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
     });
   }
 
-  /// Register — yangi hisob yaratish
-  Future<void> register({
-    required String fullName,
-    required String phone,
-    required String password,
-    String? email,
-  }) async {
-    state = state.copyWithLoading();
 
-    final result = await _repository.register(
-      fullName: fullName,
-      phone: phone,
-      password: password,
-      email: email,
-    );
 
-    result.fold(
-      (failure) => state = state.copyWithError(failure.message),
-      (user) => state = state.copyWithSuccess(user),
-    );
-  }
 
-  /// Google Sign In
-  Future<void> signInWithGoogle() async {
-    state = state.copyWithLoading();
-
-    try {
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        // Foydalanuvchi oynani yopdi
-        state = state.copyWithError('Google kirish bekor qilindi');
-        return;
-      }
-
-      final googleAuth = await googleUser.authentication;
-      final idToken = googleAuth.idToken;
-
-      if (idToken == null) {
-        state = state.copyWithError('Google tokenni olishda xatolik');
-        return;
-      }
-
-      final result = await _repository.googleSignIn(idToken: idToken);
-
-      result.fold(
-        (failure) => state = state.copyWithError(failure.message),
-        (user) => state = state.copyWithSuccess(user),
-      );
-    } catch (e) {
-      state = state.copyWithError('Google kirish xatoligi: ${e.toString()}');
-    }
-  }
 
   /// Logout — tizimdan chiqish
   Future<void> logout() async {
     state = state.copyWithLoading();
-
-    // Google dan ham chiqish (agar Google orqali kirgan bo'lsa)
     try {
-      await _googleSignIn.signOut();
+      await _repository.logout();
     } catch (_) {
-      // Google signout xatoligi logout ni to'xtatmaydi
+      // Ignore API errors on logout since we're clearing local session anyway
     }
+    state = state.copyWithLogout();
+  }
 
-    await _repository.logout();
+  /// Maxalliy sessiyani tozalash (masalan 401 xatolikda chaqiriladi)
+  void clearLocalSession() {
     state = state.copyWithLogout();
   }
 
@@ -280,6 +228,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Xatolik xabarini tozalash
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  /// QR Kod orqali login
+  Future<void> qrLogin({required String qrToken}) async {
+    state = state.copyWithLoading();
+    final result = await _repository.qrLogin(qrToken: qrToken);
+    result.fold(
+      (failure) => state = state.copyWithError(failure.message),
+      (user) {
+        state = state.copyWithSuccess(user);
+        updateFCMToken(); // Login muvaffaqiyatli bo'lsa token yangilanadi
+      },
+    );
   }
 
   /// FCM Tokenni yangilash
@@ -318,6 +279,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
 /// ```
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider);
-  final googleSignIn = ref.watch(googleSignInProvider);
-  return AuthNotifier(repository: repository, googleSignIn: googleSignIn);
+  return AuthNotifier(repository: repository);
 });

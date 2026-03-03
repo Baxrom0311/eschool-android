@@ -3,7 +3,9 @@ class ApiConstants {
   ApiConstants._();
 
   // Base URL (dart-define: --dart-define=API_BASE_URL=https://...)
-  static const String _defaultBaseUrl = 'https://ranchschool.izlash.uz';
+  // Local development uchun default URL (Android emulator → host localhost)
+  // Production: --dart-define=API_BASE_URL=https://ranchschool.izlash.uz
+  static const String _defaultBaseUrl = 'http://10.0.2.2:8000';
   static const String _envBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: _defaultBaseUrl,
@@ -19,12 +21,17 @@ class ApiConstants {
   static const String login = '/api/login';
   static const String logout = '/api/logout';
   static const String me = '/api/me';
+  static const String forgotPassword = '/api/forgot-password';
+  static const String resetPassword = '/api/reset-password';
+  static const String qrLogin = '/api/qr-login';
 
   // ─── Parent (Tenant OAS) ───
   static const String parentChildren = '/api/parent/children';
   static String parentChildProfile(int studentId) =>
       '/api/parent/children/$studentId';
   static const String parentHomeworks = '/api/parent/homeworks';
+  static String parentHomeworkDetails(int homeworkId) =>
+      '/api/parent/homeworks/$homeworkId';
   static String parentHomeworkSubmit(int homeworkId) =>
       '/api/parent/homeworks/$homeworkId/submit';
   static const String parentTimetable = '/api/parent/timetable';
@@ -69,8 +76,19 @@ class ApiConstants {
 
   // ─── Notifications (tenant OAS'da yo'q, optional integration) ───
   static const String notifications = '/api/notifications';
-  static String markAsRead(int id) => '/api/notifications/$id/read';
+  static String markAsRead(String id) => '/api/notifications/$id/read';
   static const String saveFcmToken = '/api/notifications/token';
+
+  // ─── Profile & Password ───
+  static const String parentUpdateProfile = '/api/parent/profile';
+  static const String parentUploadAvatar = '/api/parent/avatar';
+  static const String parentChangePassword = '/api/parent/password';
+
+  // ─── Chat Files ───
+  static const String parentChatFiles = '/api/parent/chat/files';
+
+  // ─── Online Payment ───
+  static const String createPayment = '/api/parent/payments/create';
 
   // ─── Pagination ───
   static const int defaultPageSize = 20;

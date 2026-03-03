@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
-import '../../../core/error/exceptions.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/chat_model.dart';
 import 'api_helpers.dart';
@@ -46,7 +45,13 @@ class ChatApi with ApiHelpers {
     int perPage = 30,
   }) async {
     try {
-      final response = await _client.get(ApiConstants.messages(conversationId));
+      final response = await _client.get(
+        ApiConstants.messages(conversationId),
+        queryParameters: {
+          'page': page,
+          'per_page': perPage,
+        },
+      );
       final root = asMap(response.data);
       final messages = root['messages'] is List
           ? (root['messages'] as List).whereType<Map>().toList()
@@ -67,7 +72,7 @@ class ChatApi with ApiHelpers {
               ? row.toString().hashCode.abs()
               : toInt(row['id']),
           'content': (row['body'] ?? row['content'] ?? '').toString(),
-          'type': 'text',
+          'type': row['file_url'] != null ? 'file' : 'text',
           'sender_id': senderId,
           'sender_name': senderName ?? (isMine ? 'Siz' : 'O\'qituvchi'),
           'is_mine': isMine,
@@ -81,9 +86,7 @@ class ChatApi with ApiHelpers {
       }).toList();
 
       mapped.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      final start = ((page - 1) * perPage).clamp(0, mapped.length);
-      final end = (start + perPage).clamp(0, mapped.length);
-      return mapped.sublist(start, end);
+      return mapped;
     } on DioException catch (e) {
       throw handleDioError(e);
     }
@@ -150,10 +153,55 @@ class ChatApi with ApiHelpers {
   }
 
   /// Fayl yuborish (rasm yoki hujjat)
+  ///
+  /// POST /api/parent/chat/files
+  /// Body: multipart { receiver_id, file, body? }
   Future<MessageModel> sendFile(int conversationId, String filePath) async {
-    throw const ServerException(
-      message: 'Ushbu API versiyasida chat fayl yuborish endpointi mavjud emas',
-      statusCode: 501,
-    );
+    try {
+      final fileName = filePath.split('/').last;
+      final formData = FormData.fromMap({
+        'receiver_id': conversationId,
+        'file': await MultipartFile.fromFile(filePath, filename: fileName),
+        'body': fileName,
+      });
+
+      final response = await _client.post(
+        ApiConstants.parentChatFiles,
+        data: formData,
+      );
+
+      final root = asMap(response.data);
+      final message = root['message'] is Map<String, dynamic>
+          ? Map<String, dynamic>.from(root['message'] as Map<String, dynamic>)
+          : root;
+
+      final senderId = toInt(message['sender_id']);
+      final receiverId = toInt(message['receiver_id']);
+      final isMine = _resolveMessageOwnership(
+        conversationId: conversationId,
+        senderId: senderId,
+        receiverId: receiverId,
+      );
+      final senderName = asMap(message['sender'])['name']?.toString();
+
+      return MessageModel.fromJson({
+        'id': toInt(message['id']) == 0
+            ? message.toString().hashCode.abs()
+            : toInt(message['id']),
+        'content': (message['body'] ?? fileName).toString(),
+        'type': 'file',
+        'sender_id': senderId,
+        'sender_name': senderName ?? (isMine ? 'Siz' : 'O\'qituvchi'),
+        'is_mine': isMine,
+        'created_at':
+            (message['created_at'] ?? DateTime.now().toIso8601String())
+                .toString(),
+        'is_read': message['is_read'] ?? false,
+        'file_url': message['file_url']?.toString(),
+        'file_name': message['file_name']?.toString(),
+      });
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
   }
 }

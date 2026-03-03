@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -24,6 +25,12 @@ class FirebaseService {
   static FirebaseMessaging? _firebaseMessaging;
   static bool _initialized = false;
   static Future<void>? _initializing;
+
+  // Stream controller to broadcast foreground messages to the UI
+  static final StreamController<RemoteMessage> _messageStreamController =
+      StreamController<RemoteMessage>.broadcast();
+
+  static Stream<RemoteMessage> get onMessage => _messageStreamController.stream;
 
   static Future<void> init() async {
     if (_initialized) return;
@@ -62,9 +69,10 @@ class FirebaseService {
         _debugLog('Notification permission not granted');
       }
 
-      // Listen for foreground messages
+      // Listen for foreground messages and add to stream
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         _debugLog('Foreground FCM message received: ${message.messageId}');
+        _messageStreamController.add(message);
       });
 
       _initialized = true;
@@ -94,9 +102,14 @@ class FirebaseService {
     }
   }
 
+  static void dispose() {
+    _messageStreamController.close();
+  }
+
   static void _debugLog(String message) {
     if (kDebugMode) {
       log(message, name: 'FirebaseService');
     }
   }
 }
+

@@ -53,4 +53,19 @@ class UserRepository {
         () => _userApi.getChildDetails(childId),
         errorMessage: 'Ma\'lumot yuklashda xatolik',
       );
+
+  /// Parol o'zgartirish
+  Future<Either<Failure, void>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) =>
+      safeApiCall(
+        () => _userApi.changePassword(
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+          confirmPassword: confirmPassword,
+        ),
+        errorMessage: 'Parolni o\'zgartishda xatolik',
+      );
 }

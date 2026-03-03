@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../providers/payment_provider.dart';
 import '../../widgets/payments/payment_method_card.dart';
@@ -55,16 +56,35 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
     }
 
     final redirectUrl = paymentData['redirect_url']?.toString();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          redirectUrl == null || redirectUrl.isEmpty
-              ? 'To\'lov yaratildi'
-              : 'To\'lov havolasi: $redirectUrl',
+    
+    if (redirectUrl != null && redirectUrl.isNotEmpty) {
+      final uri = Uri.parse(redirectUrl);
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          _showError('Ilovani ochishda xatolik yuz berdi. Iltimos brauzer orqali urining.');
+          await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+        }
+      } catch (e) {
+        _showError('To\'lov havolasiga o\'tib bo\'lmadi');
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('To\'lov yaratildi, ammo link olinmadi'),
         ),
-      ),
+      );
+    }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.danger),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -143,15 +163,6 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
                   'https://cdn.payme.uz/v2/logos/payme_logo.png', // Fallback URL
               isSelected: _selectedMethod == 'payme',
               onTap: () => setState(() => _selectedMethod = 'payme'),
-            ),
-            const SizedBox(height: 12),
-
-            PaymentMethodCard(
-              name: 'Visa / MasterCard',
-              logoUrl:
-                  'https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png',
-              isSelected: _selectedMethod == 'card',
-              onTap: () => setState(() => _selectedMethod = 'card'),
             ),
             const SizedBox(height: 48),
 
