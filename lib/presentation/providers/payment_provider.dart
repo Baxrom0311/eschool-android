@@ -237,10 +237,19 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
+    final effectiveStudentId = studentId ?? state.selectedStudentId;
+    if (effectiveStudentId == null || effectiveStudentId <= 0) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'To\'lovni boshlash uchun farzand tanlang.',
+      );
+      return null;
+    }
+
     final result = await _repository.createPayment(
       amount: amount,
       method: method,
-      studentId: studentId ?? state.selectedStudentId,
+      studentId: effectiveStudentId,
     );
 
     return result.fold(
@@ -368,9 +377,8 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 ///   method: 'payme',
 /// );
 /// ```
-final paymentProvider = StateNotifierProvider.autoDispose<PaymentNotifier, PaymentState>((
-  ref,
-) {
-  final repository = ref.watch(paymentRepositoryProvider);
-  return PaymentNotifier(repository: repository);
-});
+final paymentProvider =
+    StateNotifierProvider.autoDispose<PaymentNotifier, PaymentState>((ref) {
+      final repository = ref.watch(paymentRepositoryProvider);
+      return PaymentNotifier(repository: repository);
+    });

@@ -18,22 +18,40 @@ class MockAcademicRepository implements AcademicRepository {
   MockAcademicRepository();
 
   @override
-  Future<Either<Failure, List<GradeModel>>> getGrades(int childId, {int? quarter}) async {
+  Future<Either<Failure, List<GradeModel>>> getGrades(
+    int childId, {
+    int? quarter,
+  }) async {
     if (shouldReturnError) {
       return const Left(ServerFailure('Grades load failed'));
     }
     return const Right([
-      GradeModel(id: 1, subjectName: 'Math', grade: 5, createdAt: '2023-10-10', comment: 'Good', quarter: 1, gradeType: '5'),
+      GradeModel(
+        id: 1,
+        subjectName: 'Math',
+        grade: 5,
+        createdAt: '2023-10-10',
+        comment: 'Good',
+        quarter: 1,
+        gradeType: '5',
+      ),
     ]);
   }
 
   @override
-  Future<Either<Failure, List<SubjectGradeSummary>>> getGradeSummary(int childId) async {
+  Future<Either<Failure, List<SubjectGradeSummary>>> getGradeSummary(
+    int childId,
+  ) async {
     if (shouldReturnError) {
       return const Left(ServerFailure('Summary load failed'));
     }
     return const Right([
-      SubjectGradeSummary(subjectName: 'Math', averageGrade: 4.5, totalGrades: 10, teacherName: 'Mr. Smith'),
+      SubjectGradeSummary(
+        subjectName: 'Math',
+        averageGrade: 4.5,
+        totalGrades: 10,
+        teacherName: 'Mr. Smith',
+      ),
     ]);
   }
 
@@ -43,30 +61,69 @@ class MockAcademicRepository implements AcademicRepository {
       return const Left(ServerFailure('Schedule load failed'));
     }
     return const Right([
-      ScheduleModel(id: 1, subjectName: 'Math', dayOfWeek: 1, startTime: '08:00', endTime: '09:00', roomNumber: '101', teacherName: 'Mr. Smith', lessonNumber: 1),
+      ScheduleModel(
+        id: 1,
+        subjectName: 'Math',
+        dayOfWeek: 1,
+        startTime: '08:00',
+        endTime: '09:00',
+        roomNumber: '101',
+        teacherName: 'Mr. Smith',
+        lessonNumber: 1,
+      ),
     ]);
   }
 
   @override
-  Future<Either<Failure, List<AssignmentModel>>> getAssignments(int childId, {String? status, int? page}) async {
+  Future<Either<Failure, List<AssignmentModel>>> getAssignments(
+    int childId, {
+    String? status,
+    int? page,
+  }) async {
     if (shouldReturnError) {
       return const Left(ServerFailure('Assignments load failed'));
     }
     return const Right([
-      AssignmentModel(id: 1, subjectName: 'Math', title: 'Homework 1', dueDate: '2023-10-15', status: AssignmentStatus.pending, teacherName: 'Mr. Smith', createdAt: '2023-10-10'),
+      AssignmentModel(
+        id: 1,
+        subjectName: 'Math',
+        title: 'Homework 1',
+        dueDate: '2023-10-15',
+        status: AssignmentStatus.pending,
+        teacherName: 'Mr. Smith',
+        createdAt: '2023-10-10',
+      ),
     ]);
   }
 
   @override
-  Future<Either<Failure, AssignmentModel>> getAssignmentDetails(int assignmentId) async {
+  Future<Either<Failure, AssignmentModel>> getAssignmentDetails(
+    int assignmentId, {
+    required int childId,
+  }) async {
     if (shouldReturnError) {
       return const Left(ServerFailure('Assignment details failed'));
     }
-    return const Right(AssignmentModel(id: 1, subjectName: 'Math', title: 'Homework 1', dueDate: '2023-10-15', status: AssignmentStatus.pending, teacherName: 'Mr. Smith', createdAt: '2023-10-10', description: 'Solve problems 1-10'));
+    return const Right(
+      AssignmentModel(
+        id: 1,
+        subjectName: 'Math',
+        title: 'Homework 1',
+        dueDate: '2023-10-15',
+        status: AssignmentStatus.pending,
+        teacherName: 'Mr. Smith',
+        createdAt: '2023-10-10',
+        description: 'Solve problems 1-10',
+      ),
+    );
   }
 
   @override
-  Future<Either<Failure, void>> submitAssignment(int assignmentId, {String? text, String? filePath}) async {
+  Future<Either<Failure, void>> submitAssignment(
+    int assignmentId, {
+    String? text,
+    String? filePath,
+  }) async {
     if (shouldReturnError) {
       return const Left(ServerFailure('Submission failed'));
     }
@@ -74,29 +131,60 @@ class MockAcademicRepository implements AcademicRepository {
   }
 
   @override
-  Future<Either<Failure, AttachmentModel>> uploadAssignmentFile(int assignmentId, String filePath) async {
+  Future<Either<Failure, AttachmentModel>> uploadAssignmentFile(
+    int assignmentId,
+    String filePath,
+  ) async {
     if (shouldReturnError) {
       return const Left(ServerFailure('Upload failed'));
     }
-    return const Right(AttachmentModel(id: 1, name: 'file.pdf', url: 'http://example.com/file.pdf', fileSize: 1024, mimeType: 'application/pdf'));
+    return const Right(
+      AttachmentModel(
+        id: 1,
+        name: 'file.pdf',
+        url: 'http://example.com/file.pdf',
+        fileSize: 1024,
+        mimeType: 'application/pdf',
+      ),
+    );
   }
 
   @override
-  Future<Either<Failure, List<AttendanceModel>>> getAttendance(int childId, {String? month}) async {
+  Future<Either<Failure, List<AttendanceModel>>> getAttendance(
+    int childId, {
+    String? month,
+  }) async {
     if (shouldReturnError) {
       return const Left(ServerFailure('Attendance load failed'));
     }
     return const Right([
-      AttendanceModel(id: 1, date: '2023-10-01', status: AttendanceStatus.present, subjectName: 'Math', markedBy: 'Teacher'),
+      AttendanceModel(
+        id: 1,
+        date: '2023-10-01',
+        status: AttendanceStatus.present,
+        subjectName: 'Math',
+        markedBy: 'Teacher',
+      ),
     ]);
   }
 
   @override
-  Future<Either<Failure, AttendanceSummary>> getAttendanceSummary(int childId) async {
+  Future<Either<Failure, AttendanceSummary>> getAttendanceSummary(
+    int childId,
+  ) async {
     if (shouldReturnError) {
       return const Left(ServerFailure('Attendance summary failed'));
     }
-    return const Right(AttendanceSummary(presentDays: 20, absentDays: 2, lateDays: 1, excusedDays: 0, totalDays: 23, attendancePercentage: 95.0));
+    return const Right(
+      AttendanceSummary(
+        presentDays: 20,
+        absentDays: 2,
+        lateDays: 1,
+        excusedDays: 0,
+        totalDays: 23,
+        attendancePercentage: 95.0,
+      ),
+    );
   }
 }
 
@@ -108,9 +196,7 @@ void main() {
   setUp(() {
     mockRepository = MockAcademicRepository();
     container = ProviderContainer(
-      overrides: [
-        academicRepositoryProvider.overrideWithValue(mockRepository),
-      ],
+      overrides: [academicRepositoryProvider.overrideWithValue(mockRepository)],
     );
   });
 
@@ -139,7 +225,7 @@ void main() {
     test('loadGrades sets error state on failure', () async {
       mockRepository.shouldReturnError = true;
       final notifier = container.read(gradesProvider.notifier);
-      
+
       try {
         await notifier.loadGrades(1);
       } catch (_) {}
@@ -182,7 +268,7 @@ void main() {
     test('submitAssignment returns true on success', () async {
       final notifier = container.read(assignmentsProvider.notifier);
       final success = await notifier.submitAssignment(1);
-      
+
       expect(success, true);
     });
   });

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
+import '../../../core/error/exceptions.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/payment_model.dart';
 import 'api_helpers.dart';
@@ -72,11 +73,10 @@ class PaymentApi with ApiHelpers {
         },
       );
       final root = asMap(response.data);
-      var payments =
-          _extractPaymentRows(
-              root,
-              studentId: studentId,
-            ).map(_mapPaymentRow).toList();
+      var payments = _extractPaymentRows(
+        root,
+        studentId: studentId,
+      ).map(_mapPaymentRow).toList();
 
       if (status != null && status.isNotEmpty) {
         final normalized = status.toLowerCase();
@@ -101,13 +101,19 @@ class PaymentApi with ApiHelpers {
     required String method,
     int? studentId,
   }) async {
+    if (studentId == null || studentId <= 0) {
+      throw const ValidationException(
+        message: 'To\'lovni boshlash uchun farzand tanlang.',
+        errors: {
+          'student_id': ['Farzand tanlanmagan.'],
+        },
+      );
+    }
+
     try {
       final response = await _client.post(
         ApiConstants.createPayment,
-        data: {
-          'student_id': studentId ?? 0,
-          'amount': amount,
-        },
+        data: {'student_id': studentId, 'amount': amount},
       );
 
       final data = asMap(response.data);

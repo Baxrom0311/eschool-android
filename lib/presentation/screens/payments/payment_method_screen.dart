@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../providers/payment_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../widgets/payments/payment_method_card.dart';
 import '../../widgets/common/custom_button.dart';
 
@@ -40,9 +41,24 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
       return;
     }
 
+    final selectedStudentId = ref.read(selectedChildProvider)?.id;
+    if (selectedStudentId == null || selectedStudentId <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Avval farzandni tanlang'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
     final paymentData = await ref
         .read(paymentProvider.notifier)
-        .createPayment(amount: amount, method: _selectedMethod);
+        .createPayment(
+          amount: amount,
+          method: _selectedMethod,
+          studentId: selectedStudentId,
+        );
     if (!mounted) return;
 
     if (paymentData == null) {
@@ -56,14 +72,16 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
     }
 
     final redirectUrl = paymentData['redirect_url']?.toString();
-    
+
     if (redirectUrl != null && redirectUrl.isNotEmpty) {
       final uri = Uri.parse(redirectUrl);
       try {
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {
-          _showError('Ilovani ochishda xatolik yuz berdi. Iltimos brauzer orqali urining.');
+          _showError(
+            'Ilovani ochishda xatolik yuz berdi. Iltimos brauzer orqali urining.',
+          );
           await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
         }
       } catch (e) {
@@ -71,9 +89,7 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('To\'lov yaratildi, ammo link olinmadi'),
-        ),
+        const SnackBar(content: Text('To\'lov yaratildi, ammo link olinmadi')),
       );
     }
   }
@@ -84,7 +100,6 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
       SnackBar(content: Text(message), backgroundColor: AppColors.danger),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
