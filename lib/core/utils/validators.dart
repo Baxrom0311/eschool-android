@@ -30,7 +30,8 @@ class Validators {
     if (value == null || value.trim().isEmpty) {
       return 'Email kiriting';
     }
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+    final email = value.trim();
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
       return 'Email noto\'g\'ri';
     }
     return null;

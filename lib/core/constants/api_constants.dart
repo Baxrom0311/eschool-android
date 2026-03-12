@@ -10,7 +10,28 @@ class ApiConstants {
     'API_BASE_URL',
     defaultValue: _defaultBaseUrl,
   );
-  static String get baseUrl => _envBaseUrl.isEmpty ? _defaultBaseUrl : _envBaseUrl;
+  static const String _envHostHeader = String.fromEnvironment(
+    'API_HOST_HEADER',
+    defaultValue: '',
+  );
+  static String get baseUrl =>
+      _envBaseUrl.isEmpty ? _defaultBaseUrl : _envBaseUrl;
+  static String? get hostHeader {
+    final trimmed = _envHostHeader.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  static Map<String, String> get defaultHeaders {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    final host = hostHeader;
+    if (host != null) {
+      headers['Host'] = host;
+    }
+    return headers;
+  }
 
   // Timeout durations (milliseconds)
   static const int connectTimeout = 30000;

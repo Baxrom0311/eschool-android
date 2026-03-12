@@ -253,6 +253,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
           log('FCM token synced to backend');
         }
       }
+      
+      // Listen to future token rotations to ensure uninterrupted push notifications
+      FirebaseService.onTokenRefresh.listen((newToken) async {
+        await _repository.updateFCMToken(newToken);
+        if (kDebugMode) {
+          log('Rotated FCM token synced to backend');
+        }
+      });
+      
     } catch (e) {
       if (kDebugMode) {
         log('FCM token update error: $e');

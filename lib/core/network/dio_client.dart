@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
@@ -10,6 +12,7 @@ class DioClient {
   late final Dio _dio;
   final SecureStorageService _secureStorage;
   bool _isClearingSession = false;
+  final List<Completer<void>> _pendingRequests = [];
   final VoidCallback? onUnauthorized;
 
   DioClient(this._secureStorage, {this.onUnauthorized}) {
@@ -25,10 +28,7 @@ class DioClient {
         sendTimeout: kIsWeb
             ? null
             : const Duration(milliseconds: ApiConstants.sendTimeout),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: ApiConstants.defaultHeaders,
       ),
     );
 
@@ -65,39 +65,74 @@ class DioClient {
             if (shouldClearSession) {
               if (!_isClearingSession) {
                 _isClearingSession = true;
-                
+
                 try {
                   // Attempt silent refresh
                   final oldToken = await _secureStorage.getAccessToken();
-                  final dioRefresh = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
-                  
+                  final dioRefresh = Dio(
+                    BaseOptions(
+                      baseUrl: ApiConstants.baseUrl,
+                      headers: ApiConstants.defaultHeaders,
+                    ),
+                  );
+
                   final refreshRes = await dioRefresh.post(
                     '/api/refresh',
-                    options: Options(headers: {'Authorization': 'Bearer $oldToken'}),
+                    options: Options(
+                      headers: {'Authorization': 'Bearer $oldToken'},
+                    ),
                   );
-                  
+
                   if (refreshRes.statusCode == 200) {
                     final newToken = refreshRes.data['token'];
                     await _secureStorage.saveAccessToken(newToken);
                     _isClearingSession = false;
-                    
+
+                    // Replay queued requests
+                    for (var completer in _pendingRequests) {
+                      completer.complete();
+                    }
+                    _pendingRequests.clear();
+
                     // Replay failed request
-                    requestOptions.headers['Authorization'] = 'Bearer $newToken';
+                    requestOptions.headers['Authorization'] =
+                        'Bearer $newToken';
                     final response = await _dio.fetch(requestOptions);
                     return handler.resolve(response);
                   }
                 } catch (e) {
                   // Refresh failed, proceed to local logout
+                  for (var completer in _pendingRequests) {
+                    completer.completeError(e);
+                  }
+                  _pendingRequests.clear();
                   await _secureStorage.clearAll();
                   onUnauthorized?.call();
                 } finally {
                   _isClearingSession = false;
                 }
+              } else {
+                // Token is currently being refreshed, queue this request
+                final completer = Completer<void>();
+                _pendingRequests.add(completer);
+
+                try {
+                  await completer.future;
+                  // Once refreshed, get the new token and retry
+                  final newToken = await _secureStorage.getAccessToken();
+                  if (newToken != null && newToken.isNotEmpty) {
+                    requestOptions.headers['Authorization'] =
+                        'Bearer $newToken';
+                  }
+                  final response = await _dio.fetch(requestOptions);
+                  return handler.resolve(response);
+                } catch (e) {
+                  // If refresh failed, let the error pass through
+                  return handler.next(error);
+                }
               }
             }
           }
-
-
 
           if (kIsWeb && error.type == DioExceptionType.connectionError) {
             // Web da CORS yoki Network xatosi ko'pincha connectionError yoki unknown bo'ladi.
