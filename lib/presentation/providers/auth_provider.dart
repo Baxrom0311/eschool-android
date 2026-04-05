@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -144,6 +145,7 @@ class AuthState extends Equatable {
 /// boshqaradi va [AuthState] ni yangilaydi.
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
+  StreamSubscription<String>? _tokenRefreshSub;
 
   AuthNotifier({
     required AuthRepository repository,
@@ -230,6 +232,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(error: null);
   }
 
+  @override
+  void dispose() {
+    _tokenRefreshSub?.cancel();
+    super.dispose();
+  }
+
   /// QR Kod orqali login
   Future<void> qrLogin({required String qrToken}) async {
     state = state.copyWithLoading();
@@ -255,7 +263,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       
       // Listen to future token rotations to ensure uninterrupted push notifications
-      FirebaseService.onTokenRefresh.listen((newToken) async {
+      await _tokenRefreshSub?.cancel();
+      _tokenRefreshSub = FirebaseService.onTokenRefresh.listen((newToken) async {
         await _repository.updateFCMToken(newToken);
         if (kDebugMode) {
           log('Rotated FCM token synced to backend');
