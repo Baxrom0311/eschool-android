@@ -18,7 +18,7 @@ class MockMenuNotifier extends StateNotifier<MenuState> with Mock implements Men
 void main() {
   late MockMenuNotifier mockMenuNotifier;
 
-  final testChild = ChildModel(
+  const testChild = ChildModel(
     id: 1,
     fullName: 'Ali',
     className: '1A',
@@ -33,7 +33,7 @@ void main() {
       date: todayStr,
       mealType: MealType.breakfast,
       totalCalories: 500,
-      dishes: [
+      dishes: const [
         DishModel(
           id: 1,
           name: 'Sutli Bo\'tqa',
@@ -47,7 +47,7 @@ void main() {
       date: todayStr,
       mealType: MealType.lunch,
       totalCalories: 800,
-      dishes: [
+      dishes: const [
         DishModel(
           id: 2,
           name: 'Osh',

@@ -5,7 +5,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:parent_school_app/core/error/exceptions.dart';
-import 'package:parent_school_app/core/routing/route_names.dart';
 import 'package:parent_school_app/core/storage/secure_storage.dart';
 import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/datasources/remote/auth_api.dart';
@@ -88,14 +87,14 @@ void main() {
           .thenThrow(const ServerException(message: 'Login yoki parol xato', statusCode: 401));
 
       // 2nd attempt: Valid credentials
-      final testUser = const UserModel(
+      const testUser = UserModel(
         id: 1,
         fullName: 'Eshmatov Toshmat',
         phone: '+998901234567',
         role: 'parent',
       );
       when(() => mockAuthApi.login(username: 'correct', password: 'password'))
-          .thenAnswer((_) async => AuthResponse(
+          .thenAnswer((_) async => const AuthResponse(
                 accessToken: 'valid_token_123',
                 user: testUser,
               ));

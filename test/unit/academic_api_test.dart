@@ -76,26 +76,23 @@ void main() {
     test('getGradeSummary returns list of SubjectGradeSummary on success', () async {
       // Arrange
       final tResponse = {
-        'yMap': {
-          '1': {
-            'subject_id': 1,
-            'subject_name': 'Math',
-            'grade_5': 5
-          }
-        },
-        'subjects': {
-          '1': {
-            'name': 'Math'
-          }
-        }
+        'by_subject': [
+          {
+            'subject': {'id': 1, 'name': 'Math'},
+            'grades': [
+              {'quarter': 1, 'grade_5': 5},
+              {'quarter': 2, 'grade_5': 4},
+            ],
+          },
+        ],
       };
 
       when(() => mockDioClient.get(
-            ApiConstants.childDetails(tChildId),
+            ApiConstants.grades(tChildId),
             queryParameters: any(named: 'queryParameters'),
             options: any(named: 'options'),
           )).thenAnswer((_) async => Response(
-            requestOptions: RequestOptions(path: ApiConstants.childDetails(tChildId)),
+            requestOptions: RequestOptions(path: ApiConstants.grades(tChildId)),
             data: tResponse,
             statusCode: 200,
           ));
@@ -106,7 +103,7 @@ void main() {
       // Assert
       expect(result.length, 1);
       expect(result.first.subjectName, 'Math');
-      expect(result.first.averageGrade, 5.0);
+      expect(result.first.averageGrade, 4.5);
     });
   });
 }

@@ -4,8 +4,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:parent_school_app/core/error/failures.dart';
 import 'package:parent_school_app/core/error/exceptions.dart';
 import 'package:parent_school_app/data/datasources/remote/academic_api.dart';
-import 'package:parent_school_app/data/models/assignment_model.dart';
-import 'package:parent_school_app/data/models/attendance_model.dart';
 import 'package:parent_school_app/data/models/grade_model.dart';
 import 'package:parent_school_app/data/models/schedule_model.dart';
 import 'package:parent_school_app/data/repositories/academic_repository.dart';

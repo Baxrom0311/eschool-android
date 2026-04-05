@@ -24,35 +24,42 @@ class AcademicApi with ApiHelpers {
 
   Future<List<GradeModel>> getGrades(int childId, {int? quarter}) async {
     try {
-      final root = await _getChildProfile(childId);
-      final rows = _extractQuarterGradeRows(root);
+      final response = await _client.get(
+        ApiConstants.grades(childId), 
+        queryParameters: {
+          'student_id': childId,
+          if (quarter != null) 'quarter_id': quarter,
+        },
+      );
+      final data = asMap(response.data);
+      final bySubject = data['by_subject'] is List 
+          ? (data['by_subject'] as List).whereType<Map>().toList() 
+          : [];
 
-      final normalizedRows = rows.where((row) {
-        if (quarter == null) return true;
-        final rowQuarter = toInt(
-          asMap(row['quarter'])['number'] ?? row['quarter_id'],
-        );
-        return rowQuarter == quarter;
-      }).toList();
-
-      return normalizedRows.map((row) {
-        final grade5 = _resolveGrade(row);
-        final quarterNo = toInt(
-          asMap(row['quarter'])['number'] ?? row['quarter_id'],
-        );
-        return GradeModel.fromJson({
-          'id': toInt(row['id']) == 0 ? stableId(row) : toInt(row['id']),
-          'subject_name': _subjectNameFromGradeRow(row),
-          'grade': grade5,
-          'grade_type': 'quarter',
-          'teacher_name': _teacherNameFromGradeRow(row),
-          'comment': row['comment']?.toString(),
-          'created_at':
-              (row['calculated_at'] ?? DateTime.now().toIso8601String())
-                  .toString(),
-          'quarter': quarterNo == 0 ? 1 : quarterNo,
-        });
-      }).toList();
+      final results = <GradeModel>[];
+      for (final subjectBlock in bySubject) {
+        final subjectName = asMap(subjectBlock['subject'])['name']?.toString() ?? 'Fan';
+        final grades = subjectBlock['grades'] is List 
+            ? (subjectBlock['grades'] as List).whereType<Map>().toList() 
+            : [];
+            
+        for (final g in grades) {
+          final quarterNo = toInt(g['quarter']);
+          if (quarter != null && quarterNo != quarter) continue;
+          
+          results.add(GradeModel.fromJson({
+             'id': stableId(g), // Fake ID until backend yields real ID
+             'subject_name': subjectName,
+             'grade': toInt(g['grade_5']) > 0 ? toInt(g['grade_5']) : 0,
+             'grade_type': 'quarter',
+             'teacher_name': null,
+             'comment': null,
+             'created_at': (g['calculated_at'] ?? DateTime.now().toIso8601String()).toString(),
+             'quarter': quarterNo == 0 ? 1 : quarterNo,
+          }));
+        }
+      }
+      return results;
     } on DioException catch (e) {
       throw handleDioError(e);
     }
@@ -60,68 +67,27 @@ class AcademicApi with ApiHelpers {
 
   Future<List<SubjectGradeSummary>> getGradeSummary(int childId) async {
     try {
-      final root = await _getChildProfile(childId);
+      final response = await _client.get(
+        ApiConstants.grades(childId), 
+        queryParameters: {'student_id': childId},
+      );
+      final data = asMap(response.data);
+      final bySubject = data['by_subject'] is List ? (data['by_subject'] as List).whereType<Map>().toList() : [];
 
-      final yMapRaw = root['yMap'];
-      final subjectsRaw = root['subjects'];
-      final subjects = subjectsRaw is Map
-          ? Map<String, dynamic>.from(subjectsRaw)
-          : <String, dynamic>{};
-
-      final yearRows = <Map<String, dynamic>>[];
-      if (yMapRaw is Map) {
-        for (final value in yMapRaw.values) {
-          final row = asMap(value);
-          if (row.isNotEmpty) yearRows.add(row);
-        }
-      }
-
-      if (yearRows.isNotEmpty) {
-        return yearRows.map((row) {
-          final subjectId = toInt(row['subject_id']);
-          final subject = asMap(row['subject']);
-          final subjectFromMap = asMap(subjects[subjectId.toString()]);
-
-          final subjectName =
-              (subject['name'] ??
-                      subjectFromMap['name'] ??
-                      row['subject_name'] ??
-                      'Fan')
-                  .toString();
-          final grade5 = _resolveGrade(row);
+      return bySubject.map((subjectBlock) {
+          final subjectName = asMap(subjectBlock['subject'])['name']?.toString() ?? 'Fan';
+          final grades = subjectBlock['grades'] is List ? (subjectBlock['grades'] as List).whereType<Map>().toList() : [];
+          
+          double sum = 0.0;
+          for (var g in grades) { sum += toInt(g['grade_5']); }
+          double average = grades.isNotEmpty ? (sum / grades.length) : 0.0;
 
           return SubjectGradeSummary.fromJson({
             'subject_name': subjectName,
-            'average_grade': grade5 > 0 ? grade5.toDouble() : 0.0,
-            'total_grades': 1,
+            'average_grade': average,
+            'total_grades': grades.length,
             'teacher_name': null,
           });
-        }).toList();
-      }
-
-      // Fallback: yMap bo'lmasa qMap asosida summary quramiz.
-      final quarterRows = _extractQuarterGradeRows(root);
-      final bySubject = <String, List<int>>{};
-
-      for (final row in quarterRows) {
-        final subject = _subjectNameFromGradeRow(row);
-        if (subject.isEmpty) continue;
-        final grade = _resolveGrade(row);
-        if (grade <= 0) continue;
-        bySubject.putIfAbsent(subject, () => <int>[]).add(grade);
-      }
-
-      return bySubject.entries.map((entry) {
-        final grades = entry.value;
-        final average = grades.isEmpty
-            ? 0.0
-            : grades.reduce((a, b) => a + b) / grades.length;
-        return SubjectGradeSummary.fromJson({
-          'subject_name': entry.key,
-          'average_grade': average,
-          'total_grades': grades.length,
-          'teacher_name': null,
-        });
       }).toList();
     } on DioException catch (e) {
       throw handleDioError(e);
@@ -349,32 +315,27 @@ class AcademicApi with ApiHelpers {
     String? month,
   }) async {
     try {
-      final root = await _getChildProfile(childId);
-      final marks = root['lessonMarks'] is List
-          ? (root['lessonMarks'] as List).whereType<Map>().toList()
-          : const <Map>[];
+      final response = await _client.get(
+        ApiConstants.attendance(childId),
+        queryParameters: {'student_id': childId},
+      );
+      final data = asMap(response.data);
+      final recordsRaw = data['records'] is List ? (data['records'] as List).whereType<Map>().toList() : [];
 
       final attendance = <AttendanceModel>[];
-      for (final rawMark in marks) {
-        final mark = Map<String, dynamic>.from(rawMark);
-        final session = asMap(mark['session']);
-        final type = (mark['type'] ?? '').toString().toLowerCase();
-        final date = (session['lesson_date'] ?? session['date'] ?? '')
-            .toString();
+      for (final mark in recordsRaw) {
+        final date = (mark['date'] ?? '').toString();
         if (date.isEmpty) continue;
-        if (month != null && month.isNotEmpty && !date.startsWith(month)) {
-          continue;
-        }
+        if (month != null && month.isNotEmpty && !date.startsWith(month)) continue;
 
-        final status = _statusFromLessonMark(type, mark['score']);
         attendance.add(
           AttendanceModel.fromJson({
-            'id': toInt(mark['id']) == 0 ? stableId(mark) : toInt(mark['id']),
+            'id': stableId(mark),
             'date': date,
-            'status': status,
-            'subject_name': asMap(session['subject'])['name']?.toString(),
+            'status': (mark['status'] ?? '').toString().toLowerCase(),
+            'subject_name': mark['subject']?.toString(),
             'reason': mark['note']?.toString(),
-            'marked_by': asMap(session['teacher'])['name']?.toString(),
+            'marked_by': mark['teacher']?.toString(),
           }),
         );
       }
@@ -387,28 +348,23 @@ class AcademicApi with ApiHelpers {
 
   Future<AttendanceSummary> getAttendanceSummary(int childId) async {
     try {
-      final records = await getAttendance(childId);
-      final total = records.length;
-      final present = records
-          .where((e) => e.status == AttendanceStatus.present)
-          .length;
-      final absent = records
-          .where((e) => e.status == AttendanceStatus.absent)
-          .length;
-      final late = records
-          .where((e) => e.status == AttendanceStatus.late_)
-          .length;
-      final excused = records
-          .where((e) => e.status == AttendanceStatus.excused)
-          .length;
+      final response = await _client.get(
+        ApiConstants.attendance(childId),
+        queryParameters: {'student_id': childId},
+      );
+      final data = asMap(response.data);
+      final summary = asMap(data['summary']);
+      
+      final total = toInt(summary['total']);
+      final present = toInt(summary['present']);
       final percentage = total == 0 ? 0.0 : (present * 100.0) / total;
 
       return AttendanceSummary(
         totalDays: total,
         presentDays: present,
-        absentDays: absent,
-        lateDays: late,
-        excusedDays: excused,
+        absentDays: toInt(summary['absent']),
+        lateDays: toInt(summary['late']),
+        excusedDays: toInt(summary['excused']),
         attendancePercentage: percentage,
       );
     } on DioException catch (e) {
@@ -416,27 +372,6 @@ class AcademicApi with ApiHelpers {
     }
   }
 
-  Future<Map<String, dynamic>> _getChildProfile(int childId) async {
-    final response = await _client.get(ApiConstants.childDetails(childId));
-    return asMap(response.data);
-  }
-
-  List<Map<String, dynamic>> _extractQuarterGradeRows(
-    Map<String, dynamic> root,
-  ) {
-    final qMap = root['qMap'];
-    if (qMap is! Map) return const [];
-
-    final rows = <Map<String, dynamic>>[];
-    for (final subjectValue in qMap.values) {
-      if (subjectValue is! Map) continue;
-      for (final quarterValue in subjectValue.values) {
-        final row = asMap(quarterValue);
-        if (row.isNotEmpty) rows.add(row);
-      }
-    }
-    return rows;
-  }
 
   List<Map<String, dynamic>> _extractScheduleEntries(
     Map<String, dynamic> root,
@@ -712,54 +647,6 @@ class AcademicApi with ApiHelpers {
     return _resolveHomeworkChildIdFromPayload(root, assignmentId);
   }
 
-  String _subjectNameFromGradeRow(Map<String, dynamic> row) {
-    final subject = asMap(row['subject']);
-    return (subject['name'] ?? row['subject_name'] ?? 'Fan').toString();
-  }
-
-  String? _teacherNameFromGradeRow(Map<String, dynamic> row) {
-    final teacher = asMap(row['teacher']);
-    final value = teacher['name'] ?? row['teacher_name'];
-    return value?.toString();
-  }
-
-  int _resolveGrade(Map<String, dynamic> row) {
-    final explicit = toNullableInt(row['grade_5'] ?? row['grade']);
-    if (explicit != null && explicit > 0) return explicit;
-
-    final percent = toNullableDouble(row['percent']);
-    if (percent == null) return 0;
-    if (percent >= 86) return 5;
-    if (percent >= 71) return 4;
-    if (percent >= 56) return 3;
-    return 2;
-  }
-
-  String _statusFromLessonMark(String type, dynamic score) {
-    final normalized = type.toLowerCase();
-    if (normalized == 'attendance_absent' ||
-        normalized == 'absent' ||
-        normalized == 'a') {
-      return 'absent';
-    }
-    if (normalized == 'attendance_late' ||
-        normalized == 'late' ||
-        normalized == 'l') {
-      return 'late';
-    }
-    if (normalized == 'attendance_excused' || normalized == 'excused') {
-      return 'excused';
-    }
-    if (normalized == 'attendance_present' ||
-        normalized == 'present' ||
-        normalized == 'p') {
-      return 'present';
-    }
-
-    final numeric = toNullableDouble(score);
-    if (numeric != null && numeric <= 0) return 'absent';
-    return 'present';
-  }
 
   int _weekdayFromDate(String? dateKey) {
     if (dateKey == null || dateKey.isEmpty) return 0;

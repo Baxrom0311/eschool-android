@@ -81,7 +81,7 @@ void main() {
   late ConversationsNotifier conversationsNotifier;
   late ChatRoomNotifier chatRoomNotifier;
   
-  final mockUser = const UserModel(
+  const mockUser = UserModel(
     id: 1, 
     fullName: 'Test User', 
     phone: '998901234567',

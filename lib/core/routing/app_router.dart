@@ -27,6 +27,11 @@ import '../../presentation/screens/notifications/notifications_screen.dart';
 import '../../presentation/screens/profile/children_list_screen.dart';
 import '../../presentation/screens/profile/change_password_screen.dart';
 
+import '../../presentation/screens/leaderboard/leaderboard_screen.dart';
+import '../../presentation/screens/conference/conference_screen.dart';
+import '../../presentation/screens/absence/absence_excuse_screen.dart';
+import '../../presentation/screens/library/library_screen.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../presentation/providers/auth_provider.dart';
 
@@ -203,6 +208,24 @@ class AppRouter {
     GoRoute(
       path: RouteNames.notifications,
       builder: (context, state) => const NotificationsScreen(),
+    ),
+
+    // ─── Extra Modules ───
+    GoRoute(
+      path: RouteNames.leaderboard,
+      builder: (context, state) => const LeaderboardScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.conference,
+      builder: (context, state) => const ConferenceScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.absences,
+      builder: (context, state) => const AbsenceExcuseScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.library,
+      builder: (context, state) => const LibraryScreen(),
     ),
   ];
 }

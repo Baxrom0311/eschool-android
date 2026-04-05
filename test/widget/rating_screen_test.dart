@@ -16,7 +16,7 @@ class MockRatingNotifier extends StateNotifier<RatingState> with Mock implements
 void main() {
   late MockRatingNotifier mockRatingNotifier;
 
-  final testChild = ChildModel(
+  const testChild = ChildModel(
     id: 1,
     fullName: 'Ali',
     className: '1A',
@@ -24,16 +24,16 @@ void main() {
   );
 
   final testClassRating = [
-    RatingModel(id: 1, studentName: 'Ali', rank: 1, totalScore: 100, isCurrent: true),
-    RatingModel(id: 2, studentName: 'Vali', rank: 2, totalScore: 90),
-    RatingModel(id: 3, studentName: 'Gani', rank: 3, totalScore: 80),
-    RatingModel(id: 4, studentName: 'Sami', rank: 4, totalScore: 70),
-    RatingModel(id: 5, studentName: 'Kari', rank: 5, totalScore: 60),
+    const RatingModel(id: 1, studentName: 'Ali', rank: 1, totalScore: 100, isCurrent: true),
+    const RatingModel(id: 2, studentName: 'Vali', rank: 2, totalScore: 90),
+    const RatingModel(id: 3, studentName: 'Gani', rank: 3, totalScore: 80),
+    const RatingModel(id: 4, studentName: 'Sami', rank: 4, totalScore: 70),
+    const RatingModel(id: 5, studentName: 'Kari', rank: 5, totalScore: 60),
   ];
 
   final testSchoolRating = [
-    RatingModel(id: 6, studentName: 'Bobur', rank: 1, totalScore: 150),
-    RatingModel(id: 1, studentName: 'Ali', rank: 2, totalScore: 100, isCurrent: true),
+    const RatingModel(id: 6, studentName: 'Bobur', rank: 1, totalScore: 150),
+    const RatingModel(id: 1, studentName: 'Ali', rank: 2, totalScore: 100, isCurrent: true),
   ];
 
   setUp(() {

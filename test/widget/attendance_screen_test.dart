@@ -38,14 +38,14 @@ void main() {
     await SharedPrefsService.init();
     
     // Default success mocks
-    final tChild = const ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
-    final tUser = UserModel(id: 1, fullName: 'John Doe', phone: '+998901234567', children: [tChild]);
+    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
+    const tUser = UserModel(id: 1, fullName: 'John Doe', phone: '+998901234567', children: [tChild]);
     
-    when(() => mockUserRepository.getProfile()).thenAnswer((_) async => Right(tUser));
+    when(() => mockUserRepository.getProfile()).thenAnswer((_) async => const Right(tUser));
   });
 
   Widget createWidgetUnderTest() {
-    final tChild = const ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
+    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
     return ProviderScope(
       overrides: [
         userRepositoryProvider.overrideWithValue(mockUserRepository),
@@ -91,11 +91,11 @@ void main() {
     testWidgets('shows populated stats and logic when data is available', (WidgetTester tester) async {
       // Create date today
       final today = DateTime.now();
-      final dateStr = "\${today.year}-\${today.month.toString().padLeft(2, '0')}-\${today.day.toString().padLeft(2, '0')}T00:00:00.000000Z";
+      const dateStr = "\${today.year}-\${today.month.toString().padLeft(2, '0')}-\${today.day.toString().padLeft(2, '0')}T00:00:00.000000Z";
       
       final List<AttendanceModel> tRecords = [
-        AttendanceModel(id: 1, date: dateStr, status: AttendanceStatus.present),
-        AttendanceModel(id: 2, date: '2023-11-02T00:00:00.000000Z', status: AttendanceStatus.absent),
+        const AttendanceModel(id: 1, date: dateStr, status: AttendanceStatus.present),
+        const AttendanceModel(id: 2, date: '2023-11-02T00:00:00.000000Z', status: AttendanceStatus.absent),
       ];
 
       when(() => mockAcademicRepository.getAttendance(any(), month: any(named: 'month')))

@@ -79,7 +79,7 @@ void main() {
       when(() => mockChatRepository.getMessages(1, page: any(named: 'page')))
           .thenAnswer((_) async => const Right([]));
           
-      final tMessage = const MessageModel(
+      const tMessage = MessageModel(
         id: 2,
         content: 'Yangi xabar',
         type: MessageType.text,
@@ -90,7 +90,7 @@ void main() {
       );
           
       when(() => mockChatRepository.sendMessage(1, content: 'Yangi xabar'))
-          .thenAnswer((_) async => Right(tMessage));
+          .thenAnswer((_) async => const Right(tMessage));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

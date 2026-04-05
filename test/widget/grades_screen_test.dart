@@ -33,10 +33,10 @@ void main() {
     await SharedPrefsService.init();
     
     // Default success mocks
-    final tChild = const ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
-    final tUser = UserModel(id: 1, fullName: 'John Doe', phone: '+998901234567', children: [tChild]);
+    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
+    const tUser = UserModel(id: 1, fullName: 'John Doe', phone: '+998901234567', children: [tChild]);
     
-    when(() => mockUserRepository.getProfile()).thenAnswer((_) async => Right(tUser));
+    when(() => mockUserRepository.getProfile()).thenAnswer((_) async => const Right(tUser));
     
     when(() => mockAcademicRepository.getAttendance(any(), month: any(named: 'month'))).thenAnswer((_) async => const Right([]));
     when(() => mockAcademicRepository.getAttendance(any())).thenAnswer((_) async => const Right([]));
@@ -45,7 +45,7 @@ void main() {
   });
 
   Widget createWidgetUnderTest() {
-    final tChild = const ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
+    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
     return ProviderScope(
       overrides: [
         userRepositoryProvider.overrideWithValue(mockUserRepository),

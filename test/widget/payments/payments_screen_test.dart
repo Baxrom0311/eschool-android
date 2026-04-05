@@ -10,7 +10,7 @@ import 'package:parent_school_app/data/models/user_model.dart';
 
 // Mock Payment Notifier
 class MockPaymentNotifier extends StateNotifier<PaymentState> implements PaymentNotifier {
-  MockPaymentNotifier(PaymentState state) : super(state);
+  MockPaymentNotifier(super.state);
 
   @override
   Future<void> loadInitialData({int? studentId}) async {}
@@ -42,7 +42,7 @@ class MockPaymentNotifier extends StateNotifier<PaymentState> implements Payment
 }
 
 class MockUserNotifier extends StateNotifier<UserState> implements UserNotifier {
-  MockUserNotifier(UserState state) : super(state);
+  MockUserNotifier(super.state);
 
   @override
   void setUser(UserModel user) {}
@@ -103,8 +103,8 @@ void main() {
     });
 
     testWidgets('Displays debt section when balance object has debt', (tester) async {
-      final mockChild = const ChildModel(id: 1, fullName: 'Test Child', className: '1-A', classId: 1);
-      final mockBalance = const BalanceInfo(
+      const mockChild = ChildModel(id: 1, fullName: 'Test Child', className: '1-A', classId: 1);
+      const mockBalance = BalanceInfo(
         balance: 50000, 
         monthlyFee: 150000, 
         debtAmount: 100000, 
@@ -116,10 +116,10 @@ void main() {
         ProviderScope(
           overrides: [
             userProvider.overrideWith((ref) => MockUserNotifier(
-              UserState(selectedChild: mockChild)
+              const UserState(selectedChild: mockChild)
             )),
             paymentProvider.overrideWith((ref) => MockPaymentNotifier(
-              PaymentState(isLoading: false, balance: mockBalance, selectedStudentId: 1)
+              const PaymentState(isLoading: false, balance: mockBalance, selectedStudentId: 1)
             )),
           ],
           child: const MaterialApp(

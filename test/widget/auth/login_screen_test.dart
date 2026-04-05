@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:parent_school_app/presentation/screens/auth/login_screen.dart';
 import 'package:parent_school_app/presentation/providers/auth_provider.dart';
 
 import 'package:parent_school_app/presentation/providers/user_provider.dart';
 import 'package:parent_school_app/data/models/user_model.dart';
-import 'package:parent_school_app/data/repositories/user_repository.dart';
 
 // Mock Notifier
 class MockAuthNotifier extends StateNotifier<AuthState> implements AuthNotifier {

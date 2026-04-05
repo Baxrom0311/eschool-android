@@ -3,9 +3,9 @@ class ApiConstants {
   ApiConstants._();
 
   // Base URL (dart-define: --dart-define=API_BASE_URL=https://...)
-  // Local development uchun default URL (Android emulator → host localhost)
-  // Production: --dart-define=API_BASE_URL=https://ranchschool.izlash.uz
-  static const String _defaultBaseUrl = 'http://10.0.2.2:8000';
+  // Production default teacher ilovasi bilan bir xil saqlanadi.
+  // Local development: --dart-define=API_BASE_URL=http://10.0.2.2:8000
+  static const String _defaultBaseUrl = 'https://ranchschool.izlash.uz';
   static const String _envBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: _defaultBaseUrl,
@@ -69,15 +69,26 @@ class ApiConstants {
   static String childDetails(int id) => parentChildProfile(id);
 
   // ─── Academics ───
-  // Parent OAS grades/attendance/rating ni alohida endpoint qilib bermaydi;
-  // child profile/timetable/homeworks dan derivation qilinadi.
-  static String grades(int childId) => parentChildProfile(childId);
-  static String schedule(int childId) =>
-      parentTimetable; // childId queryda ketadi
-  static String assignments(int childId) =>
-      parentHomeworks; // childId queryda ketadi
-  static String attendance(int childId) => parentChildProfile(childId);
+  static const String parentGradesQuarter = '/api/parent/grades';
+  static const String parentGradesYear = '/api/parent/grades/year';
+  static const String parentAttendanceEndpoint = '/api/parent/attendance';
+  
+  static String grades(int childId) => parentGradesQuarter;
+  static String schedule(int childId) => parentTimetable; // childId queryda ketadi
+  static String assignments(int childId) => parentHomeworks; // childId queryda ketadi
+  static String attendance(int childId) => parentAttendanceEndpoint;
   static String childRating(int childId) => parentChildProfile(childId);
+
+  // ─── Gamification & Leaderboard ───
+  static const String leaderboardCoins = '/api/leaderboard/coins';
+  static const String leaderboardBadges = '/api/leaderboard/badges';
+  static const String leaderboardMyBadges = '/api/leaderboard/my-badges';
+
+  // ─── Absence Excuses & Conference ───
+  static const String absenceExcuses = '/api/excuses';
+  static const String conferenceAvailable = '/api/parent/conferences/available';
+  static const String conferenceBook = '/api/parent/conferences/book';
+  static const String conferenceMyBookings = '/api/parent/conferences/my-bookings';
 
   // ─── Assignments ───
   static String submitAssignment(int id) => parentHomeworkSubmit(id);

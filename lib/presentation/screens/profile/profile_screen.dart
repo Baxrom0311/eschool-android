@@ -130,6 +130,46 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
 
                 _SettingsItem(
+                  icon: Icons.emoji_events_rounded,
+                  title: 'Yutuqlar va Nishonlar',
+                  subtitle: 'O\'yinlashtirilgan reyting',
+                  onTap: () {
+                    context.push(RouteNames.leaderboard);
+                  },
+                ),
+                const SizedBox(height: 8),
+
+                _SettingsItem(
+                  icon: Icons.groups_rounded,
+                  title: 'Ota-onalar majlisi',
+                  subtitle: 'O\'qituvchi bilan uchrashuv belgilash',
+                  onTap: () {
+                    context.push(RouteNames.conference);
+                  },
+                ),
+                const SizedBox(height: 8),
+
+                _SettingsItem(
+                  icon: Icons.assignment_late_rounded,
+                  title: 'E-Murojaat',
+                  subtitle: 'Davomat uzrlari',
+                  onTap: () {
+                    context.push(RouteNames.absences);
+                  },
+                ),
+                const SizedBox(height: 8),
+
+                _SettingsItem(
+                  icon: Icons.local_library_rounded,
+                  title: 'Raqamli Kutubxona',
+                  subtitle: 'Darslik va kitoblar',
+                  onTap: () {
+                    context.push(RouteNames.library);
+                  },
+                ),
+                const SizedBox(height: 8),
+
+                _SettingsItem(
                   icon: Icons.person_outline_rounded,
                   title: 'Shaxsiy ma\'lumotlar',
                   subtitle: 'Profilingizni tahrirlash',

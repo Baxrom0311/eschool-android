@@ -40,4 +40,10 @@ class RouteNames {
 
   // ─── Notifications ───
   static const String notifications = '/notifications';
+
+  // ─── Extra Modules ───
+  static const String leaderboard = '/leaderboard';
+  static const String conference = '/conference';
+  static const String absences = '/absences';
+  static const String library = '/library';
 }

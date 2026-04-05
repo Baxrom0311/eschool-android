@@ -37,13 +37,13 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await SharedPrefsService.init();
 
-    final tChild = const ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
-    final tUser = UserModel(id: 1, fullName: 'John Doe', phone: '+998901234567', children: [tChild]);
-    when(() => mockUserRepository.getProfile()).thenAnswer((_) async => Right(tUser));
+    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
+    const tUser = UserModel(id: 1, fullName: 'John Doe', phone: '+998901234567', children: [tChild]);
+    when(() => mockUserRepository.getProfile()).thenAnswer((_) async => const Right(tUser));
   });
 
   Widget createWidgetUnderTest() {
-    final tChild = const ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
+    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
     return ProviderScope(
       overrides: [
         userRepositoryProvider.overrideWithValue(mockUserRepository),

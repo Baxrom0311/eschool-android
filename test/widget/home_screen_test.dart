@@ -53,11 +53,11 @@ void main() {
     await SharedPrefsService.init();
     
     // Setup generic mock responses
-    final tChild = const ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
-    final tUser = UserModel(id: 1, fullName: 'John Doe', phone: '+998901234567', children: [tChild]);
+    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
+    const tUser = UserModel(id: 1, fullName: 'John Doe', phone: '+998901234567', children: [tChild]);
     
-    when(() => mockUserRepository.getProfile()).thenAnswer((_) async => Right(tUser));
-    final tRating = const RatingModel(id: 1, studentName: 'Test', rank: 1, totalScore: 10.0, averageGrade: 5.0, isCurrent: true);
+    when(() => mockUserRepository.getProfile()).thenAnswer((_) async => const Right(tUser));
+    const tRating = RatingModel(id: 1, studentName: 'Test', rank: 1, totalScore: 10.0, averageGrade: 5.0, isCurrent: true);
     
     when(() => mockAcademicRepository.getGrades(any(), quarter: any(named: 'quarter'))).thenAnswer((_) async => const Right([]));
     when(() => mockAcademicRepository.getGrades(any())).thenAnswer((_) async => const Right([]));

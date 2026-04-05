@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:parent_school_app/core/error/failures.dart';
 import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/models/chat_model.dart';
 import 'package:parent_school_app/data/repositories/chat_repository.dart';
@@ -145,7 +144,7 @@ void main() {
 
     test('sendMessage prepends new message on success', () async {
       final container = createContainer();
-      final tNewMessage = const MessageModel(
+      const tNewMessage = MessageModel(
         id: 99,
         senderId: 20,
         senderName: 'Me',
@@ -159,7 +158,7 @@ void main() {
       when(() => mockRepository.getMessages(tConversationId))
           .thenAnswer((_) async => Right(tMessagesPage1));
       when(() => mockRepository.sendMessage(tConversationId, content: 'New message'))
-          .thenAnswer((_) async => Right(tNewMessage));
+          .thenAnswer((_) async => const Right(tNewMessage));
 
       await container.read(chatRoomProvider.notifier).openConversation(tConversationId);
       final result = await container.read(chatRoomProvider.notifier).sendMessage('New message');

@@ -33,14 +33,14 @@ void main() {
   late MockAuthNotifier mockAuthNotifier;
   late MockGoRouter mockGoRouter;
 
-  final testUser = const UserModel(
+  const testUser = UserModel(
     id: 1,
     role: 'parent',
     fullName: 'Eshmatov Toshmat',
     phone: '+998901234567',
   );
 
-  final testChildren = const <ChildModel>[
+  const testChildren = <ChildModel>[
     ChildModel(
       id: 101,
       fullName: 'Eshmatov Ali',
@@ -55,7 +55,7 @@ void main() {
     ),
   ];
 
-  final testBalance = const BalanceInfo(
+  const testBalance = BalanceInfo(
     balance: 150000,
     monthlyFee: 500000,
     hasFinancialData: true,
@@ -63,14 +63,14 @@ void main() {
 
   setUp(() {
     mockUserNotifier = MockUserNotifier(
-      UserState(
+      const UserState(
         user: testUser,
         children: testChildren,
       ),
     );
 
     mockPaymentNotifier = MockPaymentNotifier(
-      PaymentState(
+      const PaymentState(
         balance: testBalance,
       ),
     );
@@ -166,7 +166,7 @@ void main() {
     });
 
     testWidgets('logout process functions correctly', (tester) async {
-      when(() => mockAuthNotifier.logout()).thenAnswer((_) async => null);
+      when(() => mockAuthNotifier.logout()).thenAnswer((_) async {});
       when(() => mockUserNotifier.clear()).thenReturn(null);
       when(() => mockPaymentNotifier.clear()).thenReturn(null);
       when(() => mockGoRouter.go(any())).thenReturn(null);

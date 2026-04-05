@@ -32,14 +32,14 @@ void main() {
   }
 
   group('UserNotifier', () {
-    final tChild = const ChildModel(
+    const tChild = ChildModel(
       id: 1,
       fullName: 'John Jr',
       className: '5A',
       classId: 10,
     );
 
-    final tUser = UserModel(
+    const tUser = UserModel(
       id: 1,
       fullName: 'John Doe',
       phone: '+998901234567',
@@ -63,7 +63,7 @@ void main() {
     test('loadProfile updates state and resolves selected child on success', () async {
       final container = createContainer();
       when(() => mockRepository.getProfile())
-          .thenAnswer((_) async => Right(tUser));
+          .thenAnswer((_) async => const Right(tUser));
 
       final future = container.read(userProvider.notifier).loadProfile();
       expect(container.read(userProvider).isLoading, true);
@@ -94,11 +94,11 @@ void main() {
     test('selectChild updates selectedChild in state', () async {
       final container = createContainer();
       when(() => mockRepository.getProfile())
-          .thenAnswer((_) async => Right(tUser));
+          .thenAnswer((_) async => const Right(tUser));
 
       await container.read(userProvider.notifier).loadProfile();
       
-      final tChild2 = const ChildModel(
+      const tChild2 = ChildModel(
         id: 2,
         fullName: 'Jane Doe',
         className: '3B',
