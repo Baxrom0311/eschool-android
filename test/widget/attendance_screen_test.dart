@@ -20,6 +20,7 @@ import 'package:parent_school_app/presentation/screens/academics/attendance_scre
 import 'package:table_calendar/table_calendar.dart';
 
 class MockUserRepository extends Mock implements UserRepository {}
+
 class MockAcademicRepository extends Mock implements AcademicRepository {}
 
 void main() {
@@ -36,16 +37,33 @@ void main() {
 
     SharedPreferences.setMockInitialValues({});
     await SharedPrefsService.init();
-    
+
     // Default success mocks
-    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
-    const tUser = UserModel(id: 1, fullName: 'John Doe', phone: '+998901234567', children: [tChild]);
-    
-    when(() => mockUserRepository.getProfile()).thenAnswer((_) async => const Right(tUser));
+    const tChild = ChildModel(
+      id: 1,
+      fullName: 'John Jr',
+      className: '5A',
+      classId: 10,
+    );
+    const tUser = UserModel(
+      id: 1,
+      fullName: 'John Doe',
+      phone: '+998901234567',
+      children: [tChild],
+    );
+
+    when(
+      () => mockUserRepository.getProfile(),
+    ).thenAnswer((_) async => const Right(tUser));
   });
 
   Widget createWidgetUnderTest() {
-    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
+    const tChild = ChildModel(
+      id: 1,
+      fullName: 'John Jr',
+      className: '5A',
+      classId: 10,
+    );
     return ProviderScope(
       overrides: [
         userRepositoryProvider.overrideWithValue(mockUserRepository),
@@ -65,22 +83,32 @@ void main() {
   group('AttendanceScreen Widget Tests', () {
     testWidgets('shows loading state initially', (WidgetTester tester) async {
       final completer = Completer<Either<Failure, List<AttendanceModel>>>();
-      when(() => mockAcademicRepository.getAttendance(any(), month: any(named: 'month')))
-          .thenAnswer((_) => completer.future);
+      when(
+        () => mockAcademicRepository.getAttendance(
+          any(),
+          month: any(named: 'month'),
+        ),
+      ).thenAnswer((_) => completer.future);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
-      
+
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('shows empty stats when data is empty', (WidgetTester tester) async {
-      when(() => mockAcademicRepository.getAttendance(any(), month: any(named: 'month')))
-          .thenAnswer((_) async => const Right([]));
+    testWidgets('shows empty stats when data is empty', (
+      WidgetTester tester,
+    ) async {
+      when(
+        () => mockAcademicRepository.getAttendance(
+          any(),
+          month: any(named: 'month'),
+        ),
+      ).thenAnswer((_) async => const Right([]));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
-      
+
       expect(find.text('Jami darslar'), findsOneWidget);
       // Wait, there are 3 stats columns but they display '-' when summary is empty or 0
       expect(find.text('0'), findsNWidgets(3));
@@ -88,34 +116,52 @@ void main() {
       expect(find.byType(TableCalendar), findsOneWidget);
     });
 
-    testWidgets('shows populated stats and logic when data is available', (WidgetTester tester) async {
-      // Create date today
-      final today = DateTime.now();
-      const dateStr = "\${today.year}-\${today.month.toString().padLeft(2, '0')}-\${today.day.toString().padLeft(2, '0')}T00:00:00.000000Z";
-      
+    testWidgets('shows populated stats and logic when data is available', (
+      WidgetTester tester,
+    ) async {
+      const dateStr = '2024-11-01T00:00:00.000000Z';
+
       final List<AttendanceModel> tRecords = [
-        const AttendanceModel(id: 1, date: dateStr, status: AttendanceStatus.present),
-        const AttendanceModel(id: 2, date: '2023-11-02T00:00:00.000000Z', status: AttendanceStatus.absent),
+        const AttendanceModel(
+          id: 1,
+          date: dateStr,
+          status: AttendanceStatus.present,
+        ),
+        const AttendanceModel(
+          id: 2,
+          date: '2023-11-02T00:00:00.000000Z',
+          status: AttendanceStatus.absent,
+        ),
       ];
 
-      when(() => mockAcademicRepository.getAttendance(any(), month: any(named: 'month')))
-          .thenAnswer((_) async => Right(tRecords));
+      when(
+        () => mockAcademicRepository.getAttendance(
+          any(),
+          month: any(named: 'month'),
+        ),
+      ).thenAnswer((_) async => Right(tRecords));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       expect(find.text('Jami darslar'), findsOneWidget);
-      
+
       // Because length = 2, present = 1, absent = 1
       expect(find.text('2'), findsWidgets); // Jami darslar
       expect(find.text('1'), findsWidgets); // Qatnashdi or Sababsiz
-      
+
       expect(find.byType(TableCalendar), findsOneWidget);
     });
 
-    testWidgets('shows error state when API fails', (WidgetTester tester) async {
-      when(() => mockAcademicRepository.getAttendance(any(), month: any(named: 'month')))
-          .thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
+    testWidgets('shows error state when API fails', (
+      WidgetTester tester,
+    ) async {
+      when(
+        () => mockAcademicRepository.getAttendance(
+          any(),
+          month: any(named: 'month'),
+        ),
+      ).thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

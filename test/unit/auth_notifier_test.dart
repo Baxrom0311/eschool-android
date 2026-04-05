@@ -14,11 +14,21 @@ class MockAuthRepository implements AuthRepository {
   void setShouldFail(bool value) => _shouldFail = value;
 
   @override
-  Future<Either<Failure, UserModel>> login({required String username, required String password}) async {
+  Future<Either<Failure, UserModel>> login({
+    required String username,
+    required String password,
+  }) async {
     if (_shouldFail) {
       return const Left(ServerFailure('Login failed'));
     }
-    return const Right(UserModel(id: 1, phone: '+998901234567', fullName: 'Test User', role: 'parent'));
+    return const Right(
+      UserModel(
+        id: 1,
+        phone: '+998901234567',
+        fullName: 'Test User',
+        role: 'parent',
+      ),
+    );
   }
 
   @override
@@ -31,20 +41,24 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> forgotPassword({required String phone}) async => const Right(null);
+  Future<Either<Failure, void>> forgotPassword({required String phone}) async =>
+      const Right(null);
 
   @override
-  Future<Either<Failure, void>> resetPassword({required String phone, required String code, required String password, required String passwordConfirmation}) async => const Right(null);
+  Future<Either<Failure, void>> updateFCMToken(String token) async =>
+      const Right(null);
 
   @override
-  Future<Either<Failure, void>> updateFCMToken(String token) async => const Right(null);
-
-  @override
-  Future<Either<Failure, UserModel>> qrLogin({required String qrToken}) async => 
-    const Right(UserModel(id: 4, phone: '+998900000000', fullName: 'QR User', role: 'parent'));
+  Future<Either<Failure, UserModel>> qrLogin({required String qrToken}) async =>
+      const Right(
+        UserModel(
+          id: 4,
+          phone: '+998900000000',
+          fullName: 'QR User',
+          role: 'parent',
+        ),
+      );
 }
-
-
 
 void main() {
   late AuthNotifier authNotifier;
@@ -52,9 +66,7 @@ void main() {
 
   setUp(() {
     mockRepository = MockAuthRepository();
-    authNotifier = AuthNotifier(
-      repository: mockRepository,
-    );
+    authNotifier = AuthNotifier(repository: mockRepository);
   });
 
   group('AuthNotifier Tests', () {
@@ -64,9 +76,9 @@ void main() {
 
     test('checkAuthStatus should return true when token exists', () async {
       mockRepository.setHasToken(true);
-      
+
       final result = await authNotifier.checkAuthStatus();
-      
+
       expect(result, true);
       expect(authNotifier.state.isAuthenticated, true);
     });

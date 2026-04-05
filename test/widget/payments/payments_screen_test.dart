@@ -9,17 +9,15 @@ import 'package:parent_school_app/data/models/child_model.dart';
 import 'package:parent_school_app/data/models/user_model.dart';
 
 // Mock Payment Notifier
-class MockPaymentNotifier extends StateNotifier<PaymentState> implements PaymentNotifier {
+class MockPaymentNotifier extends StateNotifier<PaymentState>
+    implements PaymentNotifier {
   MockPaymentNotifier(super.state);
 
   @override
   Future<void> loadInitialData({int? studentId}) async {}
-  
+
   @override
   Future<void> refresh({int? studentId}) async {}
-  
-  @override
-  Future<void> loadMorePayments({int? studentId}) async {}
 
   @override
   void clear() {}
@@ -41,7 +39,8 @@ class MockPaymentNotifier extends StateNotifier<PaymentState> implements Payment
   Future<void> refreshBalance() async {}
 }
 
-class MockUserNotifier extends StateNotifier<UserState> implements UserNotifier {
+class MockUserNotifier extends StateNotifier<UserState>
+    implements UserNotifier {
   MockUserNotifier(super.state);
 
   @override
@@ -57,74 +56,100 @@ class MockUserNotifier extends StateNotifier<UserState> implements UserNotifier 
   @override
   void clearError() {}
   @override
-  Future<void> updateProfile({String? fullName, String? email, String? phone, bool? notificationsEnabled}) async {}
+  Future<void> updateProfile({
+    String? fullName,
+    String? email,
+    String? phone,
+    bool? notificationsEnabled,
+  }) async {}
   @override
   Future<void> restoreCachedProfile() async {}
   @override
-  Future<String?> changePassword({required String currentPassword, required String newPassword, required String confirmPassword}) async => null;
+  Future<String?> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async => null;
   @override
   Future<void> uploadAvatar(String filePath) async {}
 }
 
 void main() {
   group('PaymentsScreen Widget Tests', () {
-    testWidgets('Shows loading indicator when state is loading and no balance', (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            paymentProvider.overrideWith((ref) => MockPaymentNotifier(
-              const PaymentState(isLoading: true)
-            )),
-          ],
-          child: const MaterialApp(
-            home: PaymentsScreen(),
+    testWidgets(
+      'Shows loading indicator when state is loading and no balance',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              paymentProvider.overrideWith(
+                (ref) =>
+                    MockPaymentNotifier(const PaymentState(isLoading: true)),
+              ),
+            ],
+            child: const MaterialApp(home: PaymentsScreen()),
           ),
-        ),
-      );
+        );
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      },
+    );
 
     testWidgets('Displays error message correctly', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            paymentProvider.overrideWith((ref) => MockPaymentNotifier(
-              const PaymentState(isLoading: false, error: 'Tarmoq xatosi yuz berdi')
-            )),
+            paymentProvider.overrideWith(
+              (ref) => MockPaymentNotifier(
+                const PaymentState(
+                  isLoading: false,
+                  error: 'Tarmoq xatosi yuz berdi',
+                ),
+              ),
+            ),
           ],
-          child: const MaterialApp(
-            home: PaymentsScreen(),
-          ),
+          child: const MaterialApp(home: PaymentsScreen()),
         ),
       );
 
       expect(find.text('Tarmoq xatosi yuz berdi'), findsOneWidget);
     });
 
-    testWidgets('Displays debt section when balance object has debt', (tester) async {
-      const mockChild = ChildModel(id: 1, fullName: 'Test Child', className: '1-A', classId: 1);
+    testWidgets('Displays debt section when balance object has debt', (
+      tester,
+    ) async {
+      const mockChild = ChildModel(
+        id: 1,
+        fullName: 'Test Child',
+        className: '1-A',
+        classId: 1,
+      );
       const mockBalance = BalanceInfo(
-        balance: 50000, 
-        monthlyFee: 150000, 
-        debtAmount: 100000, 
+        balance: 50000,
+        monthlyFee: 150000,
+        debtAmount: 100000,
         contractNumber: 'CH-1234',
-        hasFinancialData: true
+        hasFinancialData: true,
       );
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            userProvider.overrideWith((ref) => MockUserNotifier(
-              const UserState(selectedChild: mockChild)
-            )),
-            paymentProvider.overrideWith((ref) => MockPaymentNotifier(
-              const PaymentState(isLoading: false, balance: mockBalance, selectedStudentId: 1)
-            )),
+            userProvider.overrideWith(
+              (ref) =>
+                  MockUserNotifier(const UserState(selectedChild: mockChild)),
+            ),
+            paymentProvider.overrideWith(
+              (ref) => MockPaymentNotifier(
+                const PaymentState(
+                  isLoading: false,
+                  balance: mockBalance,
+                  selectedStudentId: 1,
+                ),
+              ),
+            ),
           ],
-          child: const MaterialApp(
-            home: PaymentsScreen(),
-          ),
+          child: const MaterialApp(home: PaymentsScreen()),
         ),
       );
 

@@ -8,29 +8,35 @@ import 'package:parent_school_app/presentation/providers/user_provider.dart';
 import 'package:parent_school_app/data/models/user_model.dart';
 
 // Mock Notifier
-class MockAuthNotifier extends StateNotifier<AuthState> implements AuthNotifier {
+class MockAuthNotifier extends StateNotifier<AuthState>
+    implements AuthNotifier {
   MockAuthNotifier() : super(const AuthState.initial());
 
   @override
   Future<bool> checkAuthStatus() async => false;
 
   @override
-  Future<void> login({required String username, required String password}) async {
+  Future<void> login({
+    required String username,
+    required String password,
+  }) async {
     state = state.copyWith(isLoading: true);
     await Future.delayed(const Duration(milliseconds: 100)); // Simulate network
     state = state.copyWith(
-      isLoading: false, 
+      isLoading: false,
       isAuthenticated: true,
-      user: const UserModel(id: 1, fullName: 'Test', phone: '+998901234567', role: 'parent'),
+      user: const UserModel(
+        id: 1,
+        fullName: 'Test',
+        phone: '+998901234567',
+        role: 'parent',
+      ),
     );
   }
 
   @override
   Future<void> logout() async {}
 
-  @override
-  Future<void> resetPassword({required String phone, required String code, required String password, required String passwordConfirmation}) async {}
-  
   @override
   Future<void> forgotPassword({required String phone}) async {}
 
@@ -47,7 +53,8 @@ class MockAuthNotifier extends StateNotifier<AuthState> implements AuthNotifier 
   void clearLocalSession() {}
 }
 
-class MockUserNotifier extends StateNotifier<UserState> implements UserNotifier {
+class MockUserNotifier extends StateNotifier<UserState>
+    implements UserNotifier {
   MockUserNotifier() : super(const UserState.initial());
 
   @override
@@ -70,33 +77,40 @@ class MockUserNotifier extends StateNotifier<UserState> implements UserNotifier 
   @override
   void clearError() {}
   @override
-  Future<void> updateProfile({String? fullName, String? email, String? phone, bool? notificationsEnabled}) async {}
+  Future<void> updateProfile({
+    String? fullName,
+    String? email,
+    String? phone,
+    bool? notificationsEnabled,
+  }) async {}
   @override
   Future<void> restoreCachedProfile() async {}
   @override
-  Future<String?> changePassword({required String currentPassword, required String newPassword, required String confirmPassword}) async => null;
+  Future<String?> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async => null;
   @override
   Future<void> uploadAvatar(String filePath) async {}
 }
 
 void main() {
   group('LoginScreen Widget Tests', () {
-    testWidgets('Renders properly and identifies validation errors', (tester) async {
+    testWidgets('Renders properly and identifies validation errors', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            authProvider.overrideWith((ref) => MockAuthNotifier()),
-          ],
-          child: const MaterialApp(
-            home: LoginScreen(),
-          ),
+          overrides: [authProvider.overrideWith((ref) => MockAuthNotifier())],
+          child: const MaterialApp(home: LoginScreen()),
         ),
       );
 
       // Verify the screen renders
       expect(find.text('Xush kelibsiz!'), findsOneWidget);
       expect(find.byType(TextFormField), findsNWidgets(2)); // Email & Password
-      
+
       final loginButton = find.byType(ElevatedButton);
       expect(loginButton, findsOneWidget);
 
@@ -109,39 +123,39 @@ void main() {
       expect(find.text('Parol kiriting'), findsOneWidget);
     });
 
-    testWidgets('Permits login submission when validation succeeds', (tester) async {
+    testWidgets('Permits login submission when validation succeeds', (
+      tester,
+    ) async {
       final mockAuth = MockAuthNotifier();
       final mockUser = MockUserNotifier();
-      
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             authProvider.overrideWith((ref) => mockAuth),
             userProvider.overrideWith((ref) => mockUser),
           ],
-          child: const MaterialApp(
-            home: LoginScreen(),
-          ),
+          child: const MaterialApp(home: LoginScreen()),
         ),
       );
 
       final emailField = find.byType(TextFormField).first;
       final passwordField = find.byType(TextFormField).last;
-      
+
       await tester.enterText(emailField, 'test@example.com');
       await tester.enterText(passwordField, '123456');
-      
+
       // Tap login
       final loginButton = find.byType(ElevatedButton);
       await tester.tap(loginButton);
       await tester.pump(); // Start animation
-      
+
       // Loading indicator should appear momentarily inside ElevatedButton
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      
+
       await tester.pumpAndSettle(); // Settle network simulator
-      
-      // Wait, there's a problem here because `_completeAuthFlow` calls `userProvider.notifier` but we mocked authProvider. 
+
+      // Wait, there's a problem here because `_completeAuthFlow` calls `userProvider.notifier` but we mocked authProvider.
       // UserProvider might error out if it tries to fetch, but the button press logic will execute successfully.
     });
   });
