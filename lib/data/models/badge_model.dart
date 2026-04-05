@@ -5,7 +5,7 @@ class BadgeModel {
   final String category;
   final String icon;
 
-  BadgeModel({
+  const BadgeModel({
     required this.id,
     required this.name,
     required this.description,

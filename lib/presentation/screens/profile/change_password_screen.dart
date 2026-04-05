@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/app_snackbar.dart';
 import '../../providers/user_provider.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
 
   @override
-  ConsumerState<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
+  ConsumerState<ChangePasswordScreen> createState() =>
+      _ChangePasswordScreenState();
 }
 
 class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
@@ -30,7 +32,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
     setState(() => _isLoading = true);
 
-    final error = await ref.read(userProvider.notifier).changePassword(
+    final error = await ref
+        .read(userProvider.notifier)
+        .changePassword(
           currentPassword: _currentController.text,
           newPassword: _newController.text,
           confirmPassword: _confirmController.text,
@@ -40,18 +44,12 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     setState(() => _isLoading = false);
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: Colors.red.shade600,
-        ),
-      );
+      AppSnackBar.show(context, error, type: AppSnackBarType.error);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Parol muvaffaqiyatli o\'zgartirildi!'),
-          backgroundColor: Colors.green,
-        ),
+      AppSnackBar.show(
+        context,
+        'Parol muvaffaqiyatli o\'zgartirildi!',
+        type: AppSnackBarType.success,
       );
       Navigator.of(context).pop();
     }
@@ -84,7 +82,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _confirmController,
-                decoration: const InputDecoration(labelText: 'Parolni tasdiqlang'),
+                decoration: const InputDecoration(
+                  labelText: 'Parolni tasdiqlang',
+                ),
                 obscureText: true,
                 validator: (v) =>
                     v != _newController.text ? 'Parollar mos kelmadi' : null,

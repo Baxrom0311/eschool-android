@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/storage_keys.dart';
+import '../../core/network/api_error_handler.dart';
 import '../../data/datasources/remote/rating_api.dart';
 import '../../data/models/rating_model.dart';
 import '../../core/error/exceptions.dart';
@@ -114,7 +115,10 @@ class RatingNotifier extends StateNotifier<RatingState> {
       } else {
         state = state.copyWith(
           isLoading: false,
-          error: 'Reytingni yuklashda xatolik: ${e.toString()}',
+          error: ApiErrorHandler.readableMessage(
+            e,
+            fallback: 'Reytingni yuklashda xatolik',
+          ),
         );
       }
     }
@@ -167,7 +171,10 @@ class RatingNotifier extends StateNotifier<RatingState> {
       } else {
         state = state.copyWith(
           isLoading: false,
-          error: 'Xatolik: ${e.toString()}',
+          error: ApiErrorHandler.readableMessage(
+            e,
+            fallback: 'Maktab reytingini yuklashda xatolik',
+          ),
         );
       }
     }

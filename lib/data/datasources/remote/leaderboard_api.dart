@@ -9,6 +9,24 @@ class LeaderboardApi with ApiHelpers {
 
   LeaderboardApi(this._client);
 
+  Future<Map<String, dynamic>> getGlobalLeaderboard() async {
+    try {
+      final response = await _client.get(ApiConstants.leaderboardGlobal);
+      return asMap(response.data);
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getClassLeaderboard() async {
+    try {
+      final response = await _client.get(ApiConstants.leaderboardClass);
+      return asMap(response.data);
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
+  }
+
   Future<int> getCoins(int childId) async {
     try {
       final response = await _client.get(

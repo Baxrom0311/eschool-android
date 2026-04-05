@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/network/api_error_handler.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
@@ -71,7 +72,12 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
         });
       }
     } catch (e) {
-      _showError(e.toString());
+      _showError(
+        ApiErrorHandler.readableMessage(
+          e,
+          fallback: 'QR orqali kirish amalga oshmadi',
+        ),
+      );
       setState(() {
         _isProcessing = false;
         _hasScanned = false;
@@ -99,10 +105,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
       body: Stack(
         children: [
           // Kamera
-          MobileScanner(
-            controller: _cameraController,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _cameraController, onDetect: _onDetect),
 
           // Overlay — markazda QR kod ramka
           Center(

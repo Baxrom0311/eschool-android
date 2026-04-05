@@ -7,6 +7,7 @@ import '../../core/constants/storage_keys.dart';
 import '../../data/datasources/remote/notification_api.dart';
 import '../../data/models/notification_model.dart';
 import '../../core/error/exceptions.dart';
+import '../../core/network/api_error_handler.dart';
 import '../../core/storage/shared_prefs_service.dart';
 import 'auth_provider.dart';
 
@@ -116,7 +117,10 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
       } else {
         state = state.copyWith(
           isLoading: false,
-          error: 'Xatolik: ${e.toString()}',
+          error: ApiErrorHandler.readableMessage(
+            e,
+            fallback: 'Bildirishnomalarni yuklashda xatolik',
+          ),
         );
       }
     }
@@ -142,7 +146,12 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: state.notifications.isEmpty ? 'Xatolik: ${e.toString()}' : null,
+        error: state.notifications.isEmpty
+            ? ApiErrorHandler.readableMessage(
+                e,
+                fallback: 'Bildirishnomalarni yuklashda xatolik',
+              )
+            : null,
       );
     }
   }

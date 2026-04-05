@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/app_snackbar.dart';
 import '../../providers/payment_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/payments/payment_method_card.dart';
@@ -32,22 +33,20 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
     final amount = int.tryParse(digits);
 
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('To\'lov summasini to\'g\'ri kiriting'),
-          backgroundColor: AppColors.danger,
-        ),
+      AppSnackBar.show(
+        context,
+        'To\'lov summasini to\'g\'ri kiriting',
+        type: AppSnackBarType.error,
       );
       return;
     }
 
     final selectedStudentId = ref.read(selectedChildProvider)?.id;
     if (selectedStudentId == null || selectedStudentId <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Avval farzandni tanlang'),
-          backgroundColor: AppColors.danger,
-        ),
+      AppSnackBar.show(
+        context,
+        'Avval farzandni tanlang',
+        type: AppSnackBarType.error,
       );
       return;
     }
@@ -65,9 +64,7 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
       final error =
           ref.read(paymentProvider).error ??
           'Parent API da to\'lov yaratish qo\'llab-quvvatlanmaydi.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: AppColors.danger),
-      );
+      AppSnackBar.show(context, error, type: AppSnackBarType.error);
       return;
     }
 
@@ -88,17 +85,13 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
         _showError('To\'lov havolasiga o\'tib bo\'lmadi');
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('To\'lov yaratildi, ammo link olinmadi')),
-      );
+      AppSnackBar.show(context, 'To\'lov yaratildi, ammo link olinmadi');
     }
   }
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.danger),
-    );
+    AppSnackBar.show(context, message, type: AppSnackBarType.error);
   }
 
   @override

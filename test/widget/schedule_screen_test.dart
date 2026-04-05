@@ -115,7 +115,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Xatolik: Exception: Tarmoq xatosi'), findsOneWidget);
+      expect(find.textContaining('Xatolik: Tarmoq xatosi'), findsOneWidget);
     });
   });
 }

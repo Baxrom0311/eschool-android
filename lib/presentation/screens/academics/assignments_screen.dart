@@ -33,17 +33,16 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
     final selectedChild = ref.read(selectedChildProvider);
     if (selectedChild != null) {
       final status = _selectedTab == 0 ? 'pending' : null;
-      ref.read(assignmentsProvider.notifier).loadAssignments(
-            selectedChild.id,
-            status: status,
-          );
+      ref
+          .read(assignmentsProvider.notifier)
+          .loadAssignments(selectedChild.id, status: status);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final assignmentsAsync = ref.watch(assignmentsProvider);
-    
+
     // Extract data safely
     final assignments = assignmentsAsync.valueOrNull?.assignments ?? [];
     final isLoading = assignmentsAsync.isLoading;
@@ -71,10 +70,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primaryBlue,
-                      AppColors.secondaryBlue,
-                    ],
+                    colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
                   ),
                 ),
                 child: SafeArea(
@@ -86,8 +82,9 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                         Consumer(
                           builder: (context, ref, _) {
                             final user = ref.watch(userProvider).user;
-                            final selectedChild =
-                                ref.watch(selectedChildProvider);
+                            final selectedChild = ref.watch(
+                              selectedChildProvider,
+                            );
 
                             return Row(
                               children: [
@@ -95,7 +92,8 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                                 CircleAvatar(
                                   radius: 30,
                                   backgroundColor: Colors.white,
-                                  backgroundImage: selectedChild?.avatarUrl != null
+                                  backgroundImage:
+                                      selectedChild?.avatarUrl != null
                                       ? NetworkImage(selectedChild!.avatarUrl!)
                                       : null,
                                   child: selectedChild?.avatarUrl == null
@@ -115,12 +113,14 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                                 // User Info
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         selectedChild != null
                                             ? selectedChild.fullName
-                                            : (user?.fullName ?? 'Foydalanuvchi'),
+                                            : (user?.fullName ??
+                                                  'Foydalanuvchi'),
                                         style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
@@ -129,11 +129,13 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        selectedChild?.className ?? 'Sinf yo\'q',
+                                        selectedChild?.className ??
+                                            'Sinf yo\'q',
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: Colors.white
-                                              .withValues(alpha: 0.9),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.9,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -180,11 +182,11 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                         },
                       ),
                     ),
-                    Expanded(
+                    const Expanded(
                       child: _TabButton(
                         label: 'Vazifalar',
                         isActive: true,
-                        onTap: () {},
+                        onTap: null,
                       ),
                     ),
                   ],
@@ -221,7 +223,8 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                     ),
                     Expanded(
                       child: _SegmentButton(
-                        label: 'Barchasi', // Haftalik -> Barchasi implies no status filter?
+                        label:
+                            'Barchasi', // Haftalik -> Barchasi implies no status filter?
                         isActive: _selectedTab == 1,
                         onTap: () {
                           if (_selectedTab != 1) {
@@ -245,7 +248,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
               child: Center(child: CircularProgressIndicator()),
             )
           else if (hasError && assignments.isEmpty)
-             SliverFillRemaining(
+            SliverFillRemaining(
               child: Center(child: Text('Xatolik: ${assignmentsAsync.error}')),
             )
           else if (assignments.isEmpty)
@@ -256,36 +259,37 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final assignment = assignments[index];
-                    // Logic to determine color based on subject or random
-                    // For now, let's use a default or consistent hashing
-                    final color = Colors.primaries[
-                        assignment.subjectName.length % Colors.primaries.length];
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final assignment = assignments[index];
+                  // Logic to determine color based on subject or random
+                  // For now, let's use a default or consistent hashing
+                  final color =
+                      Colors.primaries[assignment.subjectName.length %
+                          Colors.primaries.length];
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: InkWell(
-                        onTap: () {
-                          context.push(RouteNames.assignmentDetail,
-                              extra: assignment);
-                        },
-                        child: _AssignmentCard(
-                          subject: assignment.subjectName,
-                          title: assignment.title,
-                          description: assignment.description ?? '',
-                          deadline:
-                              assignment.dueDate.split('T')[0], // Simple format
-                          isUrgent: assignment.isOverdue, // or logic?
-                          status: assignment.status, // Pass enum directly
-                          color: color,
-                        ),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: InkWell(
+                      onTap: () {
+                        context.push(
+                          RouteNames.assignmentDetail,
+                          extra: assignment,
+                        );
+                      },
+                      child: _AssignmentCard(
+                        subject: assignment.subjectName,
+                        title: assignment.title,
+                        description: assignment.description ?? '',
+                        deadline: assignment.dueDate.split(
+                          'T',
+                        )[0], // Simple format
+                        isUrgent: assignment.isOverdue, // or logic?
+                        status: assignment.status, // Pass enum directly
+                        color: color,
                       ),
-                    );
-                  },
-                  childCount: assignments.length,
-                ),
+                    ),
+                  );
+                }, childCount: assignments.length),
               ),
             ),
 
@@ -303,7 +307,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
 class _TabButton extends StatelessWidget {
   final String label;
   final bool isActive;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _TabButton({
     required this.label,
@@ -553,7 +557,8 @@ class _AssignmentCard extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Submit Button
-            if (status == AssignmentStatus.pending || status == AssignmentStatus.overdue)
+            if (status == AssignmentStatus.pending ||
+                status == AssignmentStatus.overdue)
               SizedBox(
                 width: double.infinity,
                 child: CustomButton(
@@ -561,7 +566,9 @@ class _AssignmentCard extends StatelessWidget {
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Vazifa yuborish funksiyasi tez orada...'),
+                        content: Text(
+                          'Vazifa yuborish funksiyasi tez orada...',
+                        ),
                       ),
                     );
                   },

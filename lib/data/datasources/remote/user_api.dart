@@ -59,6 +59,9 @@ class UserApi with ApiHelpers {
       if (fullName != null) body['name'] = fullName;
       if (email != null) body['email'] = email;
       if (phone != null) body['phone'] = phone;
+      if (notificationsEnabled != null) {
+        body['notifications_enabled'] = notificationsEnabled;
+      }
 
       await _client.post(ApiConstants.parentUpdateProfile, data: body);
 

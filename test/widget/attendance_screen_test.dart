@@ -166,7 +166,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // UI uses error.toString(), so it will be "Exception: Tarmoq xatosi"
+      // UI shows the normalized human-readable API error.
       expect(find.textContaining('Tarmoq xatosi'), findsOneWidget);
     });
   });

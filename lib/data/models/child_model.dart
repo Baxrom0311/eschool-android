@@ -35,6 +35,15 @@ class ChildModel extends Equatable {
   @JsonKey(name: 'birth_date')
   final String? birthDate;
 
+  @JsonKey(name: 'xp', readValue: _xpReader, defaultValue: 0)
+  final int xp;
+
+  @JsonKey(name: 'coins', readValue: _coinsReader, defaultValue: 0)
+  final int coins;
+
+  @JsonKey(name: 'level', readValue: _levelReader, defaultValue: 1)
+  final int level;
+
   const ChildModel({
     required this.id,
     required this.fullName,
@@ -44,6 +53,9 @@ class ChildModel extends Equatable {
     this.averageGrade = 0.0,
     this.attendancePercentage = 0,
     this.birthDate,
+    this.xp = 0,
+    this.coins = 0,
+    this.level = 1,
   });
 
   factory ChildModel.fromJson(Map<String, dynamic> json) =>
@@ -60,6 +72,9 @@ class ChildModel extends Equatable {
     double? averageGrade,
     int? attendancePercentage,
     String? birthDate,
+    int? xp,
+    int? coins,
+    int? level,
   }) {
     return ChildModel(
       id: id ?? this.id,
@@ -70,6 +85,9 @@ class ChildModel extends Equatable {
       averageGrade: averageGrade ?? this.averageGrade,
       attendancePercentage: attendancePercentage ?? this.attendancePercentage,
       birthDate: birthDate ?? this.birthDate,
+      xp: xp ?? this.xp,
+      coins: coins ?? this.coins,
+      level: level ?? this.level,
     );
   }
 
@@ -92,6 +110,9 @@ class ChildModel extends Equatable {
         averageGrade,
         attendancePercentage,
         birthDate,
+        xp,
+        coins,
+        level,
       ];
 
   @override
@@ -109,4 +130,19 @@ Object? _classNameReader(Map json, String key) {
   if (json['class'] is Map) return json['class']['name'];
   if (json['group'] is String) return json['group'];
   return 'Sinf yo\'q';
+}
+
+Object? _xpReader(Map json, String key) {
+  if (json['gamification'] is Map) return json['gamification']['xp'];
+  return json['xp'];
+}
+
+Object? _coinsReader(Map json, String key) {
+  if (json['gamification'] is Map) return json['gamification']['coins'];
+  return json['coins'];
+}
+
+Object? _levelReader(Map json, String key) {
+  if (json['gamification'] is Map) return json['gamification']['level'];
+  return json['level'];
 }

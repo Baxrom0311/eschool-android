@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../widgets/chat/message_bubble.dart';
 
@@ -62,6 +63,42 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(error ?? 'Xabar yuborilmadi')));
+  }
+
+  Future<void> _sendFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowMultiple: false,
+      allowedExtensions: const ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+    );
+    final filePath = result?.files.single.path;
+    if (filePath == null || filePath.isEmpty) return;
+
+    final success = await _chatNotifier.sendFile(filePath);
+    if (!mounted) return;
+
+    if (success) {
+      return;
+    }
+
+    final error = ref.read(chatRoomProvider).error;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(error ?? 'Fayl yuborilmadi')));
+  }
+
+  Future<void> _handleMenuAction(String action) async {
+    switch (action) {
+      case 'refresh':
+        final conversationId = widget.chatData?['id'];
+        if (conversationId is int) {
+          await _chatNotifier.openConversation(conversationId);
+        }
+        return;
+      case 'back':
+        Navigator.of(context).maybePop();
+        return;
+    }
   }
 
   @override
@@ -134,7 +171,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
+          PopupMenuButton<String>(
+            onSelected: _handleMenuAction,
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'refresh', child: Text('Yangilash')),
+              PopupMenuItem(
+                value: 'back',
+                child: Text('Chatlar ro\'yxatiga qaytish'),
+              ),
+            ],
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -202,7 +248,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                   child: IconButton(
                     icon: const Icon(Icons.attach_file_rounded),
                     color: AppColors.textSecondary,
-                    onPressed: () {},
+                    onPressed: state.isSending ? null : _sendFile,
                   ),
                 ),
                 const SizedBox(width: 12),

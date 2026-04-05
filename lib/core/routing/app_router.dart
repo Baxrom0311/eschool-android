@@ -26,6 +26,7 @@ import '../../presentation/screens/chat/chat_room_screen.dart';
 import '../../presentation/screens/notifications/notifications_screen.dart';
 import '../../presentation/screens/profile/children_list_screen.dart';
 import '../../presentation/screens/profile/change_password_screen.dart';
+import '../../presentation/screens/profile/edit_profile_screen.dart';
 
 import '../../presentation/screens/leaderboard/leaderboard_screen.dart';
 import '../../presentation/screens/conference/conference_screen.dart';
@@ -37,16 +38,15 @@ import '../../presentation/providers/auth_provider.dart';
 
 // Placeholder screens — Developer 1 ularni haqiqiy screenlar bilan almashtiradi
 
-final routerNotifierProvider = ChangeNotifierProvider((ref) => RouterNotifier(ref));
+final routerNotifierProvider = ChangeNotifierProvider(
+  (ref) => RouterNotifier(ref),
+);
 
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
 
   RouterNotifier(this._ref) {
-    _ref.listen<AuthState>(
-      authProvider,
-      (_, __) => notifyListeners(),
-    );
+    _ref.listen<AuthState>(authProvider, (_, __) => notifyListeners());
   }
 
   String? redirect(BuildContext context, GoRouterState state) {
@@ -55,7 +55,8 @@ class RouterNotifier extends ChangeNotifier {
     final isPublicRoute = AppRouter.publicRoutes.contains(location);
 
     // Initial check hasn't finished (still checking secure storage on boot)
-    if (authState == const AuthState.initial() && location == RouteNames.splash) {
+    if (authState == const AuthState.initial() &&
+        location == RouteNames.splash) {
       return null;
     }
 
@@ -140,6 +141,10 @@ class AppRouter {
     GoRoute(
       path: RouteNames.childrenList,
       builder: (context, state) => const ChildrenListScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.editProfile,
+      builder: (context, state) => const EditProfileScreen(),
     ),
     GoRoute(
       path: RouteNames.changePassword,

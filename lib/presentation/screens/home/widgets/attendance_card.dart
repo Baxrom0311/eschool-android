@@ -4,11 +4,13 @@ import '../../../../core/constants/app_colors.dart';
 class AttendanceCard extends StatelessWidget {
   final double attendanceRate;
   final int score;
+  final int level;
 
   const AttendanceCard({
     super.key,
     required this.attendanceRate,
     required this.score,
+    required this.level,
   });
 
   @override
@@ -39,13 +41,33 @@ class AttendanceCard extends StatelessWidget {
           Expanded(
             child: _buildStatItem('Davomat', '$attendanceRate%'),
           ),
-          Container(
-            width: 1,
-            height: 60,
-            color: Colors.white.withValues(alpha: 0.3),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 1,
+                height: 60,
+                color: Colors.white.withValues(alpha: 0.3),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Lvl $level',
+                  style: const TextStyle(
+                    color: AppColors.primaryBlue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
           ),
           Expanded(
-            child: _buildStatItem('Ballar', '$score', alignEnd: true),
+            child: _buildStatItem('Coinlar', '$score', alignEnd: true),
           ),
         ],
       ),

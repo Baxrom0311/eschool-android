@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/network/api_error_handler.dart';
 import '../../../core/routing/route_names.dart';
 import '../../../core/utils/validators.dart';
 import '../../providers/auth_provider.dart';
@@ -60,7 +61,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       await _completeAuthFlow(defaultError: 'Kirish amalga oshmadi');
     } catch (e) {
-      _showError('Kirish amalga oshmadi: ${e.toString()}');
+      _showError(
+        ApiErrorHandler.readableMessage(e, fallback: 'Kirish amalga oshmadi'),
+      );
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);

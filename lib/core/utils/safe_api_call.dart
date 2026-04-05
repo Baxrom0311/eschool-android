@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 
 import '../error/exceptions.dart';
 import '../error/failures.dart';
+import '../network/api_error_handler.dart';
 
 /// Barcha repository metodlari uchun umumiy xatolik qayta ishlash wrapper.
 ///
@@ -33,6 +34,11 @@ Future<Either<Failure, T>> safeApiCall<T>(
   } on ServerException catch (e) {
     return Left(ServerFailure(e.message));
   } catch (e) {
-    return Left(ServerFailure('$errorMessage: ${e.toString()}'));
+    final message = ApiErrorHandler.readableMessage(e, fallback: errorMessage);
+    return Left(
+      ServerFailure(
+        message == errorMessage ? message : '$errorMessage: $message',
+      ),
+    );
   }
 }

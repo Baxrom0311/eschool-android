@@ -1,7 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/network/api_error_handler.dart';
 import '../../data/datasources/remote/conference_api.dart';
 import '../../data/models/conference_model.dart';
 import 'auth_provider.dart';
+import 'user_provider.dart';
+
+const _undefined = Object();
 
 final conferenceApiProvider = Provider<ConferenceApi>((ref) {
   final dioClient = ref.watch(dioClientProvider);
@@ -9,79 +14,121 @@ final conferenceApiProvider = Provider<ConferenceApi>((ref) {
 });
 
 class ConferenceState {
+  final List<ConferenceModel> availableSlots;
   final List<ConferenceModel> bookings;
-  final List<Map<String, dynamic>> availableSlots;
   final bool isLoading;
+  final bool isBooking;
   final String? error;
+  final int? childId;
 
   const ConferenceState({
-    this.bookings = const [],
     this.availableSlots = const [],
+    this.bookings = const [],
     this.isLoading = false,
+    this.isBooking = false,
     this.error,
+    this.childId,
   });
 
   ConferenceState copyWith({
+    List<ConferenceModel>? availableSlots,
     List<ConferenceModel>? bookings,
-    List<Map<String, dynamic>>? availableSlots,
     bool? isLoading,
-    String? error,
-    bool clearError = false,
+    bool? isBooking,
+    Object? error = _undefined,
+    Object? childId = _undefined,
   }) {
     return ConferenceState(
-      bookings: bookings ?? this.bookings,
       availableSlots: availableSlots ?? this.availableSlots,
+      bookings: bookings ?? this.bookings,
       isLoading: isLoading ?? this.isLoading,
-      error: clearError ? null : (error ?? this.error),
+      isBooking: isBooking ?? this.isBooking,
+      error: error == _undefined ? this.error : error as String?,
+      childId: childId == _undefined ? this.childId : childId as int?,
     );
   }
 }
 
 class ConferenceNotifier extends StateNotifier<ConferenceState> {
-  final ConferenceApi _api;
+  ConferenceNotifier(this._api, this._ref) : super(const ConferenceState());
 
-  ConferenceNotifier(this._api) : super(const ConferenceState());
+  final ConferenceApi _api;
+  final Ref _ref;
 
   Future<void> loadBookings(int childId) async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(isLoading: true, error: null, childId: childId);
     try {
-      final bookings = await _api.getMyBookings(childId);
       final availableSlots = await _api.getAvailableSlots(childId);
+      final bookings = await _api.getMyBookings(childId);
+
       state = state.copyWith(
-        bookings: bookings,
         availableSlots: availableSlots,
+        bookings: bookings,
         isLoading: false,
+        error: null,
+        childId: childId,
       );
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        error: ApiErrorHandler.readableMessage(error),
+        childId: childId,
+      );
     }
   }
 
   Future<bool> bookConference({
     required int childId,
-    required int teacherId,
-    required String date,
-    required String timeSlot,
-    String? medium,
+    required int conferenceSlotId,
+    String? note,
   }) async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(isBooking: true, error: null, childId: childId);
     try {
       await _api.bookConference(
         childId: childId,
-        teacherId: teacherId,
-        date: date,
-        timeSlot: timeSlot,
-        medium: medium,
+        conferenceSlotId: conferenceSlotId,
+        note: note,
       );
+      _ref.invalidate(availableConferencesProvider);
+      _ref.invalidate(myBookingsProvider);
       await loadBookings(childId);
+      state = state.copyWith(isBooking: false, error: null);
       return true;
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+    } catch (error) {
+      state = state.copyWith(
+        isBooking: false,
+        error: ApiErrorHandler.readableMessage(error),
+      );
       return false;
     }
   }
+
+  Future<bool> book(int slotId, int studentId, String? note) {
+    return bookConference(
+      childId: studentId,
+      conferenceSlotId: slotId,
+      note: note,
+    );
+  }
 }
 
-final conferenceProvider = StateNotifierProvider<ConferenceNotifier, ConferenceState>((ref) {
-  return ConferenceNotifier(ref.watch(conferenceApiProvider));
+final conferenceProvider =
+    StateNotifierProvider<ConferenceNotifier, ConferenceState>((ref) {
+      return ConferenceNotifier(ref.watch(conferenceApiProvider), ref);
+    });
+
+final availableConferencesProvider = FutureProvider<List<ConferenceModel>>((
+  ref,
+) async {
+  final child = ref.watch(selectedChildProvider);
+  if (child == null) return const [];
+  return ref.watch(conferenceApiProvider).getAvailableSlots(child.id);
 });
+
+final myBookingsProvider = FutureProvider<List<ConferenceModel>>((ref) async {
+  final child = ref.watch(selectedChildProvider);
+  if (child == null) return const [];
+  return ref.watch(conferenceApiProvider).getMyBookings(child.id);
+});
+
+final conferenceBookingControllerProvider = conferenceProvider;

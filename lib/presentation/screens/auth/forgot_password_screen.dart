@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/network/api_error_handler.dart';
 import '../../../core/utils/validators.dart';
 import '../../providers/auth_provider.dart';
 
@@ -57,7 +58,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
       _showSuccess('Tasdiqlash kodi yuborildi');
     } catch (e) {
-      _showError(e.toString());
+      _showError(
+        ApiErrorHandler.readableMessage(
+          e,
+          fallback: 'Tasdiqlash kodini yuborishda xatolik',
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -91,7 +97,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       // Login sahifasiga qaytish
       context.pop();
     } catch (e) {
-      _showError(e.toString());
+      _showError(
+        ApiErrorHandler.readableMessage(
+          e,
+          fallback: 'Parolni yangilashda xatolik',
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -257,8 +268,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.4,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : const Text(
@@ -419,8 +429,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.4,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : const Text(

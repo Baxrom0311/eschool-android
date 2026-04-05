@@ -10,13 +10,15 @@ import '../profile/profile_screen.dart';
 import '../academics/grades_screen.dart';
 import '../payments/payments_screen.dart';
 import '../menu/daily_menu_screen.dart';
-import '../rating/rating_screen.dart';
+import '../leaderboard/leaderboard_screen.dart';
+import '../../providers/leaderboard_provider.dart';
 
 import 'widgets/academic_stats.dart';
 import 'widgets/attendance_card.dart';
 import 'widgets/daily_menu_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/schedule_list.dart';
+import 'widgets/services_grid.dart';
 
 /// Home Screen - Main App Screen with Bottom Navigation
 class HomeScreen extends ConsumerStatefulWidget {
@@ -163,6 +165,7 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
     // uchun Home ochilganda grades/attendance prefetch qilmaymiz.
     // Tegishli ekran ochilganda ular alohida yuklanadi.
     ref.read(ratingProvider.notifier).loadChildRating(child.id);
+    ref.read(leaderboardProvider.notifier).loadData(child.id);
   }
 
   @override
@@ -172,9 +175,7 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
     // Watch AsyncValues
     final attendanceAsync = ref.watch(attendanceProvider);
     final gradesAsync = ref.watch(gradesProvider);
-    final ratingState = ref.watch(
-      ratingProvider,
-    ); // Rating is still old StateNotifier
+    final ratingState = ref.watch(ratingProvider);
 
     // Listen for child changes to reload
     ref.listen(selectedChildProvider, (previous, next) {
@@ -215,7 +216,6 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
     gpa = gpa.clamp(0.0, 5.0);
 
     // Rating Score/Rank
-    final score = ratingState.childRating?.totalScore.round() ?? 0;
     final rank = ratingState.childRating?.rank;
 
     return Container(
@@ -235,10 +235,15 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
                       .round()
                       .clamp(0, 100)
                       .toDouble(),
-                  score: score,
+                  score: child?.coins ?? 0,
+                  level: child?.level ?? 1,
                 ),
 
                 const ScheduleList(),
+
+                const SizedBox(height: 24),
+
+                const ServicesGrid(),
 
                 const SizedBox(height: 24),
 
@@ -282,7 +287,7 @@ class _EducationTabScreen extends StatelessWidget {
             ),
           ),
           const Expanded(
-            child: TabBarView(children: [GradesScreen(), RatingScreen()]),
+            child: TabBarView(children: [GradesScreen(), LeaderboardScreen()]),
           ),
         ],
       ),

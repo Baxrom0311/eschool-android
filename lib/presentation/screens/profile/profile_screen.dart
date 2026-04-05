@@ -174,9 +174,7 @@ class ProfileScreen extends ConsumerWidget {
                   title: 'Shaxsiy ma\'lumotlar',
                   subtitle: 'Profilingizni tahrirlash',
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tez orada...')),
-                    );
+                    context.push(RouteNames.editProfile);
                   },
                 ),
                 const SizedBox(height: 8),

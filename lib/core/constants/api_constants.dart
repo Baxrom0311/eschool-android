@@ -80,15 +80,24 @@ class ApiConstants {
   static String childRating(int childId) => parentChildProfile(childId);
 
   // ─── Gamification & Leaderboard ───
+  static const String leaderboardGlobal = '/api/leaderboard/global';
+  static const String leaderboardClass = '/api/leaderboard/class';
   static const String leaderboardCoins = '/api/leaderboard/coins';
   static const String leaderboardBadges = '/api/leaderboard/badges';
   static const String leaderboardMyBadges = '/api/leaderboard/my-badges';
 
   // ─── Absence Excuses & Conference ───
   static const String absenceExcuses = '/api/excuses';
+  static const String submitAbsenceExcuse = '/api/parent/excuses';
   static const String conferenceAvailable = '/api/parent/conferences/available';
   static const String conferenceBook = '/api/parent/conferences/book';
   static const String conferenceMyBookings = '/api/parent/conferences/my-bookings';
+
+  // ─── Library ───
+  static const String libraryBooks = '/api/library/books';
+  static const String libraryMyLoans = '/api/library/my-loans';
+  static String borrowBook(int id) => '/api/library/books/$id/borrow';
+  static String returnBook(int id) => '/api/library/loans/$id/return';
 
   // ─── Assignments ───
   static String submitAssignment(int id) => parentHomeworkSubmit(id);

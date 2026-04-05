@@ -36,8 +36,8 @@ class AbsenceExcuseApi with ApiHelpers {
     try {
       final data = {
         'student_id': childId,
-        'date_from': dateFrom,
-        'date_to': dateTo,
+        'excuse_date': dateFrom,
+        if (dateTo.isNotEmpty) 'excuse_date_to': dateTo,
         'reason': reason,
       };
 

@@ -115,7 +115,7 @@ void main() {
         await tester.pumpWidget(createWidgetUnderTest());
         await tester.pumpAndSettle();
 
-        // Shaxsiy ma'lumotlar -> SnackBar 'Tez orada...'
+        // Shaxsiy ma'lumotlar -> Edit profile
         await tester.dragUntilVisible(
           find.text('Shaxsiy ma\'lumotlar'),
           find.byType(Scrollable),
@@ -123,11 +123,8 @@ void main() {
         );
         await tester.pumpAndSettle();
         await tester.tap(find.text('Shaxsiy ma\'lumotlar'));
-        await tester.pump(
-          const Duration(milliseconds: 100),
-        ); // allow snackbar to show
-        expect(find.text('Tez orada...'), findsOneWidget);
-        await tester.pumpAndSettle(); // clear snackbar
+        await tester.pumpAndSettle();
+        verify(() => mockGoRouter.push(RouteNames.editProfile)).called(1);
 
         // Parolni o'zgartirish
         await tester.ensureVisible(find.text('Parolni o\'zgartirish'));

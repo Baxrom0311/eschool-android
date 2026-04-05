@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+
 import '../constants/app_strings.dart';
+import '../error/exceptions.dart';
 
 /// DioException → foydalanuvchi uchun tushunarli xabar
 class ApiErrorHandler {
@@ -27,7 +29,23 @@ class ApiErrorHandler {
       }
     }
 
-    return AppStrings.errorGeneric;
+    return readableMessage(error);
+  }
+
+  static String readableMessage(
+    Object? error, {
+    String fallback = AppStrings.errorGeneric,
+  }) {
+    if (error == null) return fallback;
+    if (error is DioException) return handleError(error);
+    if (error is ServerException) return error.message;
+    if (error is NetworkException) return error.message;
+    if (error is AuthException) return error.message;
+    if (error is ValidationException) return error.message;
+
+    final rawMessage = error is String ? error : error.toString();
+    final normalized = _normalizeMessage(rawMessage);
+    return normalized.isEmpty ? fallback : normalized;
   }
 
   static String _handleStatusCode(Response? response) {
@@ -42,7 +60,7 @@ class ApiErrorHandler {
     if (data is Map<String, dynamic>) {
       final message = data['message'] ?? data['error'];
       if (message != null && message is String && message.isNotEmpty) {
-        return message;
+        return readableMessage(message);
       }
     }
 
@@ -92,5 +110,17 @@ class ApiErrorHandler {
     }
 
     return null;
+  }
+
+  static String _normalizeMessage(String rawMessage) {
+    var message = rawMessage.trim();
+    if (message.isEmpty || message == 'null') return '';
+
+    message = message.replaceFirst(RegExp(r'^[A-Za-z_ ]*Exception:\s*'), '');
+    message = message.replaceFirst(RegExp(r'^[A-Za-z_ ]*Error:\s*'), '');
+    message = message.replaceFirst('Bad state: ', '');
+    message = message.replaceFirst('Invalid argument(s): ', '');
+
+    return message.trim();
   }
 }

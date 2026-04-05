@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/storage_keys.dart';
+import '../../core/network/api_error_handler.dart';
 import '../../core/storage/shared_prefs_service.dart';
 import '../../core/storage/local_cache_service.dart';
 import '../../data/datasources/remote/academic_api.dart';
@@ -87,7 +88,7 @@ class GradesNotifier extends AutoDisposeAsyncNotifier<GradesData> {
         quarter: targetQuarter,
       );
       final grades = gradesResult.fold(
-        (l) => throw Exception(l.message),
+        (l) => throw ApiErrorHandler.readableMessage(l.message),
         (r) => r,
       );
       final summaryResult = await repository.getGradeSummary(childId);
@@ -237,7 +238,7 @@ class ScheduleNotifier extends AutoDisposeAsyncNotifier<ScheduleData> {
     try {
       final result = await repository.getSchedule(childId);
       final data = result.fold(
-        (l) => throw Exception(l.message),
+        (l) => throw ApiErrorHandler.readableMessage(l.message),
         (r) =>
             ScheduleData(fullSchedule: r, selectedDay: DateTime.now().weekday),
       );
@@ -351,7 +352,7 @@ class AssignmentsNotifier extends AutoDisposeAsyncNotifier<AssignmentsData> {
     try {
       final result = await repository.getAssignments(childId, status: status);
       final assignments = result.fold(
-        (l) => throw Exception(l.message),
+        (l) => throw ApiErrorHandler.readableMessage(l.message),
         (r) => r,
       );
 
@@ -399,7 +400,7 @@ class AssignmentsNotifier extends AutoDisposeAsyncNotifier<AssignmentsData> {
     if (childId == null) {
       if (cachedDetails == null) {
         state = AsyncValue.error(
-          Exception('Farzand tanlanmagan'),
+          ApiErrorHandler.readableMessage('Farzand tanlanmagan'),
           StackTrace.current,
         );
       }
@@ -415,7 +416,10 @@ class AssignmentsNotifier extends AutoDisposeAsyncNotifier<AssignmentsData> {
     result.fold(
       (l) {
         if (cachedDetails != null) return;
-        state = AsyncValue.error(Exception(l.message), StackTrace.current);
+        state = AsyncValue.error(
+          ApiErrorHandler.readableMessage(l.message),
+          StackTrace.current,
+        );
       },
       (details) {
         final baseAssignments =
@@ -572,7 +576,7 @@ class AttendanceNotifier extends AutoDisposeAsyncNotifier<AttendanceData> {
         month: month,
       );
       final records = recordsResult.fold(
-        (l) => throw Exception(l.message),
+        (l) => throw ApiErrorHandler.readableMessage(l.message),
         (r) => r,
       );
       final summary = _buildSummaryFromRecords(records);

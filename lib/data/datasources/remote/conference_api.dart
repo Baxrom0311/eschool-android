@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/conference_model.dart';
@@ -9,16 +10,14 @@ class ConferenceApi with ApiHelpers {
 
   ConferenceApi(this._client);
 
-  Future<List<Map<String, dynamic>>> getAvailableSlots(int childId) async {
+  Future<List<ConferenceModel>> getAvailableSlots(int childId) async {
     try {
-      final response = await _client.get(
-        ApiConstants.conferenceAvailable,
-        queryParameters: {'student_id': childId},
+      final response = await _client.get(ApiConstants.conferenceAvailable);
+      return parseListResponse(
+        response.data,
+        ConferenceModel.fromJson,
+        listKey: 'slots',
       );
-      // Returns raw available slots map representing available teachers and time slots
-      return response.data['available_slots'] is List 
-        ? List<Map<String, dynamic>>.from(response.data['available_slots']) 
-        : [];
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       if (status == 404) return [];
@@ -45,20 +44,16 @@ class ConferenceApi with ApiHelpers {
 
   Future<void> bookConference({
     required int childId,
-    required int teacherId,
-    required String date,
-    required String timeSlot,
-    String? medium,
+    required int conferenceSlotId,
+    String? note,
   }) async {
     try {
       await _client.post(
         ApiConstants.conferenceBook,
         data: {
           'student_id': childId,
-          'teacher_id': teacherId,
-          'date': date,
-          'time_slot': timeSlot,
-          if (medium != null) 'medium': medium,
+          'slot_id': conferenceSlotId,
+          if (note != null && note.isNotEmpty) 'note': note,
         },
       );
     } on DioException catch (e) {

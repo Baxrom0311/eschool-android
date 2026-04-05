@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../data/models/schedule_model.dart';
 import '../../../providers/academic_provider.dart';
@@ -60,7 +61,9 @@ class ScheduleList extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Xatolik: $err')),
+            error: (err, stack) => Center(
+              child: Text('Xatolik: ${ApiErrorHandler.readableMessage(err)}'),
+            ),
           ),
         ),
       ],

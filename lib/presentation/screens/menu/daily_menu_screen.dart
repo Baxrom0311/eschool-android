@@ -6,6 +6,7 @@ import '../../providers/user_provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../widgets/menu/meal_card.dart';
+import '../../widgets/common/app_state_view.dart';
 
 /// Daily Menu Screen - Weekly food schedule
 class DailyMenuScreen extends ConsumerStatefulWidget {
@@ -197,31 +198,30 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
 
           // ─── Meals List Section ───
           Expanded(
-            child: state.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : state.error != null
-                ? Center(child: Text(state.error!))
-                : meals.isEmpty
-                ? const Center(
-                    child: Text('Tanlangan kun uchun menyu mavjud emas'),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                    itemCount: meals.length,
-                    itemBuilder: (context, index) {
-                      final meal = meals[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: MealCard(
-                          title: meal['title'] as String,
-                          time: meal['time'] as String,
-                          calories: meal['calories'] as String,
-                          imageUrl: meal['imageUrl'] as String,
-                          ingredients: meal['ingredients'] as List<String>,
-                        ),
-                      );
-                    },
-                  ),
+            child: AppStateView(
+              isLoading: state.isLoading,
+              errorMessage: state.error,
+              isEmpty: meals.isEmpty && !state.isLoading,
+              emptyMessage: 'Tanlangan kun uchun menyu mavjud emas',
+              onRetry: () => _loadWeeklyMenuForSelectedChild(force: true),
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                itemCount: meals.length,
+                itemBuilder: (context, index) {
+                  final meal = meals[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: MealCard(
+                      title: meal['title'] as String,
+                      time: meal['time'] as String,
+                      calories: meal['calories'] as String,
+                      imageUrl: meal['imageUrl'] as String,
+                      ingredients: meal['ingredients'] as List<String>,
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),

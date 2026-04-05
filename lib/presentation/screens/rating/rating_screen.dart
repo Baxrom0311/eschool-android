@@ -5,6 +5,7 @@ import '../../providers/user_provider.dart';
 import '../../../data/models/rating_model.dart';
 import '../../../data/models/child_model.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../widgets/common/app_state_view.dart';
 
 /// Rating Screen - Class and School student rankings
 class RatingScreen extends ConsumerStatefulWidget {
@@ -154,7 +155,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                         ],
                       ),
                     ),
-                  if (top3.isEmpty && !state.isLoading)
+                  if (top3.isEmpty && !state.isLoading && state.error == null)
                     const Padding(
                       padding: EdgeInsets.all(32),
                       child: Text(
@@ -169,32 +170,41 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
 
           // ─── Rankings List ───
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              itemCount: others.length,
-              itemBuilder: (context, index) {
-                final student = others[index];
+            child: AppStateView(
+              errorMessage: currentList.isEmpty ? state.error : null,
+              isEmpty: !state.isLoading && currentList.isEmpty,
+              emptyMessage: 'Reyting ma\'lumotlari topilmadi',
+              onRetry: _loadSelectedTabData,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
+                itemCount: others.length,
+                itemBuilder: (context, index) {
+                  final student = others[index];
 
-                if (student.isCurrent) {
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                  if (student.isCurrent) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                        ),
                       ),
-                    ),
+                      child: _buildStudentTile(student),
+                    );
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
                     child: _buildStudentTile(student),
                   );
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: _buildStudentTile(student),
-                );
-              },
+                },
+              ),
             ),
           ),
         ],
