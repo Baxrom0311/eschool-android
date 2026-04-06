@@ -25,11 +25,7 @@ class AppErrorWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 64,
-              color: AppColors.textHint,
-            ),
+            Icon(icon, size: 64, color: AppColors.textHint),
             const SizedBox(height: 16),
             Text(
               message ?? AppStrings.errorGeneric,
@@ -43,7 +39,7 @@ class AppErrorWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh, size: 20),
-                label: const Text(AppStrings.retry),
+                label: Text(AppStrings.retry),
               ),
             ],
           ],

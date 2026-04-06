@@ -1,3 +1,5 @@
+import '../constants/app_strings.dart';
+
 /// Form validatsiya funksiyalari
 class Validators {
   Validators._();
@@ -6,8 +8,8 @@ class Validators {
   static String? required(String? value, [String? fieldName]) {
     if (value == null || value.trim().isEmpty) {
       return fieldName != null
-          ? '$fieldName to\'ldirilishi shart'
-          : 'Bu maydon to\'ldirilishi shart';
+          ? '$fieldName ${AppStrings.fieldRequired.toLowerCase()}'
+          : AppStrings.fieldRequired;
     }
     return null;
   }
@@ -15,12 +17,12 @@ class Validators {
   /// Telefon raqamini tekshirish (O'zbekiston formati)
   static String? phone(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Telefon raqamini kiriting';
+      return AppStrings.phoneRequired;
     }
     // +998 XX XXX XX XX
     final cleaned = value.replaceAll(RegExp(r'[\s\-\(\)]'), '');
     if (!RegExp(r'^(\+998|998)?[0-9]{9}$').hasMatch(cleaned)) {
-      return 'Telefon raqami noto\'g\'ri';
+      return AppStrings.invalidPhone;
     }
     return null;
   }
@@ -28,11 +30,11 @@ class Validators {
   /// Email tekshirish
   static String? email(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Email kiriting';
+      return AppStrings.emailRequired;
     }
     final email = value.trim();
     if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
-      return 'Email noto\'g\'ri';
+      return AppStrings.invalidEmail;
     }
     return null;
   }
@@ -40,10 +42,10 @@ class Validators {
   /// Parol tekshirish (minimum 6 belgi)
   static String? password(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Parolni kiriting';
+      return AppStrings.passwordRequired;
     }
     if (value.length < 6) {
-      return 'Parol kamida 6 ta belgi bo\'lishi kerak';
+      return AppStrings.passwordTooShort;
     }
     return null;
   }
@@ -51,10 +53,10 @@ class Validators {
   /// Parollarni solishtirish
   static String? confirmPassword(String? value, String? original) {
     if (value == null || value.isEmpty) {
-      return 'Parolni tasdiqlang';
+      return AppStrings.confirmPasswordRequired;
     }
     if (value != original) {
-      return 'Parollar mos kelmayapti';
+      return AppStrings.passwordsDoNotMatch;
     }
     return null;
   }
@@ -62,7 +64,7 @@ class Validators {
   /// Minimum uzunlik
   static String? minLength(String? value, int min) {
     if (value == null || value.length < min) {
-      return 'Kamida $min ta belgi kiritilishi kerak';
+      return AppStrings.minimumLength(min);
     }
     return null;
   }

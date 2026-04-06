@@ -13,7 +13,7 @@ class ApiErrorHandler {
         case DioExceptionType.connectionTimeout:
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
-          return 'Server bilan aloqa vaqti tugadi. Qayta urinib ko\'ring.';
+          return AppStrings.requestTimeout;
 
         case DioExceptionType.connectionError:
           return AppStrings.noInternet;
@@ -22,7 +22,7 @@ class ApiErrorHandler {
           return _handleStatusCode(error.response);
 
         case DioExceptionType.cancel:
-          return 'So\'rov bekor qilindi';
+          return AppStrings.requestCancelled;
 
         default:
           return AppStrings.errorGeneric;
@@ -32,11 +32,10 @@ class ApiErrorHandler {
     return readableMessage(error);
   }
 
-  static String readableMessage(
-    Object? error, {
-    String fallback = AppStrings.errorGeneric,
-  }) {
-    if (error == null) return fallback;
+  static String readableMessage(Object? error, {String? fallback}) {
+    final effectiveFallback = fallback ?? AppStrings.errorGeneric;
+
+    if (error == null) return effectiveFallback;
     if (error is DioException) return handleError(error);
     if (error is ServerException) return error.message;
     if (error is NetworkException) return error.message;
@@ -45,7 +44,7 @@ class ApiErrorHandler {
 
     final rawMessage = error is String ? error : error.toString();
     final normalized = _normalizeMessage(rawMessage);
-    return normalized.isEmpty ? fallback : normalized;
+    return normalized.isEmpty ? effectiveFallback : normalized;
   }
 
   static String _handleStatusCode(Response? response) {
@@ -66,13 +65,13 @@ class ApiErrorHandler {
 
     switch (response.statusCode) {
       case 400:
-        return 'Noto\'g\'ri so\'rov';
+        return AppStrings.badRequest;
       case 401:
         return AppStrings.errorAuth;
       case 403:
-        return 'Ruxsat berilmagan';
+        return AppStrings.forbidden;
       case 404:
-        return 'Ma\'lumot topilmadi';
+        return AppStrings.notFound;
       case 500:
         return AppStrings.errorServer;
       default:

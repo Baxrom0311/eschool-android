@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_locale.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/api_error_handler.dart';
 import '../../../core/routing/route_names.dart';
 import '../../../core/utils/validators.dart';
+import '../../providers/app_locale_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 
@@ -40,11 +43,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    final l10n = context.l10n;
     final authState = ref.read(authProvider);
     if (_isSubmitting || authState.isLoading) return;
 
     if (authState.isAuthenticated) {
-      await _completeAuthFlow(defaultError: 'Kirish amalga oshmadi');
+      await _completeAuthFlow(defaultError: l10n.loginFailed);
       return;
     }
 
@@ -59,10 +63,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             username: _loginController.text.trim(),
             password: _passwordController.text,
           );
-      await _completeAuthFlow(defaultError: 'Kirish amalga oshmadi');
+      await _completeAuthFlow(defaultError: l10n.loginFailed);
     } catch (e) {
       _showError(
-        ApiErrorHandler.readableMessage(e, fallback: 'Kirish amalga oshmadi'),
+        ApiErrorHandler.readableMessage(e, fallback: l10n.loginFailed),
       );
     } finally {
       if (mounted) {
@@ -94,7 +98,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final userState = ref.read(userProvider);
     if (userState.user == null) {
-      _showError(userState.error ?? 'Profil ma\'lumotlarini yuklashda xatolik');
+      _showError(userState.error ?? context.l10n.profileLoadError);
       return;
     }
 
@@ -114,6 +118,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final currentLocale = ref.watch(appLocaleProvider);
     final size = MediaQuery.of(context).size;
     final topHeight = size.height * 0.4;
     final isLoading = ref.watch(authProvider).isLoading;
@@ -155,8 +161,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
                             child: Row(
                               children: [
-                                const Text(
-                                  'Login',
+                                Text(
+                                  l10n.loginHeader,
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 14,
@@ -164,8 +170,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                 ),
                                 const Spacer(),
+                                PopupMenuButton<AppLocale>(
+                                  tooltip: l10n.changeLanguage,
+                                  initialValue: currentLocale,
+                                  onSelected: (locale) {
+                                    ref
+                                        .read(appLocaleProvider.notifier)
+                                        .setLocale(locale);
+                                  },
+                                  color: Colors.white,
+                                  itemBuilder: (context) => AppLocale.values
+                                      .map(
+                                        (locale) => PopupMenuItem<AppLocale>(
+                                          value: locale,
+                                          child: Text(locale.nativeLabel),
+                                        ),
+                                      )
+                                      .toList(),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.14,
+                                      ),
+                                      borderRadius: BorderRadius.circular(999),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      currentLocale.code.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
                                 Text(
-                                  'Asosiy ekran',
+                                  l10n.homeScreen,
                                   style: TextStyle(
                                     color: Colors.white.withValues(alpha: 0.75),
                                     fontSize: 12,
@@ -190,8 +240,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 18),
-                          const Text(
-                            'Xush kelibsiz!',
+                          Text(
+                            l10n.welcome,
                             style: TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.w700,
@@ -201,7 +251,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            'Tizimga kirish uchun\nma\'lumotlaringizni kiriting',
+                            l10n.loginHint,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 17,
@@ -241,7 +291,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildSectionLabel('EMAIL'),
+                          _buildSectionLabel(l10n.emailSection),
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _loginController,
@@ -249,7 +299,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             textInputAction: TextInputAction.next,
                             validator: Validators.email,
                             decoration: InputDecoration(
-                              hintText: 'Masalan: parent11@ranch.local',
+                              hintText: l10n.emailExample,
                               prefixIcon: const Icon(
                                 Icons.alternate_email_rounded,
                                 color: AppColors.textHint,
@@ -269,7 +319,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const SizedBox(height: 16),
                           Row(
                             children: [
-                              _buildSectionLabel('PAROL'),
+                              _buildSectionLabel(l10n.passwordSection),
                               const Spacer(),
                               TextButton(
                                 onPressed: () =>
@@ -280,8 +330,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   tapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
-                                child: const Text(
-                                  'Unutdingizmi?',
+                                child: Text(
+                                  l10n.forgotPasswordShort,
                                   style: TextStyle(
                                     color: AppColors.primaryBlue,
                                     fontSize: 12.5,
@@ -301,15 +351,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 _handleLogin();
                               }
                             },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Parol kiriting';
-                              }
-                              if (value.length < 6) {
-                                return 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak';
-                              }
-                              return null;
-                            },
+                            validator: Validators.password,
                             decoration: InputDecoration(
                               hintText: '••••••••',
                               prefixIcon: const Icon(
@@ -367,12 +409,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                             ),
                                       ),
                                     )
-                                  : const Row(
+                                  : Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          'Kirish',
+                                          l10n.loginButton,
                                           style: TextStyle(
                                             fontSize: 19,
                                             fontWeight: FontWeight.w700,
@@ -398,7 +440,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   horizontal: 12,
                                 ),
                                 child: Text(
-                                  'YOKI',
+                                  l10n.orLabel,
                                   style: TextStyle(
                                     color: AppColors.textSecondary.withValues(
                                       alpha: 0.8,
@@ -421,20 +463,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             children: [
                               Expanded(
                                 child: _AuthOptionCard(
-                                  label: 'Google',
+                                  label: l10n.googleLabel,
                                   icon: Icons.g_mobiledata_rounded,
                                   onTap: isBusy
                                       ? null
-                                      : () => _showError(
-                                          'Google orqali kirish tez kunda ishga tushiriladi',
-                                        ),
+                                      : () => _showError(l10n.googleSoon),
                                   iconColor: AppColors.primaryBlue,
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: _AuthOptionCard(
-                                  label: 'QR Kod',
+                                  label: l10n.qrCodeLabel,
                                   icon: Icons.qr_code_2_rounded,
                                   onTap: isBusy ? null : _handleQrLogin,
                                   iconColor: AppColors.textPrimary,
@@ -443,10 +483,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ],
                           ),
                           const SizedBox(height: 20),
-                          const Text(
-                            'Hisob administrator tomonidan yaratiladi',
+                          Text(
+                            l10n.accountCreatedByAdmin,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.textHint,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,

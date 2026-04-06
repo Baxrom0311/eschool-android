@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_locale.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/academic_provider.dart';
+import '../../providers/app_locale_provider.dart';
 import '../../providers/rating_provider.dart';
 import '../../providers/user_provider.dart';
 import '../profile/profile_screen.dart';
@@ -57,13 +60,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final currentLocale = ref.watch(appLocaleProvider);
     final showMainAppBar = _currentIndex <= 1;
 
     return Scaffold(
       appBar: showMainAppBar
           ? AppBar(
               title: Text(
-                _currentIndex == 0 ? 'E-School' : 'Ta\'lim',
+                _currentIndex == 0 ? l10n.homeTitle : l10n.academicsTitle,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               backgroundColor: Colors.white,
@@ -71,6 +76,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               elevation: 0,
               centerTitle: false,
               actions: [
+                PopupMenuButton<AppLocale>(
+                  tooltip: l10n.changeLanguage,
+                  initialValue: currentLocale,
+                  onSelected: (locale) {
+                    ref.read(appLocaleProvider.notifier).setLocale(locale);
+                  },
+                  itemBuilder: (context) => AppLocale.values
+                      .map(
+                        (locale) => PopupMenuItem<AppLocale>(
+                          value: locale,
+                          child: Text(locale.nativeLabel),
+                        ),
+                      )
+                      .toList(),
+                  icon: const Icon(Icons.translate_rounded),
+                ),
                 IconButton(
                   onPressed: () {
                     context.push(RouteNames.notifications);
@@ -97,26 +118,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         selectedFontSize: 12,
         unselectedFontSize: 12,
         elevation: 8,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.grid_view_rounded),
-            label: 'Asosiy',
+            icon: const Icon(Icons.grid_view_rounded),
+            label: l10n.home,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.school_rounded),
-            label: 'Ta\'lim',
+            icon: const Icon(Icons.school_rounded),
+            label: l10n.academics,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_rounded),
-            label: 'Ovqat',
+            icon: const Icon(Icons.restaurant_rounded),
+            label: l10n.menu,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_rounded),
-            label: 'To\'lov',
+            icon: const Icon(Icons.account_balance_wallet_rounded),
+            label: l10n.paymentShort,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'Profil',
+            icon: const Icon(Icons.person_rounded),
+            label: l10n.profile,
           ),
         ],
       ),

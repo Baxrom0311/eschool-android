@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_strings.dart';
+import '../../core/localization/app_localizations.dart';
 
 /// Asosiy pastki navigatsiya paneli
 class BottomNavBar extends StatelessWidget {
@@ -15,6 +15,8 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.white,
@@ -34,31 +36,31 @@ class BottomNavBar extends StatelessWidget {
             children: [
               _NavItem(
                 icon: Icons.grid_view_rounded,
-                label: AppStrings.home,
+                label: l10n.home,
                 isActive: currentIndex == 0,
                 onTap: () => onTap(0),
               ),
               _NavItem(
                 icon: Icons.menu_book_outlined,
-                label: AppStrings.academics,
+                label: l10n.academics,
                 isActive: currentIndex == 1,
                 onTap: () => onTap(1),
               ),
               _NavItem(
                 icon: Icons.restaurant_outlined,
-                label: AppStrings.menu,
+                label: l10n.menu,
                 isActive: currentIndex == 2,
                 onTap: () => onTap(2),
               ),
               _NavItem(
                 icon: Icons.account_balance_wallet_outlined,
-                label: AppStrings.payments,
+                label: l10n.paymentShort,
                 isActive: currentIndex == 3,
                 onTap: () => onTap(3),
               ),
               _NavItem(
                 icon: Icons.person_outline,
-                label: AppStrings.profile,
+                label: l10n.profile,
                 isActive: currentIndex == 4,
                 onTap: () => onTap(4),
               ),
