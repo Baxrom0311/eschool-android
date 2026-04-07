@@ -9,7 +9,9 @@ import 'package:parent_school_app/presentation/providers/rating_provider.dart';
 import 'package:parent_school_app/presentation/providers/user_provider.dart';
 import 'package:parent_school_app/presentation/screens/rating/rating_screen.dart';
 
-class MockRatingNotifier extends StateNotifier<RatingState> with Mock implements RatingNotifier {
+class MockRatingNotifier extends StateNotifier<RatingState>
+    with Mock
+    implements RatingNotifier {
   MockRatingNotifier(super.state);
 }
 
@@ -24,7 +26,13 @@ void main() {
   );
 
   final testClassRating = [
-    const RatingModel(id: 1, studentName: 'Ali', rank: 1, totalScore: 100, isCurrent: true),
+    const RatingModel(
+      id: 1,
+      studentName: 'Ali',
+      rank: 1,
+      totalScore: 100,
+      isCurrent: true,
+    ),
     const RatingModel(id: 2, studentName: 'Vali', rank: 2, totalScore: 90),
     const RatingModel(id: 3, studentName: 'Gani', rank: 3, totalScore: 80),
     const RatingModel(id: 4, studentName: 'Sami', rank: 4, totalScore: 70),
@@ -33,15 +41,18 @@ void main() {
 
   final testSchoolRating = [
     const RatingModel(id: 6, studentName: 'Bobur', rank: 1, totalScore: 150),
-    const RatingModel(id: 1, studentName: 'Ali', rank: 2, totalScore: 100, isCurrent: true),
+    const RatingModel(
+      id: 1,
+      studentName: 'Ali',
+      rank: 2,
+      totalScore: 100,
+      isCurrent: true,
+    ),
   ];
 
   setUp(() {
     mockRatingNotifier = MockRatingNotifier(
-      RatingState(
-        classRating: testClassRating,
-        schoolRating: testSchoolRating,
-      ),
+      RatingState(classRating: testClassRating, schoolRating: testSchoolRating),
     );
   });
 
@@ -51,9 +62,7 @@ void main() {
         ratingProvider.overrideWith((ref) => mockRatingNotifier),
         selectedChildProvider.overrideWithValue(testChild),
       ],
-      child: const MaterialApp(
-        home: RatingScreen(),
-      ),
+      child: const MaterialApp(home: RatingScreen()),
     );
   }
 
@@ -62,15 +71,19 @@ void main() {
       mockRatingNotifier = MockRatingNotifier(
         const RatingState(isLoading: true, classRating: []),
       );
-      when(() => mockRatingNotifier.loadClassRating(any())).thenAnswer((_) async {});
+      when(
+        () => mockRatingNotifier.loadClassRating(any()),
+      ).thenAnswer((_) async {});
 
       await tester.pumpWidget(createWidgetUnderTest());
-      
+
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('renders class rating correctly with podium', (tester) async {
-      when(() => mockRatingNotifier.loadClassRating(10)).thenAnswer((_) async {});
+      when(
+        () => mockRatingNotifier.loadClassRating(10),
+      ).thenAnswer((_) async {});
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -84,14 +97,18 @@ void main() {
       // Check remaining list elements
       expect(find.text('Sami'), findsOneWidget);
       expect(find.text('Kari'), findsOneWidget);
-      expect(find.text('70.0 ball'), findsOneWidget);
-      
+      expect(find.text('70 ball'), findsOneWidget);
+
       verify(() => mockRatingNotifier.loadClassRating(10)).called(1);
     });
 
     testWidgets('switches to school rating on tab press', (tester) async {
-      when(() => mockRatingNotifier.loadClassRating(10)).thenAnswer((_) async {});
-      when(() => mockRatingNotifier.loadSchoolRating()).thenAnswer((_) async {});
+      when(
+        () => mockRatingNotifier.loadClassRating(10),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockRatingNotifier.loadSchoolRating(),
+      ).thenAnswer((_) async {});
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -102,7 +119,7 @@ void main() {
 
       expect(find.text('Bobur'), findsOneWidget);
       // Ali is rank 2 in school
-      expect(find.text('150.0'), findsOneWidget); 
+      expect(find.text('150.0'), findsOneWidget);
 
       verify(() => mockRatingNotifier.loadSchoolRating()).called(1);
     });
@@ -111,7 +128,9 @@ void main() {
       mockRatingNotifier = MockRatingNotifier(
         const RatingState(classRating: [], isLoading: false),
       );
-      when(() => mockRatingNotifier.loadClassRating(any())).thenAnswer((_) async {});
+      when(
+        () => mockRatingNotifier.loadClassRating(any()),
+      ).thenAnswer((_) async {});
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

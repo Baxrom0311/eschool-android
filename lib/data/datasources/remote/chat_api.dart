@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/chat_model.dart';
 import 'api_helpers.dart';
@@ -10,6 +11,12 @@ class ChatApi with ApiHelpers {
   final DioClient _client;
 
   ChatApi(this._client);
+
+  AppLocalizations get _l10n => AppLocalizations.current;
+
+  String _defaultSenderName(bool isMine) {
+    return isMine ? _l10n.meLabel : _l10n.teacherLabel;
+  }
 
   /// Suhbatlar ro'yxati
   Future<List<ConversationModel>> getConversations() async {
@@ -24,7 +31,8 @@ class ChatApi with ApiHelpers {
         final contact = Map<String, dynamic>.from(raw);
         return ConversationModel.fromJson({
           'id': toInt(contact['id']),
-          'participant_name': (contact['name'] ?? 'Foydalanuvchi').toString(),
+          'participant_name': (contact['name'] ?? _l10n.userFallbackName)
+              .toString(),
           'participant_role': contact['role']?.toString(),
           'participant_avatar': contact['avatar_url']?.toString(),
           'last_message': contact['last_message']?.toString(),
@@ -47,10 +55,7 @@ class ChatApi with ApiHelpers {
     try {
       final response = await _client.get(
         ApiConstants.messages(conversationId),
-        queryParameters: {
-          'page': page,
-          'per_page': perPage,
-        },
+        queryParameters: {'page': page, 'per_page': perPage},
       );
       final root = asMap(response.data);
       final messages = root['messages'] is List
@@ -74,7 +79,7 @@ class ChatApi with ApiHelpers {
           'content': (row['body'] ?? row['content'] ?? '').toString(),
           'type': row['file_url'] != null ? 'file' : 'text',
           'sender_id': senderId,
-          'sender_name': senderName ?? (isMine ? 'Siz' : 'O\'qituvchi'),
+          'sender_name': senderName ?? _defaultSenderName(isMine),
           'is_mine': isMine,
           'created_at': (row['created_at'] ?? DateTime.now().toIso8601String())
               .toString(),
@@ -126,7 +131,7 @@ class ChatApi with ApiHelpers {
             .toString(),
         'type': type,
         'sender_id': senderId,
-        'sender_name': senderName ?? (isMine ? 'Siz' : 'O\'qituvchi'),
+        'sender_name': senderName ?? _defaultSenderName(isMine),
         'is_mine': isMine,
         'created_at':
             (message['created_at'] ?? DateTime.now().toIso8601String())
@@ -191,7 +196,7 @@ class ChatApi with ApiHelpers {
         'content': (message['body'] ?? fileName).toString(),
         'type': 'file',
         'sender_id': senderId,
-        'sender_name': senderName ?? (isMine ? 'Siz' : 'O\'qituvchi'),
+        'sender_name': senderName ?? _defaultSenderName(isMine),
         'is_mine': isMine,
         'created_at':
             (message['created_at'] ?? DateTime.now().toIso8601String())

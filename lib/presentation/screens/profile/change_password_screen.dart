@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../providers/user_provider.dart';
 
@@ -28,6 +29,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -48,7 +51,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     } else {
       AppSnackBar.show(
         context,
-        'Parol muvaffaqiyatli o\'zgartirildi!',
+        l10n.passwordUpdatedSuccess,
         type: AppSnackBarType.success,
       );
       Navigator.of(context).pop();
@@ -57,8 +60,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Parolni o\'zgartirish')),
+      appBar: AppBar(title: Text(l10n.passwordChangeTitle)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -67,27 +72,27 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
             children: [
               TextFormField(
                 controller: _currentController,
-                decoration: const InputDecoration(labelText: 'Joriy parol'),
+                decoration: InputDecoration(labelText: l10n.currentPasswordLabel),
                 obscureText: true,
-                validator: (v) => v?.isEmpty == true ? 'Kiritish shart' : null,
+                validator: (v) => v?.isEmpty == true ? l10n.fieldRequired : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _newController,
-                decoration: const InputDecoration(labelText: 'Yangi parol'),
+                decoration: InputDecoration(labelText: l10n.newPasswordLabel),
                 obscureText: true,
                 validator: (v) =>
-                    v != null && v.length < 8 ? 'Eng kamida 8 ta belgi' : null,
+                    v != null && v.length < 8 ? l10n.minimumLength(8) : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _confirmController,
-                decoration: const InputDecoration(
-                  labelText: 'Parolni tasdiqlang',
+                decoration: InputDecoration(
+                  labelText: l10n.confirmPasswordLabel,
                 ),
                 obscureText: true,
                 validator: (v) =>
-                    v != _newController.text ? 'Parollar mos kelmadi' : null,
+                    v != _newController.text ? l10n.passwordsDoNotMatch : null,
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -100,7 +105,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Saqlash'),
+                      : Text(l10n.saveAction),
                 ),
               ),
             ],

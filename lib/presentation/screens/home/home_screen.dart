@@ -7,6 +7,7 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/academic_provider.dart';
 import '../../providers/app_locale_provider.dart';
+import '../../providers/app_theme_mode_provider.dart';
 import '../../providers/rating_provider.dart';
 import '../../providers/user_provider.dart';
 import '../profile/profile_screen.dart';
@@ -62,6 +63,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final currentLocale = ref.watch(appLocaleProvider);
+    final currentThemeMode = ref.watch(appThemeModeProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final showMainAppBar = _currentIndex <= 1;
 
     return Scaffold(
@@ -71,11 +75,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 _currentIndex == 0 ? l10n.homeTitle : l10n.academicsTitle,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.textPrimary,
+              backgroundColor:
+                  theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+              foregroundColor:
+                  theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
               elevation: 0,
               centerTitle: false,
               actions: [
+                PopupMenuButton<ThemeMode>(
+                  tooltip: l10n.changeTheme,
+                  initialValue: currentThemeMode,
+                  onSelected: (themeMode) {
+                    ref
+                        .read(appThemeModeProvider.notifier)
+                        .setThemeMode(themeMode);
+                  },
+                  itemBuilder: (context) => ThemeMode.values
+                      .map(
+                        (themeMode) => PopupMenuItem<ThemeMode>(
+                          value: themeMode,
+                          child: Row(
+                            children: [
+                              Icon(_themeModeIcon(themeMode), size: 18),
+                              const SizedBox(width: 10),
+                              Text(_themeModeLabel(themeMode, l10n)),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  icon: Icon(
+                    _themeModeIcon(currentThemeMode),
+                    color: colorScheme.onSurface,
+                  ),
+                ),
                 PopupMenuButton<AppLocale>(
                   tooltip: l10n.changeLanguage,
                   initialValue: currentLocale,
@@ -113,8 +146,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         currentIndex: _currentIndex,
         onTap: _onTabSelected,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primaryBlue,
-        unselectedItemColor: AppColors.textSecondary,
+        selectedItemColor: colorScheme.primary,
+        unselectedItemColor: colorScheme.onSurfaceVariant,
         selectedFontSize: 12,
         unselectedFontSize: 12,
         elevation: 8,
@@ -142,6 +175,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
     );
+  }
+
+  String _themeModeLabel(ThemeMode themeMode, AppLocalizations l10n) {
+    return switch (themeMode) {
+      ThemeMode.system => l10n.themeSystem,
+      ThemeMode.light => l10n.themeLight,
+      ThemeMode.dark => l10n.themeDark,
+    };
+  }
+
+  IconData _themeModeIcon(ThemeMode themeMode) {
+    return switch (themeMode) {
+      ThemeMode.system => Icons.brightness_auto_rounded,
+      ThemeMode.light => Icons.light_mode_rounded,
+      ThemeMode.dark => Icons.dark_mode_rounded,
+    };
   }
 }
 
@@ -240,7 +289,7 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
     final rank = ratingState.childRating?.rank;
 
     return Container(
-      color: AppColors.background,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async => _loadHomeData(),
@@ -289,21 +338,23 @@ class _EducationTabScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return DefaultTabController(
       length: 2,
       child: Column(
         children: [
           Container(
             color: Colors.white,
-            child: const TabBar(
+            child: TabBar(
               labelColor: AppColors.primaryBlue,
               unselectedLabelColor: AppColors.textSecondary,
               indicatorColor: AppColors.primaryBlue,
               indicatorSize: TabBarIndicatorSize.tab,
-              indicatorPadding: EdgeInsets.symmetric(horizontal: 40),
+              indicatorPadding: const EdgeInsets.symmetric(horizontal: 40),
               tabs: [
-                Tab(text: 'Baholar'),
-                Tab(text: 'Reyting'),
+                Tab(text: l10n.gradesTab),
+                Tab(text: l10n.ratingTab),
               ],
             ),
           ),

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/storage_keys.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../data/datasources/remote/notification_api.dart';
 import '../../data/models/notification_model.dart';
 import '../../core/error/exceptions.dart';
@@ -119,7 +120,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
           isLoading: false,
           error: ApiErrorHandler.readableMessage(
             e,
-            fallback: 'Bildirishnomalarni yuklashda xatolik',
+            fallback: AppLocalizations.current.notificationsLoadFailed,
           ),
         );
       }
@@ -149,7 +150,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
         error: state.notifications.isEmpty
             ? ApiErrorHandler.readableMessage(
                 e,
-                fallback: 'Bildirishnomalarni yuklashda xatolik',
+                fallback: AppLocalizations.current.notificationsLoadFailed,
               )
             : null,
       );

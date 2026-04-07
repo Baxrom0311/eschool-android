@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/payment_provider.dart';
-import '../../providers/user_provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
+
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/routing/route_names.dart';
+import '../../providers/payment_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../widgets/payments/balance_header.dart';
 import '../../widgets/common/custom_button.dart';
 
@@ -42,21 +43,25 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     ref.read(paymentProvider.notifier).loadInitialData(studentId: studentId);
   }
 
-  String _formatLastUpdated(String? rawDate) {
-    if (rawDate == null || rawDate.isEmpty) return 'Yangilanmagan';
+  String _formatLastUpdated(AppLocalizations l10n, String? rawDate) {
+    if (rawDate == null || rawDate.isEmpty) return l10n.notUpdatedLabel;
     final parsed = DateTime.tryParse(rawDate);
-    if (parsed == null) return 'Yangilanmagan';
+    if (parsed == null) return l10n.notUpdatedLabel;
 
     final now = DateTime.now();
     if (now.year == parsed.year &&
         now.month == parsed.month &&
         now.day == parsed.day) {
-      return 'Bugun';
+      return l10n.todayLabel;
     }
 
     final day = parsed.day.toString().padLeft(2, '0');
     final month = parsed.month.toString().padLeft(2, '0');
     return '$day.$month.${parsed.year}';
+  }
+
+  String _formatCurrencyAmount(AppLocalizations l10n, num amount) {
+    return '${Formatters.formatCurrency(amount.toDouble())} ${l10n.currencyCode}';
   }
 
   @override
@@ -67,6 +72,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final state = ref.watch(paymentProvider);
     final userState = ref.watch(userProvider);
     final child = userState.selectedChild;
@@ -81,14 +89,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'To\'lovlar',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.paymentsTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         elevation: 0,
       ),
       body: state.isLoading && state.balance == null
@@ -103,13 +113,19 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   children: [
                     // ─── Header Section ───
                     Container(
-                      color: AppColors.primaryBlue,
+                      color:
+                          theme.appBarTheme.backgroundColor ??
+                          colorScheme.surface,
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       child: BalanceHeader(
                         balance: hasFinancialData
-                            ? '${state.balance?.balance ?? 0} UZS'
-                            : 'Ma\'lumot yo\'q',
+                            ? _formatCurrencyAmount(
+                                l10n,
+                                state.balance?.balance ?? 0,
+                              )
+                            : l10n.noFinancialData,
                         lastUpdated: _formatLastUpdated(
+                          l10n,
                           state.balance?.nextPaymentDate,
                         ),
                       ),
@@ -125,7 +141,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                               padding: const EdgeInsets.only(bottom: 16),
                               child: Text(
                                 state.error!,
-                                style: const TextStyle(color: Colors.red),
+                                style: TextStyle(color: colorScheme.error),
                               ),
                             ),
 
@@ -133,31 +149,40 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           if (child != null ||
                               state.balance?.contractNumber != null)
                             _InfoCard(
-                              title: 'Shartnoma ma\'lumotlari',
+                              title: l10n.contractInfoTitle,
                               icon: Icons.description_rounded,
                               items: [
                                 if (state.balance?.contractNumber != null)
                                   {
-                                    'label': 'Shartnoma',
+                                    'label': l10n.contractLabel,
                                     'value': state.balance!.contractNumber!,
                                   },
                                 if (child != null)
                                   {
-                                    'label': 'O\'quvchi',
+                                    'label': l10n.studentLabel,
                                     'value': child.fullName,
                                   },
                                 if (child != null)
-                                  {'label': 'Sinf', 'value': child.className},
+                                  {
+                                    'label': l10n.classLabel,
+                                    'value': child.className,
+                                  },
                                 if (hasFinancialData && state.balance != null)
                                   {
-                                    'label': 'Balans',
-                                    'value': state.balance!.formattedBalance,
+                                    'label': l10n.balanceLabel,
+                                    'value': _formatCurrencyAmount(
+                                      l10n,
+                                      state.balance!.balance,
+                                    ),
                                   },
                                 if (hasFinancialData &&
                                     (state.balance?.monthlyFee ?? 0) > 0)
                                   {
-                                    'label': 'Oylik to\'lov',
-                                    'value': state.balance!.formattedMonthlyFee,
+                                    'label': l10n.monthlyPaymentLabel,
+                                    'value': _formatCurrencyAmount(
+                                      l10n,
+                                      state.balance!.monthlyFee,
+                                    ),
                                   },
                               ],
                             ),
@@ -187,9 +212,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
-                                          'Qarzdorlik mavjud',
-                                          style: TextStyle(
+                                        Text(
+                                          l10n.debtExistsTitle,
+                                          style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                             color: Color(0xFFE65100),
@@ -197,7 +222,12 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          'Iltimos, ${Formatters.formatCurrency(debtAmount.toDouble())} UZS to\'lov qiling',
+                                          l10n.debtPaymentPrompt(
+                                            _formatCurrencyAmount(
+                                              l10n,
+                                              debtAmount,
+                                            ),
+                                          ),
                                           style: const TextStyle(
                                             fontSize: 13,
                                             color: Color(0xFFE65100),
@@ -213,7 +243,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
                           // ─── Action Buttons ───
                           CustomButton(
-                            text: 'Hozir to\'lash',
+                            text: l10n.payNowAction,
                             onPressed: () {
                               context.push(RouteNames.paymentMethod);
                             },
@@ -227,17 +257,17 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                               context.push(RouteNames.paymentHistory);
                             },
                             icon: const Icon(Icons.history_rounded),
-                            label: const Text('To\'lovlar tarixi'),
+                            label: Text(l10n.paymentHistoryTitle),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              side: const BorderSide(
-                                color: AppColors.primaryBlue,
+                              side: BorderSide(
+                                color: colorScheme.primary,
                                 width: 1.5,
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              foregroundColor: AppColors.primaryBlue,
+                              foregroundColor: colorScheme.primary,
                             ),
                           ),
                         ],
@@ -264,9 +294,11 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Card(
       elevation: 2,
-      shadowColor: AppColors.shadow,
+      shadowColor: theme.shadowColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -274,14 +306,14 @@ class _InfoCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, color: AppColors.primaryBlue, size: 24),
+                Icon(icon, color: colorScheme.primary, size: 24),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -298,17 +330,17 @@ class _InfoCard extends StatelessWidget {
                   children: [
                     Text(
                       item['label']!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                     Text(
                       item['value']!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                   ],

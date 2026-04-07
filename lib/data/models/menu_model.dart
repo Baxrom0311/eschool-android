@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../core/localization/app_localizations.dart';
+
 part 'menu_model.g.dart';
 
 /// Ovqatlanish turi
@@ -53,17 +55,18 @@ class MenuModel extends Equatable {
 
   /// Ovqatlanish turi matni
   String get mealTypeText {
+    final l10n = AppLocalizations.current;
     switch (mealType) {
       case MealType.breakfast:
-        return 'Nonushta';
+        return l10n.breakfastLabel;
       case MealType.lunch:
-        return 'Tushlik';
+        return l10n.lunchLabel;
       case MealType.afternoonTea:
-        return 'Poldnik';
+        return l10n.afternoonTeaLabel;
       case MealType.dinner:
-        return 'Kechki ovqat';
+        return l10n.dinnerLabel;
       case MealType.snack:
-        return 'Tamaddi';
+        return l10n.snackLabel;
     }
   }
 

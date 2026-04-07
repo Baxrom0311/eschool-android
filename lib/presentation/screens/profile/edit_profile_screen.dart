@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../providers/user_provider.dart';
 
@@ -91,7 +92,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (!mounted) return;
     AppSnackBar.show(
       context,
-      'Profil muvaffaqiyatli yangilandi.',
+      context.l10n.profileUpdatedSuccess,
       type: AppSnackBarType.success,
     );
     Navigator.of(context).pop();
@@ -99,9 +100,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final userState = ref.watch(userProvider);
     final user = userState.user;
     final isLoading = userState.isLoading;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     ImageProvider<Object>? avatarImage;
     if (_avatarPath != null) {
@@ -111,9 +115,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Shaxsiy ma\'lumotlar'),
+        title: Text(l10n.editProfileTitle),
         actions: [
           TextButton(
             onPressed: isLoading ? null : _submit,
@@ -123,7 +127,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Saqlash', style: TextStyle(color: Colors.white)),
+                : Text(
+                    l10n.saveAction,
+                    style: TextStyle(
+                      color:
+                          theme.appBarTheme.foregroundColor ??
+                          colorScheme.onPrimary,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -140,13 +151,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     children: [
                       CircleAvatar(
                         radius: 44,
-                        backgroundColor: Colors.white,
+                        backgroundColor: theme.cardColor,
                         backgroundImage: avatarImage,
                         child: avatarImage == null
-                            ? const Icon(
+                            ? Icon(
                                 Icons.person_rounded,
                                 size: 42,
-                                color: AppColors.primaryBlue,
+                                color: colorScheme.primary,
                               )
                             : null,
                       ),
@@ -154,31 +165,31 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       TextButton.icon(
                         onPressed: isLoading ? null : _pickAvatar,
                         icon: const Icon(Icons.photo_camera_outlined),
-                        label: const Text('Avatarni o\'zgartirish'),
+                        label: Text(l10n.changeAvatarAction),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Asosiy ma\'lumotlar',
+                Text(
+                  l10n.basicInfoTitle,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _fullNameController,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'To\'liq ism',
-                    prefixIcon: Icon(Icons.person_outline_rounded),
+                  decoration: InputDecoration(
+                    labelText: l10n.fullNameLabel,
+                    prefixIcon: const Icon(Icons.person_outline_rounded),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Ismni kiriting';
+                      return l10n.fullNameRequired;
                     }
                     return null;
                   },
@@ -188,13 +199,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Telefon raqami',
-                    prefixIcon: Icon(Icons.phone_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.phoneNumberLabel,
+                    prefixIcon: const Icon(Icons.phone_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Telefon raqamini kiriting';
+                      return l10n.phoneRequired;
                     }
                     return null;
                   },
@@ -212,28 +223,28 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: colorScheme.outline),
                   ),
                   child: Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Bildirishnomalar',
+                              l10n.notificationsToggleTitle,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                                color: colorScheme.onSurface,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
-                              'Push xabarnomalarni yoqish yoki o\'chirish',
+                              l10n.notificationsToggleSubtitle,
                               style: TextStyle(
-                                color: AppColors.textSecondary,
+                                color: colorScheme.onSurfaceVariant,
                                 fontSize: 13,
                               ),
                             ),
@@ -274,7 +285,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Saqlash'),
+                        : Text(l10n.saveAction),
                   ),
                 ),
               ],

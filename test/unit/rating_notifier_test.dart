@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:parent_school_app/core/localization/app_locale.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/presentation/providers/rating_provider.dart';
 import 'package:parent_school_app/data/datasources/remote/rating_api.dart';
 import 'package:parent_school_app/data/models/rating_model.dart';
@@ -7,9 +9,13 @@ import 'package:parent_school_app/core/error/exceptions.dart';
 // Mock RatingApi
 class MockRatingApi implements RatingApi {
   bool shouldThrowError = false;
+  bool shouldThrowGenericError = false;
 
   @override
   Future<List<RatingModel>> getClassRating(int classId) async {
+    if (shouldThrowGenericError) {
+      throw '';
+    }
     if (shouldThrowError) {
       throw const ServerException(message: 'Class rating failed');
     }
@@ -21,6 +27,9 @@ class MockRatingApi implements RatingApi {
 
   @override
   Future<List<RatingModel>> getSchoolRating() async {
+    if (shouldThrowGenericError) {
+      throw '';
+    }
     if (shouldThrowError) {
       throw const ServerException(message: 'School rating failed');
     }
@@ -32,15 +41,18 @@ class MockRatingApi implements RatingApi {
 
   @override
   Future<RatingModel> getChildRating(int childId) async {
+    if (shouldThrowGenericError) {
+      throw '';
+    }
     if (shouldThrowError) {
       throw const ServerException(message: 'Child rating failed');
     }
     return const RatingModel(
-      id: 1, 
-      studentName: 'My Child', 
-      rank: 5, 
-      totalScore: 80.0, 
-      isCurrent: true
+      id: 1,
+      studentName: 'My Child',
+      rank: 5,
+      totalScore: 80.0,
+      isCurrent: true,
     );
   }
 }
@@ -50,6 +62,7 @@ void main() {
   late RatingNotifier ratingNotifier;
 
   setUp(() {
+    AppLocalizations.updateCurrent(AppLocalizations(AppLocale.uz));
     mockApi = MockRatingApi();
     ratingNotifier = RatingNotifier(api: mockApi);
   });
@@ -64,7 +77,7 @@ void main() {
 
     test('loadClassRating success', () async {
       await ratingNotifier.loadClassRating(1);
-      
+
       expect(ratingNotifier.state.isLoading, false);
       expect(ratingNotifier.state.classRating.length, 2);
       expect(ratingNotifier.state.error, null);
@@ -73,21 +86,21 @@ void main() {
     test('loadClassRating failure', () async {
       mockApi.shouldThrowError = true;
       await ratingNotifier.loadClassRating(1);
-      
+
       expect(ratingNotifier.state.isLoading, false);
       expect(ratingNotifier.state.error, 'Class rating failed');
     });
 
     test('loadSchoolRating success', () async {
       await ratingNotifier.loadSchoolRating();
-      
+
       expect(ratingNotifier.state.isLoading, false);
       expect(ratingNotifier.state.schoolRating.length, 2);
     });
 
     test('loadChildRating success', () async {
       await ratingNotifier.loadChildRating(1);
-      
+
       expect(ratingNotifier.state.childRating, isNotNull);
       expect(ratingNotifier.state.childRating?.rank, 5);
       expect(ratingNotifier.state.childRating?.isCurrent, true);
@@ -96,9 +109,22 @@ void main() {
     test('loadChildRating failure (silent)', () async {
       mockApi.shouldThrowError = true;
       await ratingNotifier.loadChildRating(1);
-      
+
       // Should remain null or previous state (silent fail)
       expect(ratingNotifier.state.childRating, null);
     });
+
+    test(
+      'loadSchoolRating uses localized fallback for generic errors',
+      () async {
+        AppLocalizations.updateCurrent(AppLocalizations(AppLocale.en));
+        mockApi.shouldThrowGenericError = true;
+
+        await ratingNotifier.loadSchoolRating();
+
+        expect(ratingNotifier.state.isLoading, false);
+        expect(ratingNotifier.state.error, 'Failed to load the school rating');
+      },
+    );
   });
 }

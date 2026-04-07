@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../data/models/badge_model.dart';
 import '../../providers/leaderboard_provider.dart';
 import '../../providers/user_provider.dart';
@@ -41,6 +42,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final state = ref.watch(leaderboardProvider);
 
     ref.listen(selectedChildProvider, (previous, next) {
@@ -52,9 +54,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),
       appBar: AppBar(
-        title: const Text(
-          'Liderlar Jadvali',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.leaderboardTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0,
@@ -65,10 +67,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
           labelColor: AppColors.primaryBlue,
           unselectedLabelColor: Colors.grey,
           indicatorColor: AppColors.primaryBlue,
-          tabs: const [
-            Tab(text: 'Sinf'),
-            Tab(text: 'Maktab'),
-            Tab(text: 'Nishonlar'),
+          tabs: [
+            Tab(text: l10n.leaderboardClassTab),
+            Tab(text: l10n.leaderboardSchoolTab),
+            Tab(text: l10n.leaderboardBadgesTab),
           ],
         ),
       ),
@@ -80,12 +82,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                 _RankingTab(
                   ranking: state.classRanking,
                   myRank: state.classRank,
-                  emptyText: 'Sinf reytingi hozircha yo\'q',
+                  emptyText: l10n.leaderboardClassEmpty,
                 ),
                 _RankingTab(
                   ranking: state.globalRanking,
                   myRank: state.globalRank,
-                  emptyText: 'Maktab reytingi hozircha yo\'q',
+                  emptyText: l10n.leaderboardSchoolEmpty,
                 ),
                 _BadgesTab(
                   coins: state.coins,
@@ -193,7 +195,7 @@ class _PodiumItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatarUrl = data['avatar_url']?.toString();
-    final name = data['name']?.toString() ?? 'Noma\'lum';
+    final name = data['name']?.toString() ?? context.l10n.userFallbackName;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -253,6 +255,7 @@ class _RankTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final avatarUrl = data['avatar_url']?.toString();
     final xp = data['xp']?.toString() ?? '0';
     final level = data['level']?.toString() ?? '1';
@@ -299,7 +302,7 @@ class _RankTile extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              data['name']?.toString() ?? 'Noma\'lum',
+              data['name']?.toString() ?? l10n.userFallbackName,
               style: TextStyle(
                 fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
               ),
@@ -316,7 +319,7 @@ class _RankTile extends StatelessWidget {
                 ),
               ),
               Text(
-                'Lvl $level',
+                l10n.levelBadge(int.tryParse(level) ?? 1),
                 style: const TextStyle(fontSize: 10, color: Colors.grey),
               ),
             ],
@@ -340,6 +343,7 @@ class _BadgesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -355,30 +359,30 @@ class _BadgesTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$coins Tangalar',
+                  l10n.leaderboardCoins(coins),
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text('Ochiladigan nishonlar: ${availableBadges.length}'),
+                Text(l10n.unlockableBadgesCount(availableBadges.length)),
               ],
             ),
           ),
         ),
-        const SliverToBoxAdapter(
+        SliverToBoxAdapter(
           child: Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Text(
-              'Mening nishonlarim',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              l10n.myBadgesTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
         ),
         if (myBadges.isEmpty)
-          const SliverFillRemaining(
+          SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text('Hali nishonlar yo\'q')),
+            child: Center(child: Text(l10n.noBadgesYet)),
           )
         else
           SliverPadding(

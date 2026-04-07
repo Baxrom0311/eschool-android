@@ -78,7 +78,7 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
-    expect(find.text('Liderlar Jadvali'), findsOneWidget);
+    expect(find.text('Liderlar jadvali'), findsOneWidget);
     expect(find.text('Ali'), findsWidgets);
 
     await tester.tap(find.text('Nishonlar'));

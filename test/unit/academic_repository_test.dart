@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:parent_school_app/core/error/failures.dart';
 import 'package:parent_school_app/core/error/exceptions.dart';
+import 'package:parent_school_app/core/localization/app_locale.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/data/datasources/remote/academic_api.dart';
 import 'package:parent_school_app/data/models/grade_model.dart';
 import 'package:parent_school_app/data/models/schedule_model.dart';
@@ -16,6 +18,7 @@ void main() {
 
   setUp(() {
     mockAcademicApi = MockAcademicApi();
+    AppLocalizations.updateCurrent(AppLocalizations(AppLocale.uz));
     repository = AcademicRepository(academicApi: mockAcademicApi);
   });
 
@@ -23,7 +26,11 @@ void main() {
     const tChildId = 1;
     const tAssignmentId = 123;
     final List<SubjectGradeSummary> tGradeSummary = [
-      const SubjectGradeSummary(subjectName: 'Math', averageGrade: 4.5, totalGrades: 10)
+      const SubjectGradeSummary(
+        subjectName: 'Math',
+        averageGrade: 4.5,
+        totalGrades: 10,
+      ),
     ];
     final List<ScheduleModel> tScheduleList = [
       const ScheduleModel(
@@ -35,13 +42,14 @@ void main() {
         dayOfWeek: 1,
         lessonNumber: 1,
         roomNumber: '101A',
-      )
+      ),
     ];
 
     test('getGradeSummary returns Right data on success', () async {
       // Arrange
-      when(() => mockAcademicApi.getGradeSummary(tChildId))
-          .thenAnswer((_) async => tGradeSummary);
+      when(
+        () => mockAcademicApi.getGradeSummary(tChildId),
+      ).thenAnswer((_) async => tGradeSummary);
 
       // Act
       final result = await repository.getGradeSummary(tChildId);
@@ -53,8 +61,9 @@ void main() {
 
     test('getGradeSummary returns Left on ServerException', () async {
       // Arrange
-      when(() => mockAcademicApi.getGradeSummary(tChildId))
-          .thenThrow(const ServerException(message: 'Server Error'));
+      when(
+        () => mockAcademicApi.getGradeSummary(tChildId),
+      ).thenThrow(const ServerException(message: 'Server Error'));
 
       // Act
       final result = await repository.getGradeSummary(tChildId);
@@ -65,8 +74,9 @@ void main() {
 
     test('getSchedule returns Right data on success', () async {
       // Arrange
-      when(() => mockAcademicApi.getSchedule(tChildId))
-          .thenAnswer((_) async => tScheduleList);
+      when(
+        () => mockAcademicApi.getSchedule(tChildId),
+      ).thenAnswer((_) async => tScheduleList);
 
       // Act
       final result = await repository.getSchedule(tChildId);
@@ -78,11 +88,13 @@ void main() {
 
     test('submitAssignment returns Right on success', () async {
       // Arrange
-      when(() => mockAcademicApi.submitAssignment(
-            tAssignmentId,
-            text: any(named: 'text'),
-            filePath: any(named: 'filePath'),
-          )).thenAnswer((_) async {});
+      when(
+        () => mockAcademicApi.submitAssignment(
+          tAssignmentId,
+          text: any(named: 'text'),
+          filePath: any(named: 'filePath'),
+        ),
+      ).thenAnswer((_) async {});
 
       // Act
       final result = await repository.submitAssignment(
@@ -92,22 +104,38 @@ void main() {
 
       // Assert
       expect(result, const Right(null));
-      verify(() => mockAcademicApi.submitAssignment(
-            tAssignmentId,
-            text: 'My homework',
-          )).called(1);
+      verify(
+        () => mockAcademicApi.submitAssignment(
+          tAssignmentId,
+          text: 'My homework',
+        ),
+      ).called(1);
     });
-    
+
     test('getAttendance returns Left on NetworkException', () async {
       // Arrange
-      when(() => mockAcademicApi.getAttendance(tChildId, month: '2025-01'))
-          .thenThrow(const NetworkException(message: 'No internet'));
+      when(
+        () => mockAcademicApi.getAttendance(tChildId, month: '2025-01'),
+      ).thenThrow(const NetworkException(message: 'No internet'));
 
       // Act
       final result = await repository.getAttendance(tChildId, month: '2025-01');
 
       // Assert
       expect(result, left(const NetworkFailure('No internet')));
+    });
+
+    test('getGrades uses localized fallback on unexpected errors', () async {
+      AppLocalizations.updateCurrent(AppLocalizations(AppLocale.en));
+
+      when(
+        () =>
+            mockAcademicApi.getGrades(tChildId, quarter: any(named: 'quarter')),
+      ).thenThrow('');
+
+      final result = await repository.getGrades(tChildId);
+
+      expect(result, left(const ServerFailure('Failed to load grades')));
     });
   });
 }

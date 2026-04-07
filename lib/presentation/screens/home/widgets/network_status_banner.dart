@@ -2,15 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../providers/connectivity_provider.dart';
 
 class NetworkStatusBanner extends ConsumerWidget {
   final Widget child;
 
-  const NetworkStatusBanner({
-    super.key,
-    required this.child,
-  });
+  const NetworkStatusBanner({super.key, required this.child});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,10 +32,10 @@ class NetworkStatusBanner extends ConsumerWidget {
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: const Text(
-                      'Internet aloqasi yo\'q',
+                    child: Text(
+                      AppStrings.noInternet,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/routing/route_names.dart';
 
 class ServicesGrid extends StatelessWidget {
@@ -7,27 +8,30 @@ class ServicesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final services = [
       _ServiceItem(
-        title: 'Uchrashuv',
+        title: l10n.conferenceServiceTitle,
         icon: Icons.people_alt_rounded,
         color: Colors.blue,
         route: RouteNames.conference,
       ),
       _ServiceItem(
-        title: 'Sababnoma',
+        title: l10n.absenceServiceTitle,
         icon: Icons.assignment_rounded,
         color: Colors.orange,
         route: RouteNames.absences,
       ),
       _ServiceItem(
-        title: 'Kutubxona',
+        title: l10n.libraryServiceTitle,
         icon: Icons.menu_book_rounded,
         color: Colors.green,
         route: RouteNames.library,
       ),
       _ServiceItem(
-        title: 'Reyting',
+        title: l10n.ratingServiceTitle,
         icon: Icons.leaderboard_rounded,
         color: Colors.amber,
         route: RouteNames.leaderboard,
@@ -39,9 +43,12 @@ class ServicesGrid extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Xizmatlar',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            l10n.servicesTitle,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           GridView.builder(
@@ -62,11 +69,14 @@ class ServicesGrid extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.cardColor,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: colorScheme.outline.withValues(alpha: 0.6),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: theme.shadowColor.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -90,9 +100,10 @@ class ServicesGrid extends StatelessWidget {
                       Expanded(
                         child: Text(
                           service.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                       ),

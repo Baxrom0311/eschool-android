@@ -4,10 +4,11 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/storage_keys.dart';
+import '../../core/error/exceptions.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_error_handler.dart';
 import '../../data/datasources/remote/rating_api.dart';
 import '../../data/models/rating_model.dart';
-import '../../core/error/exceptions.dart';
 import '../../core/storage/shared_prefs_service.dart';
 import 'auth_provider.dart';
 
@@ -117,7 +118,7 @@ class RatingNotifier extends StateNotifier<RatingState> {
           isLoading: false,
           error: ApiErrorHandler.readableMessage(
             e,
-            fallback: 'Reytingni yuklashda xatolik',
+            fallback: AppLocalizations.current.ratingLoadFailed,
           ),
         );
       }
@@ -173,7 +174,7 @@ class RatingNotifier extends StateNotifier<RatingState> {
           isLoading: false,
           error: ApiErrorHandler.readableMessage(
             e,
-            fallback: 'Maktab reytingini yuklashda xatolik',
+            fallback: AppLocalizations.current.schoolRatingLoadFailed,
           ),
         );
       }

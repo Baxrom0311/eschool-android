@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/error/exceptions.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/auth_response.dart';
 import 'api_helpers.dart';
@@ -15,6 +16,8 @@ class AuthApi with ApiHelpers {
   final DioClient _client;
 
   AuthApi(this._client);
+
+  AppLocalizations get _l10n => AppLocalizations.current;
 
   /// Login — foydalanuvchi nomi va parol bilan kirish
   ///
@@ -44,20 +47,13 @@ class AuthApi with ApiHelpers {
       final root = asMap(response.data);
       final normalized = _normalizeAuthResponse(root);
       if ((normalized['token'] as String).isEmpty) {
-        throw const ServerException(
-          message: 'Login javobida token topilmadi',
-          statusCode: 500,
-        );
+        throw ServerException(message: _l10n.errorServer, statusCode: 500);
       }
       return AuthResponse.fromJson(normalized);
     } on DioException catch (e) {
       throw handleDioError(e);
     }
   }
-
-
-
-
 
   /// Logout — sessiyani tugatish
   ///
@@ -154,16 +150,14 @@ class AuthApi with ApiHelpers {
       final root = asMap(response.data);
       final normalized = _normalizeAuthResponse(root);
       if ((normalized['token'] as String).isEmpty) {
-        throw const ServerException(
-          message: 'QR Login javobida token topilmadi',
-          statusCode: 500,
-        );
+        throw ServerException(message: _l10n.errorServer, statusCode: 500);
       }
       return AuthResponse.fromJson(normalized);
     } on DioException catch (e) {
       throw handleDioError(e);
     }
   }
+
   Map<String, dynamic> _normalizeAuthResponse(Map<String, dynamic> raw) {
     final user = asMap(raw['user']);
     final roles = user['roles'] is List
@@ -174,7 +168,7 @@ class AuthApi with ApiHelpers {
     final fullNameRaw = (user['full_name'] ?? user['name'] ?? '').toString();
     final fullName = fullNameRaw.isNotEmpty
         ? fullNameRaw
-        : (email != null && email.isNotEmpty ? email : 'Parent');
+        : (email != null && email.isNotEmpty ? email : _l10n.userFallbackName);
 
     return <String, dynamic>{
       'token': (raw['token'] ?? raw['access_token'] ?? '').toString(),

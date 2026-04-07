@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
+
+import '../../../../core/localization/app_localizations.dart';
 import '../../../providers/user_provider.dart';
 
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
 
-
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final child = ref.watch(selectedChildProvider);
+    final greetingName = child?.fullName ?? l10n.userFallbackName;
+    final todayLabel = DateFormat(
+      'EEEE, d-MMMM',
+      l10n.appLocale.name,
+    ).format(DateTime.now());
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 8, 0),
@@ -22,20 +29,18 @@ class HomeHeader extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Salom, ${child?.fullName ?? 'Foydalanuvchi'}',
-                style: const TextStyle(
+                l10n.homeGreeting(greetingName),
+                style: textTheme.headlineSmall?.copyWith(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                 // Fallback to simple date if formatting fails or just use the helper
-                 DateFormat('EEEE, d-MMMM', 'uz').format(DateTime.now()), 
-                style: const TextStyle(
+                todayLabel,
+                style: textTheme.bodyMedium?.copyWith(
                   fontSize: 14,
-                  color: AppColors.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],

@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import '../../core/error/failures.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/storage/secure_storage.dart';
 import '../../core/utils/safe_api_call.dart';
 import '../datasources/remote/auth_api.dart';
@@ -22,8 +23,8 @@ class AuthRepository {
   AuthRepository({
     required AuthApi authApi,
     required SecureStorageService secureStorage,
-  })  : _authApi = authApi,
-        _secureStorage = secureStorage;
+  }) : _authApi = authApi,
+       _secureStorage = secureStorage;
 
   /// Login — tizimga kirish
   ///
@@ -34,20 +35,15 @@ class AuthRepository {
     required String username,
     required String password,
   }) {
-    return safeApiCall(
-      () async {
-        final response = await _authApi.login(
-          username: username,
-          password: password,
-        );
-        await _secureStorage.saveAccessToken(response.accessToken);
-        return response.user;
-      },
-      errorMessage: 'Kirish amalga oshmadi',
-    );
+    return safeApiCall(() async {
+      final response = await _authApi.login(
+        username: username,
+        password: password,
+      );
+      await _secureStorage.saveAccessToken(response.accessToken);
+      return response.user;
+    }, errorMessage: AppLocalizations.current.loginFailed);
   }
-
-
 
   /// Logout — tizimdan chiqish
   ///
@@ -70,19 +66,14 @@ class AuthRepository {
 
   /// FCM tokenni serverga yuborish
   Future<Either<Failure, void>> updateFCMToken(String token) {
-    return safeApiCall(
-      () => _authApi.updateFcmToken(token),
-      errorMessage: 'FCM token yangilashda xatolik',
-    );
+    return safeApiCall(() => _authApi.updateFcmToken(token));
   }
 
   /// Parolni tiklash — SMS yuborish
-  Future<Either<Failure, void>> forgotPassword({
-    required String phone,
-  }) {
+  Future<Either<Failure, void>> forgotPassword({required String phone}) {
     return safeApiCall(
       () => _authApi.forgotPassword(phone: phone),
-      errorMessage: 'Parolni tiklashda xatolik',
+      errorMessage: AppLocalizations.current.verificationCodeSendFailed,
     );
   }
 
@@ -93,16 +84,11 @@ class AuthRepository {
   }
 
   /// QR Kod orqali login
-  Future<Either<Failure, UserModel>> qrLogin({
-    required String qrToken,
-  }) {
-    return safeApiCall(
-      () async {
-        final response = await _authApi.qrLogin(qrToken: qrToken);
-        await _secureStorage.saveAccessToken(response.accessToken);
-        return response.user;
-      },
-      errorMessage: 'QR kod orqali kirish amalga oshmadi',
-    );
+  Future<Either<Failure, UserModel>> qrLogin({required String qrToken}) {
+    return safeApiCall(() async {
+      final response = await _authApi.qrLogin(qrToken: qrToken);
+      await _secureStorage.saveAccessToken(response.accessToken);
+      return response.user;
+    }, errorMessage: AppLocalizations.current.qrLoginFailed);
   }
 }

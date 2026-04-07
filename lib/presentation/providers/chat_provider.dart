@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/storage_keys.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/storage/shared_prefs_service.dart';
 import '../../data/datasources/remote/chat_api.dart';
 import '../../data/models/chat_model.dart';
@@ -127,7 +128,10 @@ class ConversationsNotifier extends StateNotifier<ConversationsState> {
 }
 
 final conversationsProvider =
-    StateNotifierProvider.autoDispose<ConversationsNotifier, ConversationsState>((ref) {
+    StateNotifierProvider.autoDispose<
+      ConversationsNotifier,
+      ConversationsState
+    >((ref) {
       final repository = ref.watch(chatRepositoryProvider);
       return ConversationsNotifier(repository: repository);
     });
@@ -194,10 +198,10 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
     required ChatRepository repository,
     required OutboxService outbox,
     required UserModel? currentUser,
-  })  : _repository = repository,
-        _outbox = outbox,
-        _currentUser = currentUser,
-        super(const ChatRoomState.initial());
+  }) : _repository = repository,
+       _outbox = outbox,
+       _currentUser = currentUser,
+       super(const ChatRoomState.initial());
 
   /// Suhbatni ochish va xabarlarni yuklash
   Future<void> openConversation(int conversationId) async {
@@ -312,7 +316,11 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
     return result.fold(
       (f) {
         if (_isNetworkError(f.message)) {
-          _queueOfflineMessage('Fayl', 'file', filePath);
+          _queueOfflineMessage(
+            AppLocalizations.current.fileAttached,
+            'file',
+            filePath,
+          );
           return true;
         }
         state = state.copyWith(isSending: false, error: f.message);
@@ -337,7 +345,7 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
 
   void _queueOfflineMessage(String content, String type, String? filePath) {
     if (_currentUser == null || state.conversationId == null) return;
-    
+
     final outboxMsg = OutboxMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       conversationId: state.conversationId!,
@@ -349,8 +357,8 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
     unawaited(_outbox.queueMessage(outboxMsg));
 
     final dummy = _outbox.createDummyMessage(
-      outboxMsg, 
-      _currentUser.id, 
+      outboxMsg,
+      _currentUser.id,
       _currentUser.fullName,
     );
 
@@ -364,7 +372,10 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
 
   bool _isNetworkError(String error) {
     final lower = error.toLowerCase();
-    return lower.contains('network') || lower.contains('aloqa') || lower.contains('internet') || lower.contains('connection');
+    return lower.contains('network') ||
+        lower.contains('aloqa') ||
+        lower.contains('internet') ||
+        lower.contains('connection');
   }
 
   ChatRoomState? _readRoomCache(int conversationId) {
@@ -420,15 +431,14 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
       '${StorageKeys.chatMessagesCachePrefix}$conversationId';
 }
 
-final chatRoomProvider = StateNotifierProvider.autoDispose<ChatRoomNotifier, ChatRoomState>(
-  (ref) {
-    final repository = ref.watch(chatRepositoryProvider);
-    final outbox = ref.watch(outboxServiceProvider);
-    final currentUser = ref.watch(userProvider).user;
-    return ChatRoomNotifier(
-      repository: repository,
-      outbox: outbox,
-      currentUser: currentUser,
-    );
-  },
-);
+final chatRoomProvider =
+    StateNotifierProvider.autoDispose<ChatRoomNotifier, ChatRoomState>((ref) {
+      final repository = ref.watch(chatRepositoryProvider);
+      final outbox = ref.watch(outboxServiceProvider);
+      final currentUser = ref.watch(userProvider).user;
+      return ChatRoomNotifier(
+        repository: repository,
+        outbox: outbox,
+        currentUser: currentUser,
+      );
+    });

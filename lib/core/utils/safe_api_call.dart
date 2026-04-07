@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 
+import '../constants/app_strings.dart';
 import '../error/exceptions.dart';
 import '../error/failures.dart';
 import '../network/api_error_handler.dart';
@@ -20,8 +21,10 @@ import '../network/api_error_handler.dart';
 /// ```
 Future<Either<Failure, T>> safeApiCall<T>(
   Future<T> Function() call, {
-  String errorMessage = 'Kutilmagan xatolik',
+  String? errorMessage,
 }) async {
+  final effectiveErrorMessage = errorMessage ?? AppStrings.errorGeneric;
+
   try {
     final result = await call();
     return Right(result);
@@ -34,10 +37,15 @@ Future<Either<Failure, T>> safeApiCall<T>(
   } on ServerException catch (e) {
     return Left(ServerFailure(e.message));
   } catch (e) {
-    final message = ApiErrorHandler.readableMessage(e, fallback: errorMessage);
+    final message = ApiErrorHandler.readableMessage(
+      e,
+      fallback: effectiveErrorMessage,
+    );
     return Left(
       ServerFailure(
-        message == errorMessage ? message : '$errorMessage: $message',
+        message == effectiveErrorMessage
+            ? message
+            : '$effectiveErrorMessage: $message',
       ),
     );
   }

@@ -26,19 +26,17 @@ void main() {
 
   Widget createWidgetUnderTest() {
     return ProviderScope(
-      overrides: [
-        chatRepositoryProvider.overrideWithValue(mockChatRepository),
-      ],
-      child: const MaterialApp(
-        home: ChatListScreen(),
-      ),
+      overrides: [chatRepositoryProvider.overrideWithValue(mockChatRepository)],
+      child: const MaterialApp(home: ChatListScreen()),
     );
   }
 
   group('ChatListScreen Widget Tests', () {
     testWidgets('shows loading state initially', (WidgetTester tester) async {
       final completer = Completer<Either<Failure, List<ConversationModel>>>();
-      when(() => mockChatRepository.getConversations()).thenAnswer((_) => completer.future);
+      when(
+        () => mockChatRepository.getConversations(),
+      ).thenAnswer((_) => completer.future);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
@@ -46,13 +44,18 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('shows empty state behavior when list is empty', (WidgetTester tester) async {
-      when(() => mockChatRepository.getConversations()).thenAnswer((_) async => const Right([]));
+    testWidgets('shows empty state behavior when list is empty', (
+      WidgetTester tester,
+    ) async {
+      when(
+        () => mockChatRepository.getConversations(),
+      ).thenAnswer((_) async => const Right([]));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       expect(find.byType(ListTile), findsNothing);
+      expect(find.text('Chatlar hozircha yo\'q'), findsOneWidget);
     });
 
     testWidgets('shows conversations when loaded', (WidgetTester tester) async {
@@ -64,21 +67,26 @@ void main() {
           unreadCount: 2,
         ),
       ];
-      when(() => mockChatRepository.getConversations())
-          .thenAnswer((_) async => Right(tConversations));
+      when(
+        () => mockChatRepository.getConversations(),
+      ).thenAnswer((_) async => Right(tConversations));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
+      expect(find.text('Chatlar'), findsOneWidget);
       expect(find.text('Ali Valiyev'), findsOneWidget);
       expect(find.text('Salom ustoz'), findsOneWidget);
       expect(find.text('2'), findsOneWidget); // Unread count badge
       expect(find.byType(ListTile), findsOneWidget);
     });
 
-    testWidgets('shows error state when API fails', (WidgetTester tester) async {
-      when(() => mockChatRepository.getConversations())
-          .thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
+    testWidgets('shows error state when API fails', (
+      WidgetTester tester,
+    ) async {
+      when(
+        () => mockChatRepository.getConversations(),
+      ).thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

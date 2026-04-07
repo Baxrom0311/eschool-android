@@ -26,16 +26,10 @@ void main() {
 
   Widget createWidgetUnderTest() {
     return ProviderScope(
-      overrides: [
-        chatRepositoryProvider.overrideWithValue(mockChatRepository),
-      ],
+      overrides: [chatRepositoryProvider.overrideWithValue(mockChatRepository)],
       child: const MaterialApp(
         home: ChatRoomScreen(
-          chatData: {
-            'id': 1,
-            'name': 'Ali Valiyev',
-            'isOnline': true,
-          },
+          chatData: {'id': 1, 'name': 'Ali Valiyev', 'isOnline': true},
         ),
       ),
     );
@@ -44,7 +38,9 @@ void main() {
   group('ChatRoomScreen Widget Tests', () {
     testWidgets('shows loading state initially', (WidgetTester tester) async {
       final completer = Completer<Either<Failure, List<MessageModel>>>();
-      when(() => mockChatRepository.getMessages(1, page: any(named: 'page'))).thenAnswer((_) => completer.future);
+      when(
+        () => mockChatRepository.getMessages(1, page: any(named: 'page')),
+      ).thenAnswer((_) => completer.future);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
@@ -64,21 +60,26 @@ void main() {
           createdAt: '2023-11-20T10:00:00.000000Z',
         ),
       ];
-      when(() => mockChatRepository.getMessages(1, page: any(named: 'page')))
-          .thenAnswer((_) async => Right(tMessages));
+      when(
+        () => mockChatRepository.getMessages(1, page: any(named: 'page')),
+      ).thenAnswer((_) async => Right(tMessages));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       expect(find.text('Ali Valiyev'), findsOneWidget);
       expect(find.text('Onlayn'), findsOneWidget);
+      expect(find.text('Xabar yozing...'), findsOneWidget);
       expect(find.text('Salom ustoz'), findsOneWidget);
     });
 
-    testWidgets('sends a message and clears textfield', (WidgetTester tester) async {
-      when(() => mockChatRepository.getMessages(1, page: any(named: 'page')))
-          .thenAnswer((_) async => const Right([]));
-          
+    testWidgets('sends a message and clears textfield', (
+      WidgetTester tester,
+    ) async {
+      when(
+        () => mockChatRepository.getMessages(1, page: any(named: 'page')),
+      ).thenAnswer((_) async => const Right([]));
+
       const tMessage = MessageModel(
         id: 2,
         content: 'Yangi xabar',
@@ -88,9 +89,10 @@ void main() {
         isMine: true,
         createdAt: '2023-11-20T10:05:00.000000Z',
       );
-          
-      when(() => mockChatRepository.sendMessage(1, content: 'Yangi xabar'))
-          .thenAnswer((_) async => const Right(tMessage));
+
+      when(
+        () => mockChatRepository.sendMessage(1, content: 'Yangi xabar'),
+      ).thenAnswer((_) async => const Right(tMessage));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -103,7 +105,7 @@ void main() {
       // Find send button
       final sendButton = find.byIcon(Icons.send_rounded);
       await tester.tap(sendButton);
-      
+
       // We must mock successful send otherwise it returns error
       await tester.pumpAndSettle();
 

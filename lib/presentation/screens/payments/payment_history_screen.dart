@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
+import '../../../core/utils/formatters.dart';
 import '../../providers/payment_provider.dart';
 import '../../providers/user_provider.dart';
-import '../../../core/constants/app_colors.dart';
 
 /// Payment History Screen - List of past transactions
 class PaymentHistoryScreen extends ConsumerStatefulWidget {
@@ -47,8 +50,15 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
     }
   }
 
+  String _formatCurrencyAmount(AppLocalizations l10n, num amount) {
+    return '${Formatters.formatCurrency(amount.toDouble())} ${l10n.currencyCode}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final state = ref.watch(paymentProvider);
     final transactions = state.payments;
     final isLoading = state.isLoading;
@@ -62,28 +72,36 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('To\'lovlar tarixi'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
+        title: Text(l10n.paymentHistoryTitle),
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
       ),
       body: Column(
         children: [
           // Filter Chips (Visual only for now, or implement local filter)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
-            color: Colors.white,
-            child: const SingleChildScrollView(
+            color: theme.cardColor,
+            child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  _FilterChip(label: 'Hammasi', isActive: true),
-                  SizedBox(width: 8),
-                  _FilterChip(label: 'Muvaffaqiyatli', isActive: false),
-                  SizedBox(width: 8),
-                  _FilterChip(label: 'Rad etilgan', isActive: false),
+                  _FilterChip(label: l10n.allPaymentsFilter, isActive: true),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: l10n.successfulPaymentsFilter,
+                    isActive: false,
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: l10n.rejectedPaymentsFilter,
+                    isActive: false,
+                  ),
                 ],
               ),
             ),
@@ -93,9 +111,7 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
           if (transactions.isEmpty && isLoading)
             const Expanded(child: Center(child: CircularProgressIndicator()))
           else if (transactions.isEmpty && !isLoading)
-            const Expanded(
-              child: Center(child: Text('To\'lovlar tarixi bo\'sh')),
-            )
+            Expanded(child: Center(child: Text(l10n.paymentHistoryEmpty)))
           else
             Expanded(
               child: ListView.builder(
@@ -122,8 +138,10 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                   return Card(
                     elevation: 1,
                     margin: const EdgeInsets.only(bottom: 12),
+                    color: theme.cardColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: colorScheme.outline),
                     ),
                     child: ListTile(
                       contentPadding: const EdgeInsets.all(16),
@@ -144,11 +162,11 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                         ),
                       ),
                       title: Text(
-                        'To\'lov #${tx.id}',
-                        style: const TextStyle(
+                        l10n.paymentRecordTitle(tx.id),
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       subtitle: Column(
@@ -157,16 +175,16 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                           const SizedBox(height: 4),
                           Text(
                             tx.createdAt,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
                               Text(
-                                tx.methodText,
+                                l10n.paymentMethodLabelText(tx.method.name),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -174,7 +192,7 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '• ${tx.statusText}',
+                                '• ${l10n.paymentStatusLabel(tx.status.name)}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: isSuccess
@@ -187,13 +205,13 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                         ],
                       ),
                       trailing: Text(
-                        tx.formattedAmount,
+                        _formatCurrencyAmount(l10n, tx.amount),
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           color: isSuccess
-                              ? AppColors.textPrimary
-                              : AppColors.textSecondary,
+                              ? colorScheme.onSurface
+                              : colorScheme.onSurfaceVariant,
                           decoration: isSuccess
                               ? null
                               : TextDecoration.lineThrough,
@@ -218,19 +236,23 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isActive ? AppColors.primaryBlue : AppColors.background,
+        color: isActive ? colorScheme.primary : colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isActive ? AppColors.primaryBlue : AppColors.border,
+          color: isActive ? colorScheme.primary : colorScheme.outline,
         ),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: isActive ? Colors.white : AppColors.textSecondary,
+          color: isActive
+              ? colorScheme.onPrimary
+              : colorScheme.onSurfaceVariant,
           fontSize: 13,
           fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
         ),

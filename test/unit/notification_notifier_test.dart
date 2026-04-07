@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:parent_school_app/core/localization/app_locale.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/presentation/providers/notification_provider.dart';
 import 'package:parent_school_app/data/datasources/remote/notification_api.dart';
 import 'package:parent_school_app/data/models/notification_model.dart';
@@ -10,12 +12,16 @@ import 'package:parent_school_app/data/datasources/remote/api_helpers.dart';
 // strictly we should use Mockito's generate, but manual mock is faster here)
 class MockNotificationApi with ApiHelpers implements NotificationApi {
   bool shouldThrowError = false;
+  bool shouldThrowGenericError = false;
 
   @override
   Future<List<NotificationModel>> getNotifications({
     int page = 1,
     int perPage = 20,
   }) async {
+    if (shouldThrowGenericError) {
+      throw '';
+    }
     if (shouldThrowError) {
       throw const ServerException(message: 'Load failed');
     }
@@ -54,6 +60,7 @@ void main() {
 
   setUp(() {
     mockApi = MockNotificationApi();
+    AppLocalizations.updateCurrent(AppLocalizations(AppLocale.uz));
     notificationNotifier = NotificationNotifier(api: mockApi);
   });
 
@@ -79,6 +86,22 @@ void main() {
       expect(notificationNotifier.state.isLoading, false);
       expect(notificationNotifier.state.error, 'Load failed');
     });
+
+    test(
+      'loadNotifications uses localized fallback for generic errors',
+      () async {
+        AppLocalizations.updateCurrent(AppLocalizations(AppLocale.en));
+        mockApi.shouldThrowGenericError = true;
+
+        await notificationNotifier.loadNotifications();
+
+        expect(notificationNotifier.state.isLoading, false);
+        expect(
+          notificationNotifier.state.error,
+          'Failed to load notifications',
+        );
+      },
+    );
 
     test('loadMore success', () async {
       await notificationNotifier.loadNotifications(); // Load page 1

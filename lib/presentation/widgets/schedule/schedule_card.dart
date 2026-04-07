@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 
 /// Schedule Card - Displays a single lesson in the schedule
 class ScheduleCard extends StatelessWidget {
@@ -26,6 +27,10 @@ class ScheduleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(
@@ -41,19 +46,17 @@ class ScheduleCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: isNow
-                        ? AppColors.primaryBlue
-                        : AppColors.textPrimary,
+                    color: isNow ? color : colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Container(width: 2, height: 30, color: AppColors.border),
+                Container(width: 2, height: 30, color: colorScheme.outline),
                 const SizedBox(height: 4),
                 Text(
                   endTime,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -66,12 +69,12 @@ class ScheduleCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(16),
                 border: Border(left: BorderSide(color: color, width: 4)),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.shadow.withValues(alpha: 0.05),
+                    color: theme.shadowColor.withValues(alpha: 0.08),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -85,10 +88,10 @@ class ScheduleCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           subjectName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                            color: colorScheme.onSurface,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -125,9 +128,9 @@ class ScheduleCard extends StatelessWidget {
                             color: AppColors.primaryBlue,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            'Hozir',
-                            style: TextStyle(
+                          child: Text(
+                            l10n.currentLessonBadge,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -139,32 +142,32 @@ class ScheduleCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.location_on_outlined,
                         size: 14,
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Xona: $room',
-                        style: const TextStyle(
+                        l10n.roomLabelText(room),
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Icon(
+                      Icon(
                         Icons.person_outline_rounded,
                         size: 14,
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           teacherName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

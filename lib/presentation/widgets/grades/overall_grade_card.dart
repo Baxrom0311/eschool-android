@@ -1,31 +1,38 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 
 /// Overall Grade Card - Displays GPA and summary info
 class OverallGradeCard extends StatelessWidget {
   final double gpa;
   final int totalLessons;
   final int attendanceRate;
+  final String className;
 
   const OverallGradeCard({
     super.key,
     required this.gpa,
     required this.totalLessons,
     required this.attendanceRate,
+    required this.className,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
+        border: Border.all(color: colorScheme.outline),
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: theme.shadowColor.withValues(alpha: 0.12),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -43,40 +50,41 @@ class OverallGradeCard extends StatelessWidget {
                     child: CircularProgressIndicator(
                       value: gpa / 5,
                       strokeWidth: 8,
-                      backgroundColor: AppColors.border,
-                      valueColor:
-                          const AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
+                      backgroundColor: colorScheme.surface,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        colorScheme.primary,
+                      ),
                     ),
                   ),
                   Text(
                     gpa.toStringAsFixed(1),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primaryBlue,
+                      color: colorScheme.primary,
                     ),
                   ),
                 ],
               ),
               const SizedBox(width: 20),
               // Text Info
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Umumiy o\'zlashtirish',
-                      style: TextStyle(
+                      l10n.overallPerformanceTitle,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
-                      'Sizning ko\'rsatkichingiz sinfda 4-o\'rinda',
+                      l10n.overallPerformanceSubtitle,
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -92,18 +100,18 @@ class OverallGradeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _StatItem(
-                label: 'Darslar',
+                label: l10n.lessonsStatLabel,
                 value: totalLessons.toString(),
                 icon: Icons.school_rounded,
               ),
               _StatItem(
-                label: 'Davomat',
+                label: l10n.attendanceStatLabel,
                 value: '$attendanceRate%',
                 icon: Icons.emoji_events_rounded,
               ),
-              const _StatItem(
-                label: 'Sinf',
-                value: '8-A',
+              _StatItem(
+                label: l10n.classLabel,
+                value: className,
                 icon: Icons.group_rounded,
               ),
             ],
@@ -127,24 +135,20 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
-        Icon(icon, color: AppColors.primaryBlue.withValues(alpha: 0.6), size: 24),
+        Icon(icon, color: colorScheme.primary.withValues(alpha: 0.7), size: 24),
         const SizedBox(height: 8),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.textSecondary,
-          ),
+          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
         ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/error/exceptions.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/rating_model.dart';
 
@@ -13,6 +14,8 @@ class RatingApi {
   final DioClient _client;
 
   RatingApi(this._client);
+
+  AppLocalizations get _l10n => AppLocalizations.current;
 
   /// Sinf bo'yicha reyting (lokal derivation)
   Future<List<RatingModel>> getClassRating(int classId) async {
@@ -53,8 +56,9 @@ class RatingApi {
 
       return RatingModel.fromJson({
         'id': _toInt(student['id']) == 0 ? childId : _toInt(student['id']),
-        'student_name': (student['name'] ?? student['full_name'] ?? 'O\'quvchi')
-            .toString(),
+        'student_name':
+            (student['name'] ?? student['full_name'] ?? _l10n.studentLabel)
+                .toString(),
         'rank': 1,
         'total_score': score,
         'average_grade': average,
@@ -79,8 +83,9 @@ class RatingApi {
       final avg = _toNullableDouble(child['average_grade']) ?? 0.0;
       rows.add({
         'id': _toInt(child['id']),
-        'student_name': (child['name'] ?? child['full_name'] ?? 'O\'quvchi')
-            .toString(),
+        'student_name':
+            (child['name'] ?? child['full_name'] ?? _l10n.studentLabel)
+                .toString(),
         'total_score': avg * 20.0,
         'average_grade': avg,
         'avatar_url': child['avatar_url']?.toString(),
@@ -164,7 +169,7 @@ class RatingApi {
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode;
         final data = e.response?.data;
-        String message = 'Server xatoligi';
+        String message = _l10n.errorServer;
         if (data is Map<String, dynamic>) {
           message =
               (data['message'] as String?) ??

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/routing/route_names.dart';
 import '../../../core/utils/formatters.dart';
 import '../../providers/auth_provider.dart';
@@ -13,6 +14,9 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final userState = ref.watch(userProvider);
     final paymentState = ref.watch(paymentProvider);
     final user = userState.user;
@@ -52,7 +56,9 @@ class ProfileScreen extends ConsumerWidget {
                       backgroundColor: Colors.white,
                       child: CircleAvatar(
                         radius: 47,
-                        backgroundColor: const Color(0xFFE8F0FF),
+                        backgroundColor: colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         backgroundImage: user?.avatarUrl != null
                             ? NetworkImage(user!.avatarUrl!)
                             : null,
@@ -68,7 +74,7 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
 
                     Text(
-                      user?.fullName ?? 'Foydalanuvchi',
+                      user?.fullName ?? l10n.userFallbackName,
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -78,7 +84,7 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 4),
 
                     Text(
-                      'Tel: ${user?.phone ?? "---"}',
+                      l10n.phoneDisplay(user?.phone ?? '---'),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -94,7 +100,7 @@ class ProfileScreen extends ConsumerWidget {
                             onTap: () => context.push(RouteNames.payments),
                             child: _StatCard(
                               icon: Icons.account_balance_wallet_rounded,
-                              label: 'Balans',
+                              label: l10n.balanceLabel,
                               value: hasFinancialData
                                   ? '${Formatters.formatCurrency(paymentState.balance!.balance.toDouble())} UZS'
                                   : '---',
@@ -107,8 +113,10 @@ class ProfileScreen extends ConsumerWidget {
                             onTap: () => context.push(RouteNames.childrenList),
                             child: _StatCard(
                               icon: Icons.people_rounded,
-                              label: 'Farzandlar',
-                              value: '${userState.children.length} ta',
+                              label: l10n.childrenLabel,
+                              value: l10n.childrenCount(
+                                userState.children.length,
+                              ),
                             ),
                           ),
                         ),
@@ -131,8 +139,8 @@ class ProfileScreen extends ConsumerWidget {
 
                 _SettingsItem(
                   icon: Icons.emoji_events_rounded,
-                  title: 'Yutuqlar va Nishonlar',
-                  subtitle: 'O\'yinlashtirilgan reyting',
+                  title: l10n.achievementsTitle,
+                  subtitle: l10n.achievementsSubtitle,
                   onTap: () {
                     context.push(RouteNames.leaderboard);
                   },
@@ -141,8 +149,8 @@ class ProfileScreen extends ConsumerWidget {
 
                 _SettingsItem(
                   icon: Icons.groups_rounded,
-                  title: 'Ota-onalar majlisi',
-                  subtitle: 'O\'qituvchi bilan uchrashuv belgilash',
+                  title: l10n.conferencesTitle,
+                  subtitle: l10n.conferencesSubtitle,
                   onTap: () {
                     context.push(RouteNames.conference);
                   },
@@ -151,8 +159,8 @@ class ProfileScreen extends ConsumerWidget {
 
                 _SettingsItem(
                   icon: Icons.assignment_late_rounded,
-                  title: 'E-Murojaat',
-                  subtitle: 'Davomat uzrlari',
+                  title: l10n.absenceAppealTitle,
+                  subtitle: l10n.absenceAppealSubtitle,
                   onTap: () {
                     context.push(RouteNames.absences);
                   },
@@ -161,8 +169,8 @@ class ProfileScreen extends ConsumerWidget {
 
                 _SettingsItem(
                   icon: Icons.local_library_rounded,
-                  title: 'Raqamli Kutubxona',
-                  subtitle: 'Darslik va kitoblar',
+                  title: l10n.digitalLibraryTitle,
+                  subtitle: l10n.digitalLibrarySubtitle,
                   onTap: () {
                     context.push(RouteNames.library);
                   },
@@ -171,8 +179,8 @@ class ProfileScreen extends ConsumerWidget {
 
                 _SettingsItem(
                   icon: Icons.person_outline_rounded,
-                  title: 'Shaxsiy ma\'lumotlar',
-                  subtitle: 'Profilingizni tahrirlash',
+                  title: l10n.personalInfoTitle,
+                  subtitle: l10n.personalInfoSubtitle,
                   onTap: () {
                     context.push(RouteNames.editProfile);
                   },
@@ -181,8 +189,8 @@ class ProfileScreen extends ConsumerWidget {
 
                 _SettingsItem(
                   icon: Icons.lock_outline_rounded,
-                  title: 'Parolni o\'zgartirish',
-                  subtitle: 'Xavfsizlik sozlamalari',
+                  title: l10n.passwordChangeTitle,
+                  subtitle: l10n.passwordChangeSubtitle,
                   onTap: () {
                     context.push(RouteNames.changePassword);
                   },
@@ -191,8 +199,8 @@ class ProfileScreen extends ConsumerWidget {
 
                 _SettingsItem(
                   icon: Icons.chat_bubble_outline_rounded,
-                  title: 'Chat / Yordam',
-                  subtitle: 'Qo\'llab-quvvatlash xizmati',
+                  title: l10n.chatSupportTitle,
+                  subtitle: l10n.chatSupportSubtitle,
                   onTap: () {
                     context.push(RouteNames.chatList);
                   },
@@ -201,8 +209,8 @@ class ProfileScreen extends ConsumerWidget {
 
                 _SettingsItem(
                   icon: Icons.notifications_none_rounded,
-                  title: 'Bildirishnomalar',
-                  subtitle: 'Bildirishnoma sozlamalari',
+                  title: l10n.notificationsTitle,
+                  subtitle: l10n.notificationSettingsSubtitle,
                   onTap: () {
                     context.push(RouteNames.notifications);
                   },
@@ -211,13 +219,13 @@ class ProfileScreen extends ConsumerWidget {
 
                 _SettingsItem(
                   icon: Icons.info_outline_rounded,
-                  title: 'Ilova haqida',
-                  subtitle: 'Versiya 1.0.0',
+                  title: l10n.aboutAppTitle,
+                  subtitle: l10n.versionLabel('1.0.0'),
                   onTap: () {
                     // Show about dialog
                     showAboutDialog(
                       context: context,
-                      applicationName: 'E-School',
+                      applicationName: l10n.schoolAppName,
                       applicationVersion: '1.0.0',
                       applicationIcon: const Icon(
                         Icons.school_rounded,
@@ -235,7 +243,7 @@ class ProfileScreen extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _handleLogout(context, ref),
                     icon: const Icon(Icons.logout_rounded),
-                    label: const Text('Tizimdan chiqish'),
+                    label: Text(l10n.logoutTitle),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.danger,
                       side: const BorderSide(
@@ -259,15 +267,16 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _handleLogout(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Tizimdan chiqish'),
-        content: const Text('Rostdan ham tizimdan chiqmoqchimisiz?'),
+        title: Text(l10n.logoutTitle),
+        content: Text(l10n.logoutConfirmMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Bekor qilish'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -279,9 +288,9 @@ class ProfileScreen extends ConsumerWidget {
                 context.go(RouteNames.login);
               }
             },
-            child: const Text(
-              'Chiqish',
-              style: TextStyle(color: AppColors.danger),
+            child: Text(
+              l10n.logoutAction,
+              style: const TextStyle(color: AppColors.danger),
             ),
           ),
         ],
@@ -363,11 +372,16 @@ class _SettingsItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.border, width: 1),
+        side: BorderSide(
+          color: colorScheme.outline.withValues(alpha: 0.6),
+          width: 1,
+        ),
       ),
       child: ListTile(
         onTap: onTap,
@@ -375,26 +389,26 @@ class _SettingsItem extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: AppColors.primaryBlue.withValues(alpha: 0.1),
+            color: colorScheme.primary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: AppColors.primaryBlue, size: 24),
+          child: Icon(icon, color: colorScheme.primary, size: 24),
         ),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
         ),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.chevron_right_rounded,
-          color: AppColors.textSecondary,
+          color: colorScheme.onSurfaceVariant,
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),

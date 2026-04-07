@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../core/localization/app_localizations.dart';
+
 part 'grade_model.g.dart';
 
 /// Baho modeli — fan bo'yicha baholar
@@ -58,22 +60,30 @@ class GradeModel extends Equatable {
 
   /// Baho turi matni
   String get gradeTypeText {
+    final l10n = AppLocalizations.current;
     switch (gradeType) {
       case 'daily':
-        return 'Kunlik';
+        return l10n.gradeTypeDaily;
       case 'exam':
-        return 'Imtihon';
+        return l10n.gradeTypeExam;
       case 'homework':
-        return 'Uy vazifasi';
+        return l10n.gradeTypeHomework;
       case 'test':
-        return 'Test';
+        return l10n.gradeTypeTest;
       default:
         return gradeType;
     }
   }
 
   @override
-  List<Object?> get props => [id, subjectName, grade, gradeType, createdAt, quarter];
+  List<Object?> get props => [
+    id,
+    subjectName,
+    grade,
+    gradeType,
+    createdAt,
+    quarter,
+  ];
 }
 
 /// Fan bo'yicha baholar xulosasi

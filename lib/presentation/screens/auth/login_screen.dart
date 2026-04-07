@@ -9,6 +9,7 @@ import '../../../core/network/api_error_handler.dart';
 import '../../../core/routing/route_names.dart';
 import '../../../core/utils/validators.dart';
 import '../../providers/app_locale_provider.dart';
+import '../../providers/app_theme_mode_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 
@@ -120,13 +121,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final currentLocale = ref.watch(appLocaleProvider);
+    final currentThemeMode = ref.watch(appThemeModeProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final inputFillColor = isDark
+        ? colorScheme.surface.withValues(alpha: 0.92)
+        : const Color(0xFFF2F5FA);
     final size = MediaQuery.of(context).size;
     final topHeight = size.height * 0.4;
     final isLoading = ref.watch(authProvider).isLoading;
     final isBusy = isLoading || _isSubmitting;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           Positioned(
@@ -163,13 +171,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               children: [
                                 Text(
                                   l10n.loginHeader,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 const Spacer(),
+                                PopupMenuButton<ThemeMode>(
+                                  tooltip: l10n.changeTheme,
+                                  initialValue: currentThemeMode,
+                                  onSelected: (themeMode) {
+                                    ref
+                                        .read(appThemeModeProvider.notifier)
+                                        .setThemeMode(themeMode);
+                                  },
+                                  color: theme.cardColor,
+                                  itemBuilder: (context) => ThemeMode.values
+                                      .map(
+                                        (mode) => PopupMenuItem<ThemeMode>(
+                                          value: mode,
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                _themeModeIcon(mode),
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Text(_themeModeLabel(mode, l10n)),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                  child: _buildHeaderChip(
+                                    child: Icon(
+                                      _themeModeIcon(currentThemeMode),
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
                                 PopupMenuButton<AppLocale>(
                                   tooltip: l10n.changeLanguage,
                                   initialValue: currentLocale,
@@ -187,22 +230,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ),
                                       )
                                       .toList(),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.14,
-                                      ),
-                                      borderRadius: BorderRadius.circular(999),
-                                      border: Border.all(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                      ),
-                                    ),
+                                  child: _buildHeaderChip(
                                     child: Text(
                                       currentLocale.code.toUpperCase(),
                                       style: const TextStyle(
@@ -211,15 +239,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  l10n.homeScreen,
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.75),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],
@@ -242,7 +261,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const SizedBox(height: 18),
                           Text(
                             l10n.welcome,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
@@ -280,7 +299,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 22),
                 child: Card(
                   elevation: 7,
-                  shadowColor: AppColors.shadow,
+                  shadowColor: theme.shadowColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(26),
                   ),
@@ -300,12 +319,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             validator: Validators.email,
                             decoration: InputDecoration(
                               hintText: l10n.emailExample,
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.alternate_email_rounded,
-                                color: AppColors.textHint,
+                                color: colorScheme.onSurfaceVariant,
                               ),
                               filled: true,
-                              fillColor: const Color(0xFFF2F5FA),
+                              fillColor: inputFillColor,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
                                 borderSide: BorderSide.none,
@@ -333,7 +352,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: Text(
                                   l10n.forgotPasswordShort,
                                   style: TextStyle(
-                                    color: AppColors.primaryBlue,
+                                    color: colorScheme.primary,
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -354,9 +373,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             validator: Validators.password,
                             decoration: InputDecoration(
                               hintText: '••••••••',
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.lock_outline_rounded,
-                                color: AppColors.textHint,
+                                color: colorScheme.onSurfaceVariant,
                               ),
                               suffixIcon: IconButton(
                                 onPressed: () {
@@ -368,11 +387,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   _isPasswordVisible
                                       ? Icons.visibility_off_outlined
                                       : Icons.visibility_outlined,
-                                  color: AppColors.textHint,
+                                  color: colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               filled: true,
-                              fillColor: const Color(0xFFF2F5FA),
+                              fillColor: inputFillColor,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
                                 borderSide: BorderSide.none,
@@ -389,10 +408,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: ElevatedButton(
                               onPressed: isBusy ? null : _handleLogin,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryBlue,
+                                backgroundColor: colorScheme.primary,
                                 foregroundColor: Colors.white,
                                 elevation: 4,
-                                shadowColor: AppColors.shadow,
+                                shadowColor: theme.shadowColor,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(18),
                                 ),
@@ -415,13 +434,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       children: [
                                         Text(
                                           l10n.loginButton,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             fontSize: 19,
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
-                                        SizedBox(width: 8),
-                                        Icon(Icons.arrow_forward_rounded),
+                                        const SizedBox(width: 8),
+                                        const Icon(Icons.arrow_forward_rounded),
                                       ],
                                     ),
                             ),
@@ -442,9 +461,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: Text(
                                   l10n.orLabel,
                                   style: TextStyle(
-                                    color: AppColors.textSecondary.withValues(
-                                      alpha: 0.8,
-                                    ),
+                                    color: colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.8),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -486,8 +504,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Text(
                             l10n.accountCreatedByAdmin,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: AppColors.textHint,
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -506,14 +524,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildSectionLabel(String text) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 12.5,
         letterSpacing: 0.6,
         fontWeight: FontWeight.w700,
-        color: AppColors.textSecondary,
+        color: colorScheme.onSurfaceVariant,
       ),
+    );
+  }
+
+  String _themeModeLabel(ThemeMode themeMode, AppLocalizations l10n) {
+    return switch (themeMode) {
+      ThemeMode.system => l10n.themeSystem,
+      ThemeMode.light => l10n.themeLight,
+      ThemeMode.dark => l10n.themeDark,
+    };
+  }
+
+  IconData _themeModeIcon(ThemeMode themeMode) {
+    return switch (themeMode) {
+      ThemeMode.system => Icons.brightness_auto_rounded,
+      ThemeMode.light => Icons.light_mode_rounded,
+      ThemeMode.dark => Icons.dark_mode_rounded,
+    };
+  }
+
+  Widget _buildHeaderChip({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: child,
     );
   }
 }
@@ -533,15 +580,24 @@ class _AuthOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Ink(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F7FC),
+          color: isDark ? colorScheme.surface : const Color(0xFFF5F7FC),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE6EBF3), width: 1),
+          border: Border.all(
+            color: isDark
+                ? colorScheme.outline.withValues(alpha: 0.7)
+                : const Color(0xFFE6EBF3),
+            width: 1,
+          ),
         ),
         child: Column(
           children: [
@@ -549,10 +605,11 @@ class _AuthOptionCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color:
+                    theme.textTheme.titleMedium?.color ?? AppColors.textPrimary,
               ),
             ),
           ],

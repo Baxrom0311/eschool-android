@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../../data/models/conference_model.dart';
 import '../../providers/conference_provider.dart';
@@ -33,12 +34,13 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
   }
 
   Future<void> _showBookingSheet() async {
+    final l10n = context.l10n;
     final child = ref.read(selectedChildProvider);
     final messenger = ScaffoldMessenger.of(context);
     if (child == null) {
       AppSnackBar.showOnMessenger(
         messenger,
-        'Avval farzandni tanlang',
+        l10n.selectChildFirst,
         type: AppSnackBarType.error,
       );
       return;
@@ -47,7 +49,9 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor:
+          Theme.of(context).bottomSheetTheme.backgroundColor ??
+          Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -68,9 +72,9 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
             AppSnackBar.showOnMessenger(
               messenger,
               success
-                  ? 'Uchrashuv muvaffaqiyatli belgilandi'
+                  ? l10n.conferenceBookedSuccess
                   : (ref.read(conferenceProvider).error ??
-                        'Majlisni belgilab bo\'lmadi'),
+                        l10n.conferenceBookFailed),
               type: success ? AppSnackBarType.success : AppSnackBarType.error,
             );
             return success;
@@ -81,11 +85,12 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
   }
 
   Future<void> _openMeetingLink(String url) async {
+    final l10n = context.l10n;
     final uri = Uri.tryParse(url);
     if (uri == null) {
       AppSnackBar.show(
         context,
-        'Majlis havolasi noto\'g\'ri',
+        l10n.invalidMeetingLink,
         type: AppSnackBarType.error,
       );
       return;
@@ -101,7 +106,7 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        'Majlis havolasini ochib bo\'lmadi',
+        l10n.openMeetingLinkFailed,
         type: AppSnackBarType.error,
       );
     }
@@ -122,6 +127,9 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final state = ref.watch(conferenceProvider);
 
     ref.listen(selectedChildProvider, (previous, next) {
@@ -131,17 +139,20 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
     });
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Ota-onalar majlisi'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        title: Text(l10n.conferenceTitle),
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         elevation: 1,
       ),
       body: AppStateView(
         isLoading: state.isLoading && state.bookings.isEmpty,
         errorMessage: state.bookings.isEmpty ? state.error : null,
         isEmpty: state.bookings.isEmpty && !state.isLoading,
-        emptyMessage: 'Hali majlis bron qilinmagan',
+        emptyMessage: l10n.conferenceEmpty,
         onRetry: _loadConferenceData,
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
@@ -152,12 +163,17 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
 
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
+              color: theme.cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: colorScheme.outline),
+              ),
               child: ListTile(
                 leading: const Icon(
                   Icons.people_alt,
                   color: AppColors.primaryBlue,
                 ),
-                title: Text('${booking.teacherName} bilan uchrashuv'),
+                title: Text(l10n.meetingWithTeacher(booking.teacherName)),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -169,15 +185,13 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           booking.location!,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: TextStyle(color: colorScheme.onSurfaceVariant),
                         ),
                       ),
                     Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: Chip(
-                        label: Text(booking.status),
+                        label: Text(l10n.conferenceStatusLabel(booking.status)),
                         backgroundColor: statusColor.withValues(alpha: 0.12),
                         side: BorderSide(
                           color: statusColor.withValues(alpha: 0.2),
@@ -191,7 +205,10 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
                 trailing:
                     booking.zoomLink != null && booking.zoomLink!.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.video_call, color: Colors.green),
+                        icon: Icon(
+                          Icons.video_call,
+                          color: _statusColor(booking.status),
+                        ),
                         onPressed: () => _openMeetingLink(booking.zoomLink!),
                       )
                     : null,
@@ -201,13 +218,14 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primaryBlue,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         onPressed: state.isLoading ? null : _showBookingSheet,
         icon: const Icon(Icons.add),
         label: Text(
           state.availableSlots.isEmpty
-              ? 'Majlis belgilash'
-              : 'Bo\'sh slotlar (${state.availableSlots.length})',
+              ? l10n.scheduleConferenceAction
+              : l10n.availableSlotsCount(state.availableSlots.length),
         ),
       ),
     );
@@ -257,6 +275,9 @@ class _ConferenceBookingSheetState extends State<_ConferenceBookingSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Padding(
@@ -266,21 +287,18 @@ class _ConferenceBookingSheetState extends State<_ConferenceBookingSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Center(
-            child: SizedBox(
-              width: 48,
-              child: Divider(thickness: 4, color: AppColors.border),
-            ),
+            child: SizedBox(width: 48, child: Divider(thickness: 4)),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Bo\'sh uchrashuv slotlari',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Text(
+            l10n.availableSlotsTitle,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           if (widget.slots.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(top: 12, bottom: 16),
-              child: Text('Hozircha bo\'sh slotlar topilmadi'),
+            Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 16),
+              child: Text(l10n.noAvailableSlots),
             )
           else
             ConstrainedBox(
@@ -304,13 +322,13 @@ class _ConferenceBookingSheetState extends State<_ConferenceBookingSheet> {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isSelected
-                              ? AppColors.primaryBlue
-                              : AppColors.border,
+                              ? colorScheme.primary
+                              : colorScheme.outline,
                           width: isSelected ? 1.5 : 1,
                         ),
                         color: isSelected
-                            ? AppColors.primaryBlue.withValues(alpha: 0.06)
-                            : Colors.white,
+                            ? colorScheme.primary.withValues(alpha: 0.06)
+                            : theme.cardColor,
                       ),
                       child: Row(
                         children: [
@@ -321,8 +339,8 @@ class _ConferenceBookingSheetState extends State<_ConferenceBookingSheet> {
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.border,
+                                    ? colorScheme.primary
+                                    : colorScheme.outline,
                                 width: 2,
                               ),
                             ),
@@ -331,8 +349,8 @@ class _ConferenceBookingSheetState extends State<_ConferenceBookingSheet> {
                                     child: Container(
                                       width: 10,
                                       height: 10,
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.primaryBlue,
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primary,
                                         shape: BoxShape.circle,
                                       ),
                                     ),
@@ -358,9 +376,9 @@ class _ConferenceBookingSheetState extends State<_ConferenceBookingSheet> {
                                     padding: const EdgeInsets.only(top: 4),
                                     child: Text(
                                       slot.location!,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 12,
-                                        color: AppColors.textSecondary,
+                                        color: colorScheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ),
@@ -379,7 +397,7 @@ class _ConferenceBookingSheetState extends State<_ConferenceBookingSheet> {
             controller: _noteController,
             maxLines: 3,
             decoration: InputDecoration(
-              labelText: 'Izoh (ixtiyoriy)',
+              labelText: l10n.noteOptional,
               alignLabelWithHint: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -397,20 +415,20 @@ class _ConferenceBookingSheetState extends State<_ConferenceBookingSheet> {
                   ? null
                   : _handleBook,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 minimumSize: const Size.fromHeight(48),
               ),
               child: _isSubmitting
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                       ),
                     )
-                  : const Text('Majlisni belgilash'),
+                  : Text(l10n.bookConferenceAction),
             ),
           ),
         ],

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/constants/app_colors.dart';
+
+import '../../../core/localization/app_localizations.dart';
 import '../../providers/academic_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/schedule/schedule_card.dart';
@@ -41,6 +42,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final scheduleAsync = ref.watch(scheduleProvider);
 
     // Extract data if available
@@ -56,20 +60,20 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [
           // ─── Blue Header ───
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(bottom: 24),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
+                colors: [colorScheme.primary, colorScheme.secondary],
               ),
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(32),
                 bottomRight: Radius.circular(32),
               ),
@@ -77,11 +81,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             child: SafeArea(
               child: Column(
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Text(
-                      'Dars jadvali',
-                      style: TextStyle(
+                      l10n.scheduleTitle,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -129,13 +133,13 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                                 Text(
                                   DateFormat(
                                     'E',
-                                    'uz',
+                                    l10n.appLocale.name,
                                   ).format(day).toUpperCase(),
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: isSelected
-                                        ? AppColors.primaryBlue
+                                        ? colorScheme.primary
                                         : Colors.white70,
                                   ),
                                 ),
@@ -146,7 +150,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: isSelected
-                                        ? AppColors.primaryBlue
+                                        ? colorScheme.primary
                                         : Colors.white,
                                   ),
                                 ),
@@ -166,11 +170,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           if (isLoading && schedule.isEmpty)
             const Expanded(child: Center(child: CircularProgressIndicator()))
           else if (hasError && schedule.isEmpty)
-            Expanded(
-              child: Center(child: Text('Xatolik: ${scheduleAsync.error}')),
-            )
+            Expanded(child: Center(child: Text('${scheduleAsync.error}')))
           else if (schedule.isEmpty)
-            const Expanded(child: Center(child: Text('Darslar mavjud emas')))
+            Expanded(child: Center(child: Text(l10n.noScheduleAvailable)))
           else
             Expanded(
               child: ListView.builder(

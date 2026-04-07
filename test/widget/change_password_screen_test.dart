@@ -50,8 +50,8 @@ void main() {
       await tester.tap(submitBtn);
       await tester.pumpAndSettle();
 
-      expect(find.text('Kiritish shart'), findsOneWidget);
-      expect(find.text('Eng kamida 8 ta belgi'), findsOneWidget);
+      expect(find.text('Bu maydon to\'ldirilishi shart'), findsOneWidget);
+      expect(find.text('Kamida 8 ta belgi kiritilishi kerak'), findsOneWidget);
       verifyNever(() => mockNotifier.changePassword(
             currentPassword: any(named: 'currentPassword'),
             newPassword: any(named: 'newPassword'),
@@ -72,7 +72,7 @@ void main() {
       await tester.tap(submitBtn);
       await tester.pumpAndSettle();
 
-      expect(find.text('Parollar mos kelmadi'), findsOneWidget);
+      expect(find.text('Parollar mos kelmayapti'), findsOneWidget);
       verifyNever(() => mockNotifier.changePassword(
             currentPassword: any(named: 'currentPassword'),
             newPassword: any(named: 'newPassword'),

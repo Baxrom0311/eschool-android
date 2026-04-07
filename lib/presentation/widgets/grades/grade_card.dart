@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 
 /// Grade Card - Displays subject information, grade, and progress
 class GradeCard extends StatelessWidget {
@@ -30,11 +30,17 @@ class GradeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       elevation: 2,
-      shadowColor: AppColors.shadow,
+      color: theme.cardColor,
+      shadowColor: theme.shadowColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outline),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -50,11 +56,7 @@ class GradeCard extends StatelessWidget {
                     color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 28,
-                  ),
+                  child: Icon(icon, color: color, size: 28),
                 ),
                 const SizedBox(width: 16),
 
@@ -65,18 +67,18 @@ class GradeCard extends StatelessWidget {
                     children: [
                       Text(
                         name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         teacher,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -116,19 +118,19 @@ class GradeCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Davomat',
+                          Text(
+                            l10n.attendanceStatLabel,
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                           Text(
                             '$attendance%',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                         ],
@@ -138,7 +140,7 @@ class GradeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: attendance / 100,
-                          backgroundColor: AppColors.border,
+                          backgroundColor: colorScheme.surface,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             attendance >= 95
                                 ? const Color(0xFF4CAF50)
@@ -158,19 +160,19 @@ class GradeCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'O\'rtacha',
+                          Text(
+                            l10n.averageShortLabel,
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                           Text(
                             '$average%',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                         ],
@@ -180,7 +182,7 @@ class GradeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: average / 100,
-                          backgroundColor: AppColors.border,
+                          backgroundColor: colorScheme.surface,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             average >= 90
                                 ? const Color(0xFF4CAF50)

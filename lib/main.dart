@@ -14,6 +14,7 @@ import 'core/theme/app_theme.dart';
 import 'core/constants/app_colors.dart';
 import 'core/services/firebase_service.dart';
 import 'presentation/providers/app_locale_provider.dart';
+import 'presentation/providers/app_theme_mode_provider.dart';
 import 'presentation/screens/home/widgets/network_status_banner.dart';
 
 void main() async {
@@ -93,6 +94,7 @@ class _ParentSchoolAppState extends ConsumerState<ParentSchoolApp> {
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(appLocaleProvider);
+    final themeMode = ref.watch(appThemeModeProvider);
     final l10n = AppLocalizations(locale);
     AppLocalizations.updateCurrent(l10n);
     final router = ref.watch(routerProvider);
@@ -101,6 +103,8 @@ class _ParentSchoolAppState extends ConsumerState<ParentSchoolApp> {
       title: l10n.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       routerConfig: router,
       locale: locale.locale,
       supportedLocales: AppLocalizations.supportedLocales,

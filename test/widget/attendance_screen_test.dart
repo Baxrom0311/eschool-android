@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -8,6 +9,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:parent_school_app/core/error/failures.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/models/attendance_model.dart';
 import 'package:parent_school_app/data/models/child_model.dart';
@@ -70,10 +72,14 @@ void main() {
         academicRepositoryProvider.overrideWithValue(mockAcademicRepository),
         selectedChildProvider.overrideWithValue(tChild),
       ],
-      child: const MaterialApp(
+      child: MaterialApp(
+        locale: const Locale('uz'),
+        supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: [
-          DefaultMaterialLocalizations.delegate,
-          DefaultWidgetsLocalizations.delegate,
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
         ],
         home: AttendanceScreen(),
       ),
@@ -91,6 +97,7 @@ void main() {
       ).thenAnswer((_) => completer.future);
 
       await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);

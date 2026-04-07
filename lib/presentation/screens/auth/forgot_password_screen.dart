@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/api_error_handler.dart';
 import '../../../core/utils/validators.dart';
 import '../../providers/auth_provider.dart';
@@ -45,6 +46,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   // ────────── 1-bosqich: telefon → kod yuborish ──────────
 
   Future<void> _handleSendCode() async {
+    final l10n = context.l10n;
     if (!_phoneFormKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
@@ -56,12 +58,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       if (!mounted) return;
       setState(() => _codeSent = true);
 
-      _showSuccess('Tasdiqlash kodi yuborildi');
+      _showSuccess(l10n.verificationCodeSent);
     } catch (e) {
       _showError(
         ApiErrorHandler.readableMessage(
           e,
-          fallback: 'Tasdiqlash kodini yuborishda xatolik',
+          fallback: l10n.verificationCodeSendFailed,
         ),
       );
     } finally {
@@ -72,6 +74,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   // ────────── 2-bosqich: kod + parol → reset ──────────
 
   Future<void> _handleResetPassword() async {
+    final l10n = context.l10n;
     if (!_resetFormKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
@@ -88,8 +91,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Parol muvaffaqiyatli yangilandi!'),
+        SnackBar(
+          content: Text(l10n.passwordResetSuccess),
           backgroundColor: AppColors.success,
         ),
       );
@@ -100,7 +103,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       _showError(
         ApiErrorHandler.readableMessage(
           e,
-          fallback: 'Parolni yangilashda xatolik',
+          fallback: l10n.passwordResetFailed,
         ),
       );
     } finally {
@@ -124,6 +127,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final size = MediaQuery.of(context).size;
     final topHeight = size.height * 0.32;
 
@@ -167,8 +171,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Text(
-                      'Parolni tiklash',
+                    Text(
+                      l10n.forgotPasswordTitle,
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
@@ -178,8 +182,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     const SizedBox(height: 6),
                     Text(
                       _codeSent
-                          ? 'SMS orqali kelgan kodni kiriting'
-                          : 'Telefon raqamingizni kiriting',
+                          ? l10n.forgotPasswordCodeSubtitle
+                          : l10n.forgotPasswordPhoneSubtitle,
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -224,12 +228,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   // ────────── BOSQICH 1: telefon raqam formasi ──────────
 
   Widget _buildPhoneForm() {
+    final l10n = context.l10n;
     return Form(
       key: _phoneFormKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildLabel('TELEFON RAQAM'),
+          _buildLabel(l10n.phoneNumberSection),
           const SizedBox(height: 8),
           TextFormField(
             controller: _phoneController,
@@ -271,8 +276,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Kod yuborish',
+                  : Text(
+                      l10n.sendCodeAction,
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -284,8 +289,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Center(
             child: TextButton(
               onPressed: () => context.pop(),
-              child: const Text(
-                'Kirish sahifasiga qaytish',
+              child: Text(
+                l10n.backToLoginAction,
                 style: TextStyle(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.w600,
@@ -301,12 +306,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   // ────────── BOSQICH 2: kod + yangi parol formasi ──────────
 
   Widget _buildResetForm() {
+    final l10n = context.l10n;
     return Form(
       key: _resetFormKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildLabel('TASDIQLASH KODI'),
+          _buildLabel(l10n.verificationCodeSection),
           const SizedBox(height: 8),
           TextFormField(
             controller: _codeController,
@@ -314,12 +320,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             textInputAction: TextInputAction.next,
             maxLength: 6,
             validator: (v) {
-              if (v == null || v.isEmpty) return 'Kodni kiriting';
-              if (v.length != 6) return 'Kod 6 xonali bo\'lishi kerak';
+              if (v == null || v.isEmpty) return l10n.codeRequired;
+              if (v.length != 6) return l10n.codeLengthInvalid;
               return null;
             },
             decoration: InputDecoration(
-              hintText: '123456',
+              hintText: l10n.verificationCodeHint,
               counterText: '',
               prefixIcon: const Icon(
                 Icons.sms_outlined,
@@ -334,17 +340,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             ),
           ),
           const SizedBox(height: 18),
-          _buildLabel('YANGI PAROL'),
+          _buildLabel(l10n.newPasswordLabel.toUpperCase()),
           const SizedBox(height: 8),
           TextFormField(
             controller: _passwordController,
             obscureText: !_isPasswordVisible,
             textInputAction: TextInputAction.next,
             validator: (v) {
-              if (v == null || v.isEmpty) return 'Parol kiriting';
-              if (v.length < 8) {
-                return 'Parol kamida 8 ta belgidan iborat bo\'lishi kerak';
-              }
+              if (v == null || v.isEmpty) return l10n.passwordRequired;
+              if (v.length < 8) return l10n.minimumLength(8);
               return null;
             },
             decoration: InputDecoration(
@@ -373,17 +377,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             ),
           ),
           const SizedBox(height: 18),
-          _buildLabel('PAROLNI TASDIQLASH'),
+          _buildLabel(l10n.confirmPasswordLabel.toUpperCase()),
           const SizedBox(height: 8),
           TextFormField(
             controller: _confirmController,
             obscureText: !_isConfirmVisible,
             textInputAction: TextInputAction.done,
             validator: (v) {
-              if (v == null || v.isEmpty) return 'Parolni tasdiqlang';
-              if (v != _passwordController.text) {
-                return 'Parollar mos kelmaydi';
-              }
+              if (v == null || v.isEmpty) return l10n.confirmPasswordRequired;
+              if (v != _passwordController.text) return l10n.passwordsDoNotMatch;
               return null;
             },
             decoration: InputDecoration(
@@ -432,8 +434,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Parolni yangilash',
+                  : Text(
+                      l10n.resetPasswordAction,
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -452,8 +454,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   _confirmController.clear();
                 });
               },
-              child: const Text(
-                'Qaytadan kod yuborish',
+              child: Text(
+                l10n.resendCodeAction,
                 style: TextStyle(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.w600,

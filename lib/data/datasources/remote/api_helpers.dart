@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/error/exceptions.dart';
 
 /// Barcha API klasslarda takrorlanadigan yordamchi funksiyalarni
@@ -17,15 +18,13 @@ mixin ApiHelpers {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.connectionError:
-        return const NetworkException(
-          message: 'Internet bilan aloqa yo\'q. Tarmoqni tekshiring.',
-        );
+        return NetworkException(message: AppStrings.noInternet);
 
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode;
         final data = e.response?.data;
 
-        String message = 'Server xatoligi';
+        String message = AppStrings.errorServer;
 
         if (data is Map<String, dynamic>) {
           message =
@@ -60,10 +59,10 @@ mixin ApiHelpers {
         return ServerException(message: message, statusCode: statusCode);
 
       case DioExceptionType.cancel:
-        return const ServerException(message: 'So\'rov bekor qilindi');
+        return ServerException(message: AppStrings.requestCancelled);
 
       default:
-        return const ServerException(message: 'Noma\'lum xatolik yuz berdi');
+        return ServerException(message: AppStrings.errorGeneric);
     }
   }
 

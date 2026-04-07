@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class AttendanceCard extends StatelessWidget {
   final double attendanceRate;
@@ -15,6 +16,8 @@ class AttendanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -22,10 +25,7 @@ class AttendanceCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.primaryBlue,
-            AppColors.secondaryBlue,
-          ],
+          colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -39,7 +39,7 @@ class AttendanceCard extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _buildStatItem('Davomat', '$attendanceRate%'),
+            child: _buildStatItem(l10n.attendanceStatLabel, '$attendanceRate%'),
           ),
           Stack(
             alignment: Alignment.center,
@@ -56,7 +56,7 @@ class AttendanceCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  'Lvl $level',
+                  l10n.levelBadge(level),
                   style: const TextStyle(
                     color: AppColors.primaryBlue,
                     fontWeight: FontWeight.bold,
@@ -67,7 +67,11 @@ class AttendanceCard extends StatelessWidget {
             ],
           ),
           Expanded(
-            child: _buildStatItem('Coinlar', '$score', alignEnd: true),
+            child: _buildStatItem(
+              l10n.coinsStatLabel,
+              '$score',
+              alignEnd: true,
+            ),
           ),
         ],
       ),
@@ -76,8 +80,9 @@ class AttendanceCard extends StatelessWidget {
 
   Widget _buildStatItem(String label, String value, {bool alignEnd = false}) {
     return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         Text(
           label,

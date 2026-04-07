@@ -2,13 +2,14 @@ import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/error/exceptions.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/storage/local_cache_service.dart';
 import '../../models/assignment_model.dart';
 import '../../models/attendance_model.dart';
 import '../../models/grade_model.dart';
 import '../../models/schedule_model.dart';
 import 'api_helpers.dart';
-import '../../../core/storage/local_cache_service.dart';
 
 /// Academic API — baholar, jadval, topshiriqlar, davomat
 ///
@@ -20,43 +21,61 @@ class AcademicApi with ApiHelpers {
 
   AcademicApi(this._client, this._cache);
 
+  AppLocalizations get _l10n => AppLocalizations.current;
+
+  ValidationException _assignmentFileRequiredException() {
+    final message = _l10n.assignmentSelectFileFirst;
+    return ValidationException(
+      message: message,
+      errors: {
+        'files': [message],
+      },
+    );
+  }
+
   // ─── Baholar ───
 
   Future<List<GradeModel>> getGrades(int childId, {int? quarter}) async {
     try {
       final response = await _client.get(
-        ApiConstants.grades(childId), 
+        ApiConstants.grades(childId),
         queryParameters: {
           'student_id': childId,
           if (quarter != null) 'quarter_id': quarter,
         },
       );
       final data = asMap(response.data);
-      final bySubject = data['by_subject'] is List 
-          ? (data['by_subject'] as List).whereType<Map>().toList() 
+      final bySubject = data['by_subject'] is List
+          ? (data['by_subject'] as List).whereType<Map>().toList()
           : [];
 
       final results = <GradeModel>[];
       for (final subjectBlock in bySubject) {
-        final subjectName = asMap(subjectBlock['subject'])['name']?.toString() ?? 'Fan';
-        final grades = subjectBlock['grades'] is List 
-            ? (subjectBlock['grades'] as List).whereType<Map>().toList() 
+        final subjectName =
+            asMap(subjectBlock['subject'])['name']?.toString() ??
+            _l10n.subjectFallbackName;
+        final grades = subjectBlock['grades'] is List
+            ? (subjectBlock['grades'] as List).whereType<Map>().toList()
             : [];
-            
+
         for (final g in grades) {
           final quarterNo = toInt(g['quarter']);
           if (quarter != null && quarterNo != quarter) continue;
-          
-          results.add(GradeModel.fromJson({
-             'id': stableId(g), // Fake ID until backend yields real ID
-             'subject_name': subjectName,
-             'grade': toInt(g['grade_5']) > 0 ? toInt(g['grade_5']) : 0,
-             'grade_type': 'quarter',
-             'teacher_name': null,
-             'comment': null,
-             'created_at': (g['calculated_at'] ?? DateTime.now().toIso8601String()).toString(),
-             'quarter': quarterNo == 0 ? 1 : quarterNo,
-          }));
+
+          results.add(
+            GradeModel.fromJson({
+              'id': stableId(g), // Fake ID until backend yields real ID
+              'subject_name': subjectName,
+              'grade': toInt(g['grade_5']) > 0 ? toInt(g['grade_5']) : 0,
+              'grade_type': 'quarter',
+              'teacher_name': null,
+              'comment': null,
+              'created_at':
+                  (g['calculated_at'] ?? DateTime.now().toIso8601String())
+                      .toString(),
+              'quarter': quarterNo == 0 ? 1 : quarterNo,
+            }),
+          );
         }
       }
       return results;
@@ -68,26 +87,34 @@ class AcademicApi with ApiHelpers {
   Future<List<SubjectGradeSummary>> getGradeSummary(int childId) async {
     try {
       final response = await _client.get(
-        ApiConstants.grades(childId), 
+        ApiConstants.grades(childId),
         queryParameters: {'student_id': childId},
       );
       final data = asMap(response.data);
-      final bySubject = data['by_subject'] is List ? (data['by_subject'] as List).whereType<Map>().toList() : [];
+      final bySubject = data['by_subject'] is List
+          ? (data['by_subject'] as List).whereType<Map>().toList()
+          : [];
 
       return bySubject.map((subjectBlock) {
-          final subjectName = asMap(subjectBlock['subject'])['name']?.toString() ?? 'Fan';
-          final grades = subjectBlock['grades'] is List ? (subjectBlock['grades'] as List).whereType<Map>().toList() : [];
-          
-          double sum = 0.0;
-          for (var g in grades) { sum += toInt(g['grade_5']); }
-          double average = grades.isNotEmpty ? (sum / grades.length) : 0.0;
+        final subjectName =
+            asMap(subjectBlock['subject'])['name']?.toString() ??
+            _l10n.subjectFallbackName;
+        final grades = subjectBlock['grades'] is List
+            ? (subjectBlock['grades'] as List).whereType<Map>().toList()
+            : [];
 
-          return SubjectGradeSummary.fromJson({
-            'subject_name': subjectName,
-            'average_grade': average,
-            'total_grades': grades.length,
-            'teacher_name': null,
-          });
+        double sum = 0.0;
+        for (var g in grades) {
+          sum += toInt(g['grade_5']);
+        }
+        double average = grades.isNotEmpty ? (sum / grades.length) : 0.0;
+
+        return SubjectGradeSummary.fromJson({
+          'subject_name': subjectName,
+          'average_grade': average,
+          'total_grades': grades.length,
+          'teacher_name': null,
+        });
       }).toList();
     } on DioException catch (e) {
       throw handleDioError(e);
@@ -104,13 +131,14 @@ class AcademicApi with ApiHelpers {
         queryParameters: {'student_id': childId, 'days': 7},
       );
       final root = asMap(response.data);
-      
+
       // Save schedule to local cache
       await _cache.save(cacheKey, root);
 
       return _parseSchedule(root, childId);
     } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionError || e.type == DioExceptionType.unknown) {
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.unknown) {
         final cachedData = await _cache.read(cacheKey);
         if (cachedData != null) {
           return _parseSchedule(asMap(cachedData), childId);
@@ -124,44 +152,44 @@ class AcademicApi with ApiHelpers {
     final entries = _extractScheduleEntries(root, childId);
     final gradingMode = _normalizeGradingMode(root['grading_mode']);
 
-      return entries.map((entry) {
-        final lessonTime = asMap(entry['lessonTime']);
-        final subject = asMap(entry['subject']);
-        final teacher = asMap(entry['teacher']);
-        final room = asMap(entry['room']);
-        final dateKey = entry['_date']?.toString();
-        final mark = _resolveScheduleMark(
-          root,
-          childId: childId,
-          entry: entry,
-          dateKey: dateKey,
-        );
+    return entries.map((entry) {
+      final lessonTime = asMap(entry['lessonTime']);
+      final subject = asMap(entry['subject']);
+      final teacher = asMap(entry['teacher']);
+      final room = asMap(entry['room']);
+      final dateKey = entry['_date']?.toString();
+      final mark = _resolveScheduleMark(
+        root,
+        childId: childId,
+        entry: entry,
+        dateKey: dateKey,
+      );
 
-        final fallbackDay = _weekdayFromDate(dateKey);
-        final dayOfWeek = toInt(entry['day_of_week']) == 0
-            ? fallbackDay
-            : toInt(entry['day_of_week']);
+      final fallbackDay = _weekdayFromDate(dateKey);
+      final dayOfWeek = toInt(entry['day_of_week']) == 0
+          ? fallbackDay
+          : toInt(entry['day_of_week']);
 
-        return ScheduleModel.fromJson({
-          'id': toInt(entry['id']) == 0 ? stableId(entry) : toInt(entry['id']),
-          'subject_name': (subject['name'] ?? 'Fan').toString(),
-          'teacher_name': (teacher['name'] ?? 'O\'qituvchi').toString(),
-          'start_time': (lessonTime['starts_at'] ?? '').toString(),
-          'end_time': (lessonTime['ends_at'] ?? '').toString(),
-          'day_of_week': dayOfWeek == 0 ? 1 : dayOfWeek,
-          'lesson_number': toInt(
-            lessonTime['lesson_no'] ??
-                entry['lesson_number'] ??
-                entry['lesson_no'] ??
-                1,
-          ),
-          'room_number': room['name']?.toString(),
-          'mark_value': _resolveTimetableMarkValue(mark, gradingMode),
-          'mark_mode': gradingMode,
-        });
-      }).toList();
-    }
-
+      return ScheduleModel.fromJson({
+        'id': toInt(entry['id']) == 0 ? stableId(entry) : toInt(entry['id']),
+        'subject_name': (subject['name'] ?? _l10n.subjectFallbackName)
+            .toString(),
+        'teacher_name': (teacher['name'] ?? _l10n.teacherLabel).toString(),
+        'start_time': (lessonTime['starts_at'] ?? '').toString(),
+        'end_time': (lessonTime['ends_at'] ?? '').toString(),
+        'day_of_week': dayOfWeek == 0 ? 1 : dayOfWeek,
+        'lesson_number': toInt(
+          lessonTime['lesson_no'] ??
+              entry['lesson_number'] ??
+              entry['lesson_no'] ??
+              1,
+        ),
+        'room_number': room['name']?.toString(),
+        'mark_value': _resolveTimetableMarkValue(mark, gradingMode),
+        'mark_mode': gradingMode,
+      });
+    }).toList();
+  }
 
   // ─── Topshiriqlar ───
 
@@ -198,7 +226,10 @@ class AcademicApi with ApiHelpers {
     }
   }
 
-  Future<AssignmentModel> getAssignmentDetails(int assignmentId, int childId) async {
+  Future<AssignmentModel> getAssignmentDetails(
+    int assignmentId,
+    int childId,
+  ) async {
     try {
       final response = await _client.get(
         ApiConstants.parentHomeworkDetails(assignmentId),
@@ -209,8 +240,8 @@ class AcademicApi with ApiHelpers {
       final homeworkData = asMap(root['homework']);
 
       if (homeworkData.isEmpty) {
-        throw const ServerException(
-          message: 'Topshiriq topilmadi',
+        throw ServerException(
+          message: _l10n.assignmentNotFound,
           statusCode: 404,
         );
       }
@@ -227,13 +258,7 @@ class AcademicApi with ApiHelpers {
     String? filePath,
   }) async {
     if (filePath == null || filePath.isEmpty) {
-      throw const ValidationException(
-        message:
-            'Tenant API bo\'yicha homework submit qilish uchun kamida bitta fayl yuborish majburiy.',
-        errors: {
-          'files': ['Kamida bitta fayl tanlang va yuboring.'],
-        },
-      );
+      throw _assignmentFileRequiredException();
     }
 
     await submitAssignmentWithFiles(
@@ -250,20 +275,13 @@ class AcademicApi with ApiHelpers {
   }) async {
     try {
       if (filePaths.isEmpty) {
-        throw const ValidationException(
-          message:
-              'Tenant API bo\'yicha homework submit qilish uchun kamida bitta fayl yuborish majburiy.',
-          errors: {
-            'files': ['Kamida bitta fayl tanlang va yuboring.'],
-          },
-        );
+        throw _assignmentFileRequiredException();
       }
 
       final childId = await _resolveHomeworkChildId(assignmentId);
       if (childId == null || childId <= 0) {
-        throw const ServerException(
-          message:
-              'Homework uchun student_id aniqlanmadi. Qayta urinib ko\'ring.',
+        throw ServerException(
+          message: _l10n.assignmentStudentResolveFailed,
           statusCode: 422,
         );
       }
@@ -320,13 +338,17 @@ class AcademicApi with ApiHelpers {
         queryParameters: {'student_id': childId},
       );
       final data = asMap(response.data);
-      final recordsRaw = data['records'] is List ? (data['records'] as List).whereType<Map>().toList() : [];
+      final recordsRaw = data['records'] is List
+          ? (data['records'] as List).whereType<Map>().toList()
+          : [];
 
       final attendance = <AttendanceModel>[];
       for (final mark in recordsRaw) {
         final date = (mark['date'] ?? '').toString();
         if (date.isEmpty) continue;
-        if (month != null && month.isNotEmpty && !date.startsWith(month)) continue;
+        if (month != null && month.isNotEmpty && !date.startsWith(month)) {
+          continue;
+        }
 
         attendance.add(
           AttendanceModel.fromJson({
@@ -354,7 +376,7 @@ class AcademicApi with ApiHelpers {
       );
       final data = asMap(response.data);
       final summary = asMap(data['summary']);
-      
+
       final total = toInt(summary['total']);
       final present = toInt(summary['present']);
       final percentage = total == 0 ? 0.0 : (present * 100.0) / total;
@@ -371,7 +393,6 @@ class AcademicApi with ApiHelpers {
       throw handleDioError(e);
     }
   }
-
 
   List<Map<String, dynamic>> _extractScheduleEntries(
     Map<String, dynamic> root,
@@ -582,8 +603,8 @@ class AcademicApi with ApiHelpers {
       'id': toInt(homework['id']),
       'title': (homework['title'] ?? '').toString(),
       'description': homework['description']?.toString(),
-      'subject_name': (subject['name'] ?? 'Fan').toString(),
-      'teacher_name': (teacher['name'] ?? 'O\'qituvchi').toString(),
+      'subject_name': (subject['name'] ?? _l10n.subjectFallbackName).toString(),
+      'teacher_name': (teacher['name'] ?? _l10n.teacherLabel).toString(),
       'status': normalizedStatus,
       'due_date': (homework['due_at'] ?? '').toString(),
       'created_at': (homework['assigned_at'] ?? '').toString(),
@@ -646,7 +667,6 @@ class AcademicApi with ApiHelpers {
     final root = asMap(response.data);
     return _resolveHomeworkChildIdFromPayload(root, assignmentId);
   }
-
 
   int _weekdayFromDate(String? dateKey) {
     if (dateKey == null || dateKey.isEmpty) return 0;

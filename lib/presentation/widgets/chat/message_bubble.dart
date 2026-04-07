@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
 
 /// Message Bubble - Displays a single chat message
 class MessageBubble extends StatelessWidget {
@@ -16,11 +15,15 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           Container(
             constraints: BoxConstraints(
@@ -28,13 +31,18 @@ class MessageBubble extends StatelessWidget {
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isMe ? AppColors.primaryBlue : const Color(0xFFF1F1F1),
+              color: isMe ? colorScheme.primary : theme.cardColor,
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(20),
                 topRight: const Radius.circular(20),
                 bottomLeft: Radius.circular(isMe ? 20 : 0),
                 bottomRight: Radius.circular(isMe ? 0 : 20),
               ),
+              border: isMe
+                  ? null
+                  : Border.all(
+                      color: colorScheme.outline.withValues(alpha: 0.6),
+                    ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -42,7 +50,7 @@ class MessageBubble extends StatelessWidget {
                 Text(
                   text,
                   style: TextStyle(
-                    color: isMe ? Colors.white : AppColors.textPrimary,
+                    color: isMe ? Colors.white : colorScheme.onSurface,
                     fontSize: 15,
                     height: 1.4,
                   ),
@@ -51,7 +59,7 @@ class MessageBubble extends StatelessWidget {
                 Text(
                   time,
                   style: TextStyle(
-                    color: isMe ? Colors.white70 : AppColors.textSecondary,
+                    color: isMe ? Colors.white70 : colorScheme.onSurfaceVariant,
                     fontSize: 10,
                   ),
                 ),

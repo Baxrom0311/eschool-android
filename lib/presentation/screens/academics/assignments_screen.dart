@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/routing/route_names.dart';
+import '../../../data/models/assignment_model.dart';
 import '../../providers/academic_provider.dart';
 import '../../providers/user_provider.dart';
-import '../../../data/models/assignment_model.dart';
 import '../../widgets/common/custom_button.dart';
 
 /// Assignments Screen - Homework Assignments List
@@ -41,6 +43,9 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final assignmentsAsync = ref.watch(assignmentsProvider);
 
     // Extract data safely
@@ -55,6 +60,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
     });
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           // ═══════════════════════════════════════════════════════
@@ -120,7 +126,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                                         selectedChild != null
                                             ? selectedChild.fullName
                                             : (user?.fullName ??
-                                                  'Foydalanuvchi'),
+                                                  l10n.userFallbackName),
                                         style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
@@ -130,7 +136,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                                       const SizedBox(height: 4),
                                       Text(
                                         selectedChild?.className ??
-                                            'Sinf yo\'q',
+                                            l10n.noClassLabel,
                                         style: TextStyle(
                                           fontSize: 14,
                                           color: Colors.white.withValues(
@@ -155,9 +161,9 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
               preferredSize: const Size.fromHeight(60),
               child: Container(
                 height: 60,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
                   ),
@@ -166,7 +172,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                   children: [
                     Expanded(
                       child: _TabButton(
-                        label: 'Baholar',
+                        label: l10n.gradesTab,
                         isActive: false,
                         onTap: () {
                           context.push(RouteNames.grades);
@@ -175,16 +181,16 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                     ),
                     Expanded(
                       child: _TabButton(
-                        label: 'Reyting',
+                        label: l10n.ratingTab,
                         isActive: false,
                         onTap: () {
                           context.push(RouteNames.rating);
                         },
                       ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: _TabButton(
-                        label: 'Vazifalar',
+                        label: l10n.assignmentsTab,
                         isActive: true,
                         onTap: null,
                       ),
@@ -203,7 +209,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
               padding: const EdgeInsets.all(16),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.all(4),
@@ -211,7 +217,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                   children: [
                     Expanded(
                       child: _SegmentButton(
-                        label: 'Yangi vazifalar',
+                        label: l10n.newAssignmentsTab,
                         isActive: _selectedTab == 0,
                         onTap: () {
                           if (_selectedTab != 0) {
@@ -223,8 +229,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                     ),
                     Expanded(
                       child: _SegmentButton(
-                        label:
-                            'Barchasi', // Haftalik -> Barchasi implies no status filter?
+                        label: l10n.allAssignmentsTab,
                         isActive: _selectedTab == 1,
                         onTap: () {
                           if (_selectedTab != 1) {
@@ -249,11 +254,11 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
             )
           else if (hasError && assignments.isEmpty)
             SliverFillRemaining(
-              child: Center(child: Text('Xatolik: ${assignmentsAsync.error}')),
+              child: Center(child: Text('${assignmentsAsync.error}')),
             )
           else if (assignments.isEmpty)
-            const SliverFillRemaining(
-              child: Center(child: Text('Vazifalar topilmadi')),
+            SliverFillRemaining(
+              child: Center(child: Text(l10n.assignmentsEmpty)),
             )
           else
             SliverPadding(
@@ -317,6 +322,8 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -324,7 +331,7 @@ class _TabButton extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: isActive ? AppColors.primaryBlue : Colors.transparent,
+              color: isActive ? colorScheme.primary : Colors.transparent,
               width: 3,
             ),
           ),
@@ -334,7 +341,9 @@ class _TabButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 15,
             fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-            color: isActive ? AppColors.primaryBlue : AppColors.textSecondary,
+            color: isActive
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
           ),
         ),
       ),
@@ -359,17 +368,20 @@ class _SegmentButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isActive ? Colors.white : Colors.transparent,
+          color: isActive ? theme.cardColor : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: AppColors.shadow.withValues(alpha: 0.1),
+                    color: theme.shadowColor.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -382,7 +394,9 @@ class _SegmentButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-            color: isActive ? AppColors.primaryBlue : AppColors.textSecondary,
+            color: isActive
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
           ),
         ),
       ),
@@ -413,19 +427,6 @@ class _AssignmentCard extends StatelessWidget {
     required this.color,
   });
 
-  String get statusLabel {
-    switch (status) {
-      case AssignmentStatus.pending:
-        return 'Jarayonda';
-      case AssignmentStatus.submitted:
-        return 'Topshirilgan';
-      case AssignmentStatus.graded:
-        return 'Baholangan';
-      case AssignmentStatus.overdue:
-        return 'Muddati o\'tgan';
-    }
-  }
-
   Color get statusColor {
     switch (status) {
       case AssignmentStatus.pending:
@@ -441,9 +442,14 @@ class _AssignmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final statusLabel = l10n.assignmentStatusLabel(status);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border(
           left: BorderSide(
@@ -453,7 +459,7 @@ class _AssignmentCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow.withValues(alpha: 0.08),
+            color: theme.shadowColor.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -521,9 +527,9 @@ class _AssignmentCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       deadline,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -535,10 +541,10 @@ class _AssignmentCard extends StatelessWidget {
             // Title
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -546,9 +552,9 @@ class _AssignmentCard extends StatelessWidget {
             // Description
             Text(
               description,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: colorScheme.onSurfaceVariant,
                 height: 1.4,
               ),
               maxLines: 2,
@@ -562,14 +568,10 @@ class _AssignmentCard extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: CustomButton(
-                  text: 'Yuborish',
+                  text: l10n.assignmentSubmitAction,
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Vazifa yuborish funksiyasi tez orada...',
-                        ),
-                      ),
+                      SnackBar(content: Text(l10n.assignmentSubmitSoon)),
                     );
                   },
                   height: 44,

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/routing/route_names.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
@@ -34,24 +36,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
+    final l10n = context.l10n;
     if (!_formKey.currentState!.validate()) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Tenant API da ro\'yxatdan o\'tish endpointi mavjud emas. '
-          'Hisoblar administrator tomonidan yaratiladi.',
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.registerUnavailableMessage)));
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final size = MediaQuery.of(context).size;
     final topHeight = size.height * 0.4;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           // ═══════════════════════════════════════════════════════
@@ -95,9 +97,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const SizedBox(height: 24),
 
                     // Register Title
-                    const Text(
-                      'Ro\'yxatdan o\'tish',
-                      style: TextStyle(
+                    Text(
+                      l10n.registerTitle,
+                      style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -106,7 +108,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Yangi hisob yaratish',
+                      l10n.registerSubtitle,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -132,9 +134,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Card(
                   elevation: 8,
-                  shadowColor: AppColors.shadow,
+                  shadowColor: theme.shadowColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
+                    side: BorderSide(
+                      color: colorScheme.outline.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
@@ -148,16 +153,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           // ─── Full Name Field ───
                           CustomTextField(
                             controller: _nameController,
-                            label: 'Ism Familiya',
-                            hint: 'To\'liq ismingizni kiriting',
+                            label: l10n.fullNameLabel,
+                            hint: l10n.fullNameHint,
                             prefixIcon: Icons.person_outline_rounded,
                             keyboardType: TextInputType.name,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Iltimos, ismingizni kiriting';
+                                return l10n.fullNameRequired;
                               }
                               if (value.length < 3) {
-                                return 'Ism kamida 3 ta belgidan iborat bo\'lishi kerak';
+                                return l10n.minimumLength(3);
                               }
                               return null;
                             },
@@ -167,17 +172,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           // ─── Phone Number Field ───
                           CustomTextField(
                             controller: _phoneController,
-                            label: 'Telefon raqam',
+                            label: l10n.phoneNumberLabel,
                             hint: '+998 90 123 45 67',
                             prefixIcon: Icons.phone_outlined,
                             keyboardType: TextInputType.phone,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Iltimos, telefon raqamingizni kiriting';
+                                return l10n.phoneRequired;
                               }
                               // Basic phone validation
                               if (value.length < 9) {
-                                return 'Telefon raqam noto\'g\'ri';
+                                return l10n.invalidPhone;
                               }
                               return null;
                             },
@@ -187,16 +192,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           // ─── Password Field ───
                           CustomTextField(
                             controller: _passwordController,
-                            label: 'Parol',
-                            hint: 'Parol yarating',
+                            label: l10n.passwordLabel,
+                            hint: '••••••••',
                             prefixIcon: Icons.lock_outline_rounded,
                             obscureText: true,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Iltimos, parol kiriting';
+                                return l10n.passwordRequired;
                               }
                               if (value.length < 6) {
-                                return 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak';
+                                return l10n.passwordTooShort;
                               }
                               return null;
                             },
@@ -206,16 +211,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           // ─── Confirm Password Field ───
                           CustomTextField(
                             controller: _confirmPasswordController,
-                            label: 'Parolni tasdiqlash',
-                            hint: 'Parolni qayta kiriting',
+                            label: l10n.confirmPasswordLabel,
+                            hint: '••••••••',
                             prefixIcon: Icons.lock_outline_rounded,
                             obscureText: true,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Iltimos, parolni tasdiqlang';
+                                return l10n.confirmPasswordRequired;
                               }
                               if (value != _passwordController.text) {
-                                return 'Parollar mos kelmaydi';
+                                return l10n.passwordsDoNotMatch;
                               }
                               return null;
                             },
@@ -224,7 +229,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                           // ─── Register Button ───
                           CustomButton(
-                            text: 'Hisob yaratish',
+                            text: l10n.createAccountAction,
                             onPressed: _isLoading ? null : _handleRegister,
                             isLoading: _isLoading,
                             height: 56,
@@ -236,11 +241,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text(
-                                'Hisobingiz bormi? ',
+                              Text(
+                                '${l10n.haveAccountPrompt} ',
                                 style: TextStyle(
                                   fontSize: 15,
-                                  color: AppColors.textSecondary,
+                                  color: colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               TextButton(
@@ -256,9 +261,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   tapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
-                                child: const Text(
-                                  'Kirish',
-                                  style: TextStyle(
+                                child: Text(
+                                  l10n.loginButton,
+                                  style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                   ),

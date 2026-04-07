@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class AcademicStats extends StatelessWidget {
   final double gpa;
@@ -9,13 +9,16 @@ class AcademicStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
           Expanded(
             child: _buildCard(
-              title: 'O\'rtacha baho',
+              title: l10n.averageGradeTitle,
               content: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -25,7 +28,9 @@ class AcademicStats extends StatelessWidget {
                     child: CircularProgressIndicator(
                       value: (gpa / 5).clamp(0.0, 1.0),
                       strokeWidth: 8,
-                      backgroundColor: AppColors.border,
+                      backgroundColor: colorScheme.outline.withValues(
+                        alpha: 0.4,
+                      ),
                       valueColor: const AlwaysStoppedAnimation<Color>(
                         Color(0xFF4CAF50),
                       ),
@@ -46,7 +51,7 @@ class AcademicStats extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: _buildCard(
-              title: 'Sinf reytingi',
+              title: l10n.classRankingTitle,
               content: Column(
                 children: [
                   const Icon(
@@ -63,11 +68,11 @@ class AcademicStats extends StatelessWidget {
                       color: Color(0xFFFFD700),
                     ),
                   ),
-                  const Text(
-                    'o\'rin',
+                  Text(
+                    l10n.placeSuffix,
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -80,32 +85,42 @@ class AcademicStats extends StatelessWidget {
   }
 
   Widget _buildCard({required String title, required Widget content}) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
+    return Builder(
+      builder: (context) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: colorScheme.outline.withValues(alpha: 0.6),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowColor.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          content,
-        ],
-      ),
+          child: Column(
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              content,
+            ],
+          ),
+        );
+      },
     );
   }
 }

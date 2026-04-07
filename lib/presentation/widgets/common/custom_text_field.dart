@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 
 /// Umumiy matn kiritish maydoni
@@ -48,6 +47,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final hintColor =
+        theme.inputDecorationTheme.hintStyle?.color ??
+        colorScheme.onSurfaceVariant;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -55,7 +60,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           Text(
             widget.label!,
             style: AppTextStyles.label.copyWith(
-              color: AppColors.textSecondary,
+              color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
@@ -71,18 +76,18 @@ class _CustomTextFieldState extends State<CustomTextField> {
           enabled: widget.enabled,
           onChanged: widget.onChanged,
           focusNode: widget.focusNode,
-          style: AppTextStyles.input,
+          style: AppTextStyles.input.copyWith(color: colorScheme.onSurface),
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle: AppTextStyles.inputHint,
+            hintStyle: AppTextStyles.inputHint.copyWith(color: hintColor),
             prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon, color: AppColors.textHint, size: 22)
+                ? Icon(widget.prefixIcon, color: hintColor, size: 22)
                 : null,
             suffixIcon: widget.obscureText
                 ? IconButton(
                     icon: Icon(
                       _isObscured ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.textHint,
+                      color: hintColor,
                       size: 22,
                     ),
                     onPressed: () {

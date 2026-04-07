@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 
 /// Meal Card - Displays information about a single meal
 ///
@@ -22,11 +22,17 @@ class MealCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       elevation: 4,
-      shadowColor: AppColors.shadow,
+      color: theme.cardColor,
+      shadowColor: theme.shadowColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: colorScheme.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -44,11 +50,11 @@ class MealCard extends StatelessWidget {
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       height: 160,
-                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       child: Icon(
                         Icons.restaurant_rounded,
                         size: 60,
-                        color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                        color: colorScheme.primary.withValues(alpha: 0.3),
                       ),
                     );
                   },
@@ -97,7 +103,7 @@ class MealCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryBlue,
+                      color: colorScheme.primary,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -122,20 +128,20 @@ class MealCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
                 if (ingredients.isNotEmpty) ...[
-                  const Text(
-                    'Tarkibi:',
+                  Text(
+                    l10n.mealIngredientsTitle,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -149,14 +155,17 @@ class MealCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.border.withValues(alpha: 0.5),
+                          color: colorScheme.surface,
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: colorScheme.outline.withValues(alpha: 0.7),
+                          ),
                         ),
                         child: Text(
                           item,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textPrimary,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                       );

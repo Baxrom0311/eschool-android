@@ -1,9 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:parent_school_app/core/localization/app_locale.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
+import 'package:parent_school_app/data/models/grade_model.dart';
 import 'package:parent_school_app/data/models/menu_model.dart';
 import 'package:parent_school_app/data/models/payment_model.dart';
 import 'package:parent_school_app/data/models/schedule_model.dart';
 
 void main() {
+  setUp(() {
+    AppLocalizations.updateCurrent(AppLocalizations(AppLocale.uz));
+  });
+
   group('ScheduleModel markText', () {
     test('returns grade value in grade mode', () {
       const model = ScheduleModel(
@@ -54,6 +61,18 @@ void main() {
       expect(tea.mealTypeText, 'Poldnik');
       expect(dinner.mealTypeText, 'Kechki ovqat');
     });
+
+    test('uses current locale for meal type text', () {
+      AppLocalizations.updateCurrent(AppLocalizations(AppLocale.en));
+
+      const breakfast = MenuModel(
+        id: 3,
+        date: '2026-02-21',
+        mealType: MealType.breakfast,
+      );
+
+      expect(breakfast.mealTypeText, 'Breakfast');
+    });
   });
 
   group('PaymentModel formattedAmount', () {
@@ -79,6 +98,22 @@ void main() {
       );
 
       expect(model.formattedAmount, '150 000 so\'m');
+    });
+  });
+
+  group('GradeModel gradeTypeText', () {
+    test('uses current locale for grade type labels', () {
+      AppLocalizations.updateCurrent(AppLocalizations(AppLocale.en));
+
+      const model = GradeModel(
+        id: 1,
+        subjectName: 'Math',
+        grade: 5,
+        gradeType: 'homework',
+        createdAt: '2026-02-21',
+      );
+
+      expect(model.gradeTypeText, 'Homework');
     });
   });
 }

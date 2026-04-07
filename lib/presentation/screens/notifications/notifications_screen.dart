@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/routing/route_names.dart';
 import '../../../data/models/notification_model.dart';
 import '../../../core/utils/formatters.dart';
@@ -30,22 +31,26 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final state = ref.watch(notificationProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'Bildirishnomalar',
+        title: Text(
+          l10n.notificationsTitle,
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: colorScheme.onSurface),
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(notificationProvider.notifier).refresh(),
@@ -53,7 +58,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           isLoading: state.isLoading && state.notifications.isEmpty,
           errorMessage: state.notifications.isEmpty ? state.error : null,
           isEmpty: state.notifications.isEmpty && !state.isLoading,
-          emptyMessage: 'Bildirishnomalar yo\'q',
+          emptyMessage: l10n.notificationsEmpty,
           onRetry: () =>
               ref.read(notificationProvider.notifier).loadNotifications(),
           child: ListView.builder(
@@ -77,6 +82,8 @@ class _NotificationTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     IconData icon;
     Color color;
 
@@ -109,13 +116,16 @@ class _NotificationTile extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: data.isRead ? Colors.white.withValues(alpha: 0.6) : Colors.white,
+        color: data.isRead
+            ? theme.cardColor.withValues(alpha: 0.72)
+            : theme.cardColor,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.5)),
         boxShadow: data.isRead
             ? null
             : [
                 BoxShadow(
-                  color: AppColors.shadow.withValues(alpha: 0.05),
+                  color: theme.shadowColor.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -156,15 +166,15 @@ class _NotificationTile extends ConsumerWidget {
                                 fontWeight: data.isRead
                                     ? FontWeight.w600
                                     : FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                           ),
                           Text(
                             _formatDate(data.createdAt),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -172,9 +182,9 @@ class _NotificationTile extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         data.body,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                           height: 1.4,
                         ),
                       ),
@@ -254,7 +264,7 @@ class _NotificationTile extends ConsumerWidget {
           payload['name']?.toString() ??
           payload['participant_name']?.toString() ??
           payload['title']?.toString() ??
-          'Chat',
+          AppLocalizations.current.chatFallbackTitle,
       'isOnline': false,
       'role':
           payload['role']?.toString() ??

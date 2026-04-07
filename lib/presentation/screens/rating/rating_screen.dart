@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/localization/app_localizations.dart';
+import '../../../data/models/child_model.dart';
+import '../../../data/models/rating_model.dart';
 import '../../providers/rating_provider.dart';
 import '../../providers/user_provider.dart';
-import '../../../data/models/rating_model.dart';
-import '../../../data/models/child_model.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../widgets/common/app_state_view.dart';
 
 /// Rating Screen - Class and School student rankings
@@ -37,6 +38,9 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final state = ref.watch(ratingProvider);
     ref.listen(selectedChildProvider, (previous, next) {
       if (previous?.id != next?.id) {
@@ -64,19 +68,19 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [
           // ─── Blue Header with Podium ───
           Container(
             width: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
+                colors: [colorScheme.primary, colorScheme.secondary],
               ),
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(32),
                 bottomRight: Radius.circular(32),
               ),
@@ -85,11 +89,11 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
               bottom: false,
               child: Column(
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Text(
-                      'Reyting',
-                      style: TextStyle(
+                      l10n.ratingTitle,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -110,8 +114,8 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                     ),
                     child: Row(
                       children: [
-                        _buildToggleButton('Sinfda', 0),
-                        _buildToggleButton('Maktabda', 1),
+                        _buildToggleButton(l10n.classScopeTab, 0),
+                        _buildToggleButton(l10n.schoolScopeTab, 1),
                       ],
                     ),
                   ),
@@ -156,11 +160,11 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                       ),
                     ),
                   if (top3.isEmpty && !state.isLoading && state.error == null)
-                    const Padding(
-                      padding: EdgeInsets.all(32),
+                    Padding(
+                      padding: const EdgeInsets.all(32),
                       child: Text(
-                        "Ma'lumot yo'q",
-                        style: TextStyle(color: Colors.white),
+                        l10n.ratingDataEmpty,
+                        style: TextStyle(color: colorScheme.onPrimary),
                       ),
                     ),
                 ],
@@ -173,7 +177,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
             child: AppStateView(
               errorMessage: currentList.isEmpty ? state.error : null,
               isEmpty: !state.isLoading && currentList.isEmpty,
-              emptyMessage: 'Reyting ma\'lumotlari topilmadi',
+              emptyMessage: l10n.ratingListEmpty,
               onRetry: _loadSelectedTabData,
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(
@@ -189,10 +193,10 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                        color: colorScheme.primary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                          color: colorScheme.primary.withValues(alpha: 0.3),
                         ),
                       ),
                       child: _buildStudentTile(student),
@@ -213,6 +217,8 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
   }
 
   Widget _buildToggleButton(String title, int index) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     bool isSelected = _selectedTab == index;
     return Expanded(
       child: GestureDetector(
@@ -223,7 +229,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? theme.cardColor : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Center(
@@ -232,7 +238,9 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? AppColors.primaryBlue : Colors.white70,
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.onPrimary.withValues(alpha: 0.75),
               ),
             ),
           ),
@@ -242,6 +250,9 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
   }
 
   Widget _buildStudentTile(RatingModel student) {
+    final l10n = AppLocalizations.current;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ListTile(
       leading: SizedBox(
         width: 70,
@@ -252,14 +263,14 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: student.isCurrent
-                    ? AppColors.primaryBlue
-                    : AppColors.textSecondary,
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(width: 12),
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
+              backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
               child: Text(
                 student.studentName.isNotEmpty ? student.studentName[0] : 'U',
                 style: const TextStyle(
@@ -279,10 +290,10 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
         ),
       ),
       trailing: Text(
-        '${student.totalScore} ball',
-        style: const TextStyle(
+        l10n.scorePoints(student.totalScore),
+        style: TextStyle(
           fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+          color: colorScheme.onSurface,
         ),
       ),
     );

@@ -33,6 +33,7 @@ class StorageKeys {
 
   // ─── Settings ───
   static const String language = 'language';
+  static const String themeMode = 'theme_mode';
   static const String notificationsEnabled = 'notifications_enabled';
   static const String fcmToken = 'fcm_token';
 

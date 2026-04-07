@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
-
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/menu_model.dart';
 import 'api_helpers.dart';
@@ -138,7 +138,8 @@ class MenuApi with ApiHelpers {
                 'id': toInt(report['id']) * 100 + sequence,
                 'name': name,
                 'description': [
-                  if (groupName.isNotEmpty) 'Guruh: $groupName',
+                  if (groupName.isNotEmpty)
+                    AppLocalizations.current.groupText(groupName),
                   if (recipe != null && recipe.isNotEmpty) recipe,
                 ].join('\n'),
                 'calories': 0,

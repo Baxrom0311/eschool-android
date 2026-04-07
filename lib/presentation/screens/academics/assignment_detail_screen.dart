@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../data/models/assignment_model.dart';
 import '../../providers/academic_provider.dart';
 import '../../widgets/common/custom_button.dart';
@@ -18,7 +19,8 @@ class AssignmentDetailScreen extends ConsumerStatefulWidget {
       _AssignmentDetailScreenState();
 }
 
-class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen> {
+class _AssignmentDetailScreenState
+    extends ConsumerState<AssignmentDetailScreen> {
   String? _selectedFilePath;
   String? _selectedFileName;
   bool _isSubmitting = false;
@@ -30,9 +32,9 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
     super.initState();
     if (_assignmentId > 0) {
       Future.microtask(
-        () => ref.read(assignmentsProvider.notifier).loadAssignmentDetails(
-              _assignmentId,
-            ),
+        () => ref
+            .read(assignmentsProvider.notifier)
+            .loadAssignmentDetails(_assignmentId),
       );
     }
   }
@@ -54,27 +56,28 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
   }
 
   Future<void> _submitAssignment() async {
+    final l10n = context.l10n;
+
     if (_assignmentId <= 0) return;
     if (_selectedFilePath == null || _selectedFilePath!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avval fayl tanlang')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.assignmentSelectFileFirst)));
       return;
     }
 
     setState(() => _isSubmitting = true);
-    final success = await ref.read(assignmentsProvider.notifier).submitAssignment(
-          _assignmentId,
-          filePath: _selectedFilePath,
-        );
+    final success = await ref
+        .read(assignmentsProvider.notifier)
+        .submitAssignment(_assignmentId, filePath: _selectedFilePath);
     if (!mounted) return;
 
     setState(() => _isSubmitting = false);
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vazifa muvaffaqiyatli yuborildi')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.assignmentSubmittedSuccess)));
       setState(() {
         _selectedFilePath = null;
         _selectedFileName = null;
@@ -83,15 +86,20 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
           .read(assignmentsProvider.notifier)
           .loadAssignmentDetails(_assignmentId);
     } else {
-      final error = ref.read(assignmentsProvider).error?.toString() ?? 'Yuborishda xatolik';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      final error =
+          ref.read(assignmentsProvider).error?.toString() ??
+          l10n.assignmentSubmitFailed;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final assignmentsAsync = ref.watch(assignmentsProvider);
     final loaded = assignmentsAsync.valueOrNull?.selectedAssignment;
     final assignment = loaded != null && loaded.id == _assignmentId
@@ -101,11 +109,13 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
     if (assignment == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Vazifa tafsilotlari'),
-          backgroundColor: AppColors.primaryBlue,
-          foregroundColor: Colors.white,
+          title: Text(l10n.assignmentDetailsTitle),
+          backgroundColor:
+              theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+          foregroundColor:
+              theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         ),
-        body: const Center(child: Text('Vazifa topilmadi')),
+        body: Center(child: Text(l10n.assignmentNotFound)),
       );
     }
 
@@ -114,11 +124,13 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
     final teacherFiles = assignment.attachments;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Vazifa tafsilotlari'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
+        title: Text(l10n.assignmentDetailsTitle),
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
       ),
       body: Column(
         children: [
@@ -132,31 +144,34 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.cardColor,
                       borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: colorScheme.outline.withValues(alpha: 0.6),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           assignment.subjectName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           assignment.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Muddat: ${assignment.dueDate}',
+                          l10n.assignmentDueDateText(assignment.dueDate),
                           style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.danger,
@@ -165,10 +180,10 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Status: ${assignment.statusText}',
-                          style: const TextStyle(
+                          l10n.assignmentStatusText(assignment.status),
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                         if (assignment.description != null &&
@@ -176,10 +191,10 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                           const SizedBox(height: 14),
                           Text(
                             assignment.description!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
                               height: 1.5,
-                              color: AppColors.textPrimary,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                         ],
@@ -191,30 +206,37 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.cardColor,
                       borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: colorScheme.outline.withValues(alpha: 0.6),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'O\'qituvchi fayllari',
-                          style: TextStyle(
+                        Text(
+                          l10n.assignmentTeacherFilesTitle,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 12),
                         if (teacherFiles.isEmpty)
-                          const Text(
-                            'Biriktirilgan fayl yo\'q',
-                            style: TextStyle(color: AppColors.textSecondary),
+                          Text(
+                            l10n.assignmentNoTeacherFiles,
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           )
                         else
                           ...teacherFiles.map(
                             (file) => ListTile(
                               contentPadding: EdgeInsets.zero,
-                              leading: const Icon(Icons.insert_drive_file_rounded),
+                              leading: const Icon(
+                                Icons.insert_drive_file_rounded,
+                              ),
                               title: Text(file.name),
                             ),
                           ),
@@ -226,24 +248,29 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.cardColor,
                       borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: colorScheme.outline.withValues(alpha: 0.6),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Yuborilgan fayllar',
-                          style: TextStyle(
+                        Text(
+                          l10n.assignmentSubmittedFilesTitle,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 12),
                         if (submittedFiles.isEmpty)
-                          const Text(
-                            'Hali yuborilmagan',
-                            style: TextStyle(color: AppColors.textSecondary),
+                          Text(
+                            l10n.assignmentNotSubmittedYet,
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           )
                         else
                           ...submittedFiles.map(
@@ -265,6 +292,9 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                       decoration: BoxDecoration(
                         color: AppColors.primaryBlue.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.primary.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -306,8 +336,8 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                       icon: const Icon(Icons.upload_file_rounded),
                       label: Text(
                         _selectedFileName == null
-                            ? 'Fayl tanlash'
-                            : 'Boshqa fayl tanlash',
+                            ? l10n.chooseFileAction
+                            : l10n.chooseAnotherFileAction,
                       ),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size.fromHeight(48),
@@ -315,7 +345,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                     ),
                     const SizedBox(height: 8),
                     CustomButton(
-                      text: 'Vazifani yuborish',
+                      text: l10n.assignmentSubmitAction,
                       onPressed: (_isSubmitting || assignmentsAsync.isLoading)
                           ? null
                           : _submitAssignment,

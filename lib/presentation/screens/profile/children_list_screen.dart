@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/localization/app_localizations.dart';
 import '../../providers/user_provider.dart';
 
 class ChildrenListScreen extends ConsumerWidget {
@@ -8,13 +10,22 @@ class ChildrenListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final userState = ref.watch(userProvider);
     final children = userState.children;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Farzandlarim')),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(title: Text(l10n.myChildrenTitle)),
       body: children.isEmpty
-          ? const Center(child: Text('Farzandlar topilmadi'))
+          ? Center(
+              child: Text(
+                l10n.noChildrenFound,
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+            )
           : ListView.builder(
               itemCount: children.length,
               padding: const EdgeInsets.all(16),
@@ -24,11 +35,12 @@ class ChildrenListScreen extends ConsumerWidget {
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
+                  color: theme.cardColor,
                   elevation: isSelected ? 4 : 1,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: isSelected
-                        ? BorderSide(color: Theme.of(context).primaryColor, width: 2)
+                        ? BorderSide(color: colorScheme.primary, width: 2)
                         : BorderSide.none,
                   ),
                   child: ListTile(
@@ -41,10 +53,19 @@ class ChildrenListScreen extends ConsumerWidget {
                           ? Text(child.fullName[0].toUpperCase())
                           : null,
                     ),
-                    title: Text(child.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('${child.className} - Sinf'),
+                    title: Text(
+                      child.fullName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    subtitle: Text(
+                      l10n.childClassText(child.className),
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                    ),
                     trailing: isSelected
-                        ? Icon(Icons.check_circle, color: Theme.of(context).primaryColor)
+                        ? Icon(Icons.check_circle, color: colorScheme.primary)
                         : null,
                     onTap: () {
                       ref.read(userProvider.notifier).selectChild(child);

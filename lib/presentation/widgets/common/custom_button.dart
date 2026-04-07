@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 
 /// Umumiy tugma widgeti
@@ -31,24 +30,35 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (isOutlined) {
+      final outlineColor =
+          backgroundColor ??
+          (theme.brightness == Brightness.dark
+              ? colorScheme.onSurface
+              : colorScheme.primary);
+      final outlineTextColor = textColor ?? outlineColor;
+
       return SizedBox(
         width: width ?? double.infinity,
         height: height,
         child: OutlinedButton(
           onPressed: isLoading ? null : onPressed,
           style: OutlinedButton.styleFrom(
-            side: BorderSide(
-              color: backgroundColor ?? AppColors.primaryBlue,
-            ),
+            side: BorderSide(color: outlineColor),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(borderRadius),
             ),
           ),
-          child: _buildChild(textColor ?? backgroundColor ?? AppColors.primaryBlue),
+          child: _buildChild(outlineTextColor),
         ),
       );
     }
+
+    final filledColor = backgroundColor ?? colorScheme.primary;
+    final filledTextColor = textColor ?? colorScheme.onPrimary;
 
     return SizedBox(
       width: width ?? double.infinity,
@@ -56,13 +66,13 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? AppColors.primaryBlue,
+          backgroundColor: filledColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius),
           ),
           elevation: 2,
         ),
-        child: _buildChild(textColor ?? AppColors.white),
+        child: _buildChild(filledTextColor),
       ),
     );
   }
@@ -86,17 +96,11 @@ class CustomButton extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(width: 8),
-          Text(
-            text,
-            style: AppTextStyles.button.copyWith(color: color),
-          ),
+          Text(text, style: AppTextStyles.button.copyWith(color: color)),
         ],
       );
     }
 
-    return Text(
-      text,
-      style: AppTextStyles.button.copyWith(color: color),
-    );
+    return Text(text, style: AppTextStyles.button.copyWith(color: color));
   }
 }

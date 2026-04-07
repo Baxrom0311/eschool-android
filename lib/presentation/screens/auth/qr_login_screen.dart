@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/api_error_handler.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/auth_provider.dart';
@@ -36,6 +37,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
   }
 
   Future<void> _onDetect(BarcodeCapture capture) async {
+    final l10n = context.l10n;
     if (_isProcessing || _hasScanned) return;
 
     final barcode = capture.barcodes.firstOrNull;
@@ -45,7 +47,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
 
     // QR token 64 belgidan iborat bo'lishi kerak
     if (qrToken.length != 64) {
-      _showError('Noto\'g\'ri QR kod formati');
+      _showError(l10n.qrInvalidFormat);
       return;
     }
 
@@ -65,7 +67,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
           context.go(RouteNames.home);
         }
       } else {
-        _showError(authState.error ?? 'QR orqali kirish amalga oshmadi');
+        _showError(authState.error ?? l10n.qrLoginFailed);
         setState(() {
           _isProcessing = false;
           _hasScanned = false;
@@ -73,10 +75,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
       }
     } catch (e) {
       _showError(
-        ApiErrorHandler.readableMessage(
-          e,
-          fallback: 'QR orqali kirish amalga oshmadi',
-        ),
+        ApiErrorHandler.readableMessage(e, fallback: l10n.qrLoginFailed),
       );
       setState(() {
         _isProcessing = false;
@@ -94,10 +93,11 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('QR Kod bilan kirish'),
+        title: Text(l10n.qrLoginTitle),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -141,9 +141,9 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
                     size: 40,
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'QR kodni kamera oldiga tuting',
-                    style: TextStyle(
+                  Text(
+                    l10n.qrScanInstruction,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -151,9 +151,9 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Maktab administratori bergan QR kodni skanerlang',
-                    style: TextStyle(color: Colors.white38, fontSize: 13),
+                  Text(
+                    l10n.qrAdminInstruction,
+                    style: const TextStyle(color: Colors.white38, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                 ],

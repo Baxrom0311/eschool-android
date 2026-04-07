@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../widgets/chat/message_bubble.dart';
 
 /// Chat Room Screen - Direct messaging interface
@@ -48,6 +49,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   }
 
   Future<void> _sendMessage() async {
+    final l10n = context.l10n;
     final content = _controller.text.trim();
     if (content.isEmpty) return;
 
@@ -60,12 +62,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     }
 
     final error = ref.read(chatRoomProvider).error;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(error ?? 'Xabar yuborilmadi')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error ?? l10n.chatMessageSendFailed)),
+    );
   }
 
   Future<void> _sendFile() async {
+    final l10n = context.l10n;
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowMultiple: false,
@@ -84,7 +87,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     final error = ref.read(chatRoomProvider).error;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(error ?? 'Fayl yuborilmadi')));
+    ).showSnackBar(SnackBar(content: Text(error ?? l10n.chatFileSendFailed)));
   }
 
   Future<void> _handleMenuAction(String action) async {
@@ -118,19 +121,24 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final state = ref.watch(chatRoomProvider);
     final messages = state.messages;
     final showTopLoader = state.isLoading && messages.isNotEmpty;
 
-    final chatName = widget.chatData?['name'] ?? 'Chat';
+    final chatName = widget.chatData?['name'] ?? l10n.chatFallbackTitle;
     final isOnline = widget.chatData?['isOnline'] ?? false;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         titleSpacing: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         elevation: 0,
         title: Row(
           children: [
@@ -158,12 +166,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                   ),
                 ),
                 Text(
-                  isOnline ? 'Onlayn' : 'Oflayn',
+                  isOnline ? l10n.chatOnlineStatus : l10n.chatOfflineStatus,
                   style: TextStyle(
                     fontSize: 12,
                     color: isOnline
                         ? AppColors.success
-                        : AppColors.textSecondary,
+                        : colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -173,18 +181,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         actions: [
           PopupMenuButton<String>(
             onSelected: _handleMenuAction,
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'refresh', child: Text('Yangilash')),
-              PopupMenuItem(
-                value: 'back',
-                child: Text('Chatlar ro\'yxatiga qaytish'),
-              ),
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'refresh', child: Text(l10n.refreshAction)),
+              PopupMenuItem(value: 'back', child: Text(l10n.backToChatsAction)),
             ],
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
+          child: Container(
+            color: colorScheme.outline.withValues(alpha: 0.5),
+            height: 1,
+          ),
         ),
       ),
       body: Column(
@@ -229,10 +237,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               MediaQuery.of(context).padding.bottom + 16,
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: theme.shadowColor.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -242,8 +250,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.outline.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: IconButton(
                     icon: const Icon(Icons.attach_file_rounded),
@@ -255,18 +266,20 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: 'Xabar yozing...',
-                      hintStyle: TextStyle(color: AppColors.textSecondary),
+                    decoration: InputDecoration(
+                      hintText: l10n.chatMessageHint,
+                      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Container(
                   decoration: BoxDecoration(
-                    color: AppColors.primaryBlue,
+                    color: colorScheme.primary,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: state.isSending

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../data/models/schedule_model.dart';
@@ -12,6 +13,7 @@ class ScheduleList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final scheduleAsync = ref.watch(scheduleProvider);
 
     return Column(
@@ -21,9 +23,9 @@ class ScheduleList extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Bugungi Darslar',
-                style: TextStyle(
+              Text(
+                l10n.todayLessonsSectionTitle,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
@@ -33,7 +35,7 @@ class ScheduleList extends ConsumerWidget {
                 onPressed: () {
                   context.push(RouteNames.schedule);
                 },
-                child: const Text('Barchasi'),
+                child: Text(l10n.viewAllAction),
               ),
             ],
           ),
@@ -44,10 +46,10 @@ class ScheduleList extends ConsumerWidget {
             data: (data) {
               final todaySchedule = data.todaySchedule;
               if (todaySchedule.isEmpty) {
-                return const Center(
+                return Center(
                   child: Text(
-                    'Bugun darslar topilmadi',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    l10n.noLessonsTodayShort,
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 );
               }
@@ -61,9 +63,8 @@ class ScheduleList extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(
-              child: Text('Xatolik: ${ApiErrorHandler.readableMessage(err)}'),
-            ),
+            error: (err, stack) =>
+                Center(child: Text(ApiErrorHandler.readableMessage(err))),
           ),
         ),
       ],

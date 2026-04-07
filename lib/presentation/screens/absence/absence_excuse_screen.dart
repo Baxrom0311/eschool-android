@@ -3,7 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../data/models/absence_model.dart';
 import '../../providers/absence_provider.dart';
 import '../../providers/user_provider.dart';
@@ -34,6 +34,9 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final state = ref.watch(absenceProvider);
     final child = ref.watch(selectedChildProvider);
 
@@ -44,16 +47,17 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
     });
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('E-Murojaat (Davomat)'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        title: Text(l10n.absenceTitle),
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         elevation: 0,
       ),
       body: child == null
-          ? _buildPlaceholder(
-              message: 'Davomat murojaatini yuborish uchun farzandni tanlang.',
-            )
+          ? _buildPlaceholder(message: l10n.absenceNeedChild)
           : RefreshIndicator(
               onRefresh: () async {
                 await ref.read(absenceProvider.notifier).loadExcuses(child.id);
@@ -62,9 +66,10 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: child == null ? null : () => _showSubmitDialog(context),
-        label: const Text('Murojaat qoldirish'),
+        label: Text(l10n.submitRequestAction),
         icon: const Icon(Icons.add),
-        backgroundColor: AppColors.primaryBlue,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
     );
   }
@@ -77,15 +82,15 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
     if (state.error != null && state.excuses.isEmpty) {
       return _buildPlaceholder(
         message: state.error!,
-        actionLabel: 'Qayta urinish',
+        actionLabel: AppLocalizations.current.retry,
         onAction: _loadExcuses,
       );
     }
 
     if (state.excuses.isEmpty) {
       return _buildPlaceholder(
-        message: 'Hozircha arizalar yo\'q',
-        caption: 'Sababnoma yuborsangiz, statusi shu yerda ko\'rinadi.',
+        message: AppLocalizations.current.noRequestsYet,
+        caption: AppLocalizations.current.requestStatusCaption,
       );
     }
 
@@ -105,6 +110,8 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
     String? actionLabel,
     VoidCallback? onAction,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(24),
@@ -115,10 +122,10 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
         Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
         ),
         if (caption != null) ...[
@@ -126,7 +133,7 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
           Text(
             caption,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
           ),
         ],
         if (actionLabel != null && onAction != null) ...[
@@ -135,8 +142,8 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
             child: ElevatedButton(
               onPressed: onAction,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
               ),
               child: Text(actionLabel),
             ),
@@ -147,13 +154,19 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
   }
 
   Widget _buildExcuseCard(AbsenceExcuseModel excuse) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final period = excuse.dateFrom == excuse.dateTo
         ? excuse.dateFrom
         : '${excuse.dateFrom} - ${excuse.dateTo}';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: theme.cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outline),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -164,11 +177,11 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
                 Expanded(
                   child: Text(
                     excuse.reason.isEmpty
-                        ? 'Sabab ko\'rsatilmagan'
+                        ? AppLocalizations.current.noReasonProvided
                         : excuse.reason,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -178,32 +191,32 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today_outlined,
                   size: 16,
-                  color: AppColors.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   period,
-                  style: const TextStyle(color: AppColors.textSecondary),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
             if (excuse.attachmentUrl != null &&
                 excuse.attachmentUrl!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              const Row(
+              Row(
                 children: [
                   Icon(
                     Icons.attach_file,
                     size: 16,
-                    color: AppColors.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
-                    'Fayl biriktirilgan',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    AppLocalizations.current.fileAttached,
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -219,13 +232,13 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
     String label = status;
     if (status == 'approved') {
       color = Colors.green;
-      label = 'Tasdiqlangan';
+      label = AppLocalizations.current.absenceStatusLabel(status);
     } else if (status == 'rejected') {
       color = Colors.red;
-      label = 'Rad etilgan';
+      label = AppLocalizations.current.absenceStatusLabel(status);
     } else if (status == 'pending') {
       color = Colors.orange;
-      label = 'Kutilmoqda';
+      label = AppLocalizations.current.absenceStatusLabel(status);
     }
 
     return Container(
@@ -247,6 +260,7 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
   }
 
   void _showSubmitDialog(BuildContext context) {
+    final l10n = context.l10n;
     final student = ref.read(selectedChildProvider);
     if (student == null) return;
 
@@ -259,7 +273,9 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor:
+          Theme.of(context).bottomSheetTheme.backgroundColor ??
+          Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -276,22 +292,22 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Center(
-                child: SizedBox(
-                  width: 48,
-                  child: Divider(thickness: 4, color: AppColors.border),
-                ),
+                child: SizedBox(width: 48, child: Divider(thickness: 4)),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Davomat uchun murojaat qoldirish',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                l10n.absenceRequestTitle,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: _DateButton(
-                      label: 'Boshlanish sanasi',
+                      label: l10n.startDateLabel,
                       value: DateFormat('yyyy-MM-dd').format(dateFrom),
                       onTap: () async {
                         final picked = await showDatePicker(
@@ -317,7 +333,7 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _DateButton(
-                      label: 'Tugash sanasi',
+                      label: l10n.endDateLabel,
                       value: DateFormat('yyyy-MM-dd').format(dateTo),
                       onTap: () async {
                         final picked = await showDatePicker(
@@ -341,8 +357,8 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
                 controller: reasonController,
                 maxLines: 4,
                 decoration: InputDecoration(
-                  labelText: 'Sabab',
-                  hintText: 'Sababni qisqacha yozing',
+                  labelText: l10n.reasonLabel,
+                  hintText: l10n.reasonHint,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -361,14 +377,16 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
                 },
                 icon: const Icon(Icons.attach_file),
                 label: Text(
-                  attachmentPath == null ? 'Fayl biriktirish' : 'Fayl tayyor',
+                  attachmentPath == null ? l10n.attachFile : l10n.fileReady,
                 ),
               ),
               if (attachmentPath != null) ...[
                 const SizedBox(height: 8),
                 Text(
                   attachmentPath!.split('/').last,
-                  style: const TextStyle(color: AppColors.textSecondary),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
               const SizedBox(height: 20),
@@ -383,7 +401,7 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
                           if (reason.isEmpty) {
                             setModalState(() => isSubmitting = false);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Sababni kiriting')),
+                              SnackBar(content: Text(l10n.reasonRequired)),
                             );
                             return;
                           }
@@ -408,34 +426,32 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
                           if (success) {
                             Navigator.of(bottomSheetContext).pop();
                             ScaffoldMessenger.of(this.context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Murojaat yuborildi'),
-                              ),
+                              SnackBar(content: Text(l10n.requestSubmitted)),
                             );
                           } else {
                             final error =
                                 ref.read(absenceProvider).error ??
-                                'Murojaat yuborilmadi';
+                                l10n.requestSubmitFailed;
                             ScaffoldMessenger.of(
                               context,
                             ).showSnackBar(SnackBar(content: Text(error)));
                           }
                         },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     minimumSize: const Size.fromHeight(50),
                   ),
                   child: isSubmitting
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         )
-                      : const Text('Yuborish'),
+                      : Text(l10n.sendAction),
                 ),
               ),
             ],
@@ -459,6 +475,9 @@ class _DateButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -466,25 +485,26 @@ class _DateButton extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          color: theme.cardColor,
+          border: Border.all(color: colorScheme.outline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 6),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today_outlined,
                   size: 18,
-                  color: AppColors.primaryBlue,
+                  color: colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
                 Expanded(

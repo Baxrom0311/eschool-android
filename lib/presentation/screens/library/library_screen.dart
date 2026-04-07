@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/api_error_handler.dart';
 import '../../../data/models/library_model.dart';
 import '../../providers/library_provider.dart';
@@ -34,20 +34,27 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Maktab Kutubxonasi'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        title: Text(l10n.digitalLibraryTitle),
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppColors.primaryBlue,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: AppColors.primaryBlue,
-          tabs: const [
-            Tab(text: 'Kitoblar'),
-            Tab(text: 'Mening kitoblarim'),
+          labelColor: colorScheme.primary,
+          unselectedLabelColor: colorScheme.onSurfaceVariant,
+          indicatorColor: colorScheme.primary,
+          tabs: [
+            Tab(text: l10n.libraryBooksTab),
+            Tab(text: l10n.libraryMyBooksTab),
           ],
         ),
       ),
@@ -59,6 +66,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   }
 
   Widget _buildBooksTab() {
+    final l10n = context.l10n;
     final booksAsync = ref.watch(libraryBooksProvider({'query': _query}));
 
     return Column(
@@ -68,7 +76,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Kitob qidirish...',
+              hintText: l10n.librarySearchHint,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _query.isNotEmpty
                   ? IconButton(
@@ -93,7 +101,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         Expanded(
           child: booksAsync.when(
             data: (books) => books.isEmpty
-                ? const Center(child: Text('Kitoblar topilmadi'))
+                ? Center(child: Text(l10n.libraryNoBooksFound))
                 : GridView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     gridDelegate:
@@ -119,16 +127,21 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   }
 
   Widget _buildBookCard(LibraryBookModel book) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: theme.cardColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: colorScheme.surface,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(12),
                 ),
@@ -140,8 +153,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                     : null,
               ),
               child: book.coverUrl == null || book.coverUrl!.isEmpty
-                  ? const Center(
-                      child: Icon(Icons.book, size: 48, color: Colors.grey),
+                  ? Center(
+                      child: Icon(
+                        Icons.book,
+                        size: 48,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     )
                   : null,
             ),
@@ -158,8 +175,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  book.author.isEmpty ? 'Muallif noma\'lum' : book.author,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  book.author.isEmpty ? l10n.libraryUnknownAuthor : book.author,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
@@ -167,14 +187,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.zero,
-                      backgroundColor: AppColors.primaryBlue,
+                      backgroundColor: colorScheme.primary,
                       foregroundColor: Colors.white,
                     ),
                     onPressed: book.availableCopies > 0
                         ? () => _borrowBook(book.id)
                         : null,
                     child: Text(
-                      book.availableCopies > 0 ? 'Olish' : 'Mavjud emas',
+                      book.availableCopies > 0
+                          ? l10n.libraryBorrowAction
+                          : l10n.libraryUnavailableAction,
                       style: const TextStyle(fontSize: 12),
                     ),
                   ),
@@ -188,11 +210,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   }
 
   Widget _buildMyLoansTab() {
+    final l10n = context.l10n;
     final loansAsync = ref.watch(myLoansProvider);
 
     return loansAsync.when(
       data: (loans) => loans.isEmpty
-          ? const Center(child: Text('Sizda olingan kitoblar yo\'q'))
+          ? Center(child: Text(l10n.libraryNoLoans))
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: loans.length,
@@ -203,19 +226,25 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                     : <String, dynamic>{};
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
+                  color: Theme.of(context).cardColor,
                   child: ListTile(
-                    title: Text(book['title']?.toString() ?? 'Noma\'lum kitob'),
+                    title: Text(
+                      book['title']?.toString() ?? l10n.libraryUnknownBook,
+                    ),
                     subtitle: Text(
-                      'Olindi: ${loan['borrowed_at']} | Qaytish: ${loan['due_at']}',
+                      l10n.libraryLoanDates(
+                        loan['borrowed_at']?.toString() ?? '-',
+                        loan['due_at']?.toString() ?? '-',
+                      ),
                     ),
                     trailing: loan['status'] == 'borrowed'
                         ? TextButton(
                             onPressed: () => _returnBook(loan['id']),
-                            child: const Text('Qaytarish'),
+                            child: Text(l10n.libraryReturnAction),
                           )
-                        : const Text(
-                            'Qaytarilgan',
-                            style: TextStyle(color: Colors.green),
+                        : Text(
+                            l10n.libraryReturnedStatus,
+                            style: const TextStyle(color: Colors.green),
                           ),
                   ),
                 );
@@ -228,25 +257,27 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   }
 
   Future<void> _borrowBook(int id) async {
+    final l10n = context.l10n;
     final success = await ref
         .read(libraryControllerProvider.notifier)
         .borrow(id);
     if (success && mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Kitob band qilindi!')));
+      ).showSnackBar(SnackBar(content: Text(l10n.libraryBorrowedSuccess)));
       _tabController.animateTo(1);
     }
   }
 
   Future<void> _returnBook(int id) async {
+    final l10n = context.l10n;
     final success = await ref
         .read(libraryControllerProvider.notifier)
         .returnBook(id);
     if (success && mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Kitob qaytarildi!')));
+      ).showSnackBar(SnackBar(content: Text(l10n.libraryReturnedSuccess)));
     }
   }
 }

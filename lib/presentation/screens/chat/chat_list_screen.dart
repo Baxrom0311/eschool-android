@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/chat_provider.dart';
 import '../../widgets/common/app_state_view.dart';
@@ -25,36 +26,44 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final state = ref.watch(conversationsProvider);
     final conversations = state.conversations;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'Chatlar',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.chatsTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
+          child: Container(
+            color: colorScheme.outline.withValues(alpha: 0.5),
+            height: 1,
+          ),
         ),
       ),
       body: AppStateView(
         isLoading: state.isLoading && conversations.isEmpty,
         errorMessage: conversations.isEmpty ? state.error : null,
         isEmpty: conversations.isEmpty && !state.isLoading,
-        emptyMessage: 'Chatlar hozircha yo\'q',
+        emptyMessage: l10n.chatsEmpty,
         onRetry: () =>
             ref.read(conversationsProvider.notifier).loadConversations(),
         child: ListView.separated(
           itemCount: conversations.length,
           separatorBuilder: (context, index) => const Padding(
             padding: EdgeInsets.only(left: 88),
-            child: Divider(height: 1, color: AppColors.border),
+            child: Divider(height: 1),
           ),
           itemBuilder: (context, index) {
             final chat = conversations[index];
@@ -123,9 +132,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   ),
                   Text(
                     _formatTime(chat.lastMessageTime),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -136,14 +145,14 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        chat.lastMessage ?? 'Xabar yo\'q',
+                        chat.lastMessage ?? l10n.noMessageShort,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 14,
                           color: chat.unreadCount > 0
-                              ? AppColors.textPrimary
-                              : AppColors.textSecondary,
+                              ? colorScheme.onSurface
+                              : colorScheme.onSurfaceVariant,
                           fontWeight: chat.unreadCount > 0
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -158,7 +167,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryBlue,
+                          color: colorScheme.primary,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(

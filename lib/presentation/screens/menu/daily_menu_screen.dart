@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:table_calendar/table_calendar.dart';
+
+import '../../../core/localization/app_localizations.dart';
 import '../../../data/models/menu_model.dart';
 import '../../providers/menu_provider.dart';
 import '../../providers/user_provider.dart';
-import 'package:table_calendar/table_calendar.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../widgets/menu/meal_card.dart';
 import '../../widgets/common/app_state_view.dart';
 
@@ -63,6 +64,9 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final state = ref.watch(menuProvider);
 
     ref.listen(selectedChildProvider, (previous, next) {
@@ -104,14 +108,14 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
         .toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'Ovqat menyusi',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.dailyMenuTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         elevation: 0,
         actions: [
           IconButton(
@@ -126,9 +130,9 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
         children: [
           // ─── Top Calendar Section ───
           Container(
-            decoration: const BoxDecoration(
-              color: AppColors.primaryBlue,
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: colorScheme.primary,
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(24),
                 bottomRight: Radius.circular(24),
               ),
@@ -171,7 +175,7 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
                   formatButtonTextStyle: const TextStyle(color: Colors.white),
                   formatButtonDecoration: BoxDecoration(
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: colorScheme.onPrimary.withValues(alpha: 0.5),
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -184,7 +188,7 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
                     shape: BoxShape.circle,
                   ),
                   todayDecoration: BoxDecoration(
-                    color: Colors.white.withAlpha(51),
+                    color: colorScheme.onPrimary.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -202,7 +206,7 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
               isLoading: state.isLoading,
               errorMessage: state.error,
               isEmpty: meals.isEmpty && !state.isLoading,
-              emptyMessage: 'Tanlangan kun uchun menyu mavjud emas',
+              emptyMessage: l10n.noMenuOnSelectedDay,
               onRetry: () => _loadWeeklyMenuForSelectedChild(force: true),
               child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),

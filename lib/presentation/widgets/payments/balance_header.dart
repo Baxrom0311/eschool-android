@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 
 /// Balance Header - Visual display of account balance
 class BalanceHeader extends StatelessWidget {
@@ -14,6 +16,9 @@ class BalanceHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -21,10 +26,7 @@ class BalanceHeader extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.primaryBlue,
-            Color(0xFF6B8EFF),
-          ],
+          colors: [AppColors.primaryBlue, Color(0xFF6B8EFF)],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
@@ -32,6 +34,11 @@ class BalanceHeader extends StatelessWidget {
             color: AppColors.primaryBlue.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: theme.shadowColor.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -41,9 +48,9 @@ class BalanceHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Hisob balansi',
-                style: TextStyle(
+              Text(
+                l10n.accountBalanceTitle,
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -83,7 +90,7 @@ class BalanceHeader extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                'Oxirgi yangilanish: $lastUpdated',
+                l10n.lastUpdatedLabel(lastUpdated),
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 12,

@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:parent_school_app/core/network/dio_client.dart';
+import 'package:parent_school_app/core/localization/app_locale.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/data/datasources/remote/chat_api.dart';
 import 'package:parent_school_app/core/constants/api_constants.dart';
 import 'package:parent_school_app/data/models/chat_model.dart';
@@ -14,6 +16,7 @@ void main() {
 
   setUp(() {
     mockDioClient = MockDioClient();
+    AppLocalizations.updateCurrent(AppLocalizations(AppLocale.uz));
     chatApi = ChatApi(mockDioClient);
     registerFallbackValue(Options());
   });
@@ -21,44 +24,51 @@ void main() {
   group('ChatApi', () {
     const tConversationId = 1;
 
-    test('getConversations returns list of ConversationModel on success', () async {
-      // Arrange
-      final tResponse = {
-        'contacts': [
-          {
-            'id': 1,
-            'name': 'Bekmurod Domla',
-            'role': 'teacher',
-            'avatar_url': 'http://example.com/avatar.jpg',
-            'last_message': 'Salom qalayzsiz?',
-            'last_message_at': '2025-01-01',
-            'unread_count': 2,
-            'is_online': true
-          }
-        ]
-      };
+    test(
+      'getConversations returns list of ConversationModel on success',
+      () async {
+        // Arrange
+        final tResponse = {
+          'contacts': [
+            {
+              'id': 1,
+              'name': 'Bekmurod Domla',
+              'role': 'teacher',
+              'avatar_url': 'http://example.com/avatar.jpg',
+              'last_message': 'Salom qalayzsiz?',
+              'last_message_at': '2025-01-01',
+              'unread_count': 2,
+              'is_online': true,
+            },
+          ],
+        };
 
-      when(() => mockDioClient.get(
+        when(
+          () => mockDioClient.get(
             ApiConstants.conversations,
             queryParameters: any(named: 'queryParameters'),
             options: any(named: 'options'),
-          )).thenAnswer((_) async => Response(
+          ),
+        ).thenAnswer(
+          (_) async => Response(
             requestOptions: RequestOptions(path: ApiConstants.conversations),
             data: tResponse,
             statusCode: 200,
-          ));
+          ),
+        );
 
-      // Act
-      final result = await chatApi.getConversations();
+        // Act
+        final result = await chatApi.getConversations();
 
-      // Assert
-      expect(result.length, 1);
-      final conversation = result.first;
-      expect(conversation.id, 1);
-      expect(conversation.participantName, 'Bekmurod Domla');
-      expect(conversation.unreadCount, 2);
-      expect(conversation.isOnline, true);
-    });
+        // Assert
+        expect(result.length, 1);
+        final conversation = result.first;
+        expect(conversation.id, 1);
+        expect(conversation.participantName, 'Bekmurod Domla');
+        expect(conversation.unreadCount, 2);
+        expect(conversation.isOnline, true);
+      },
+    );
 
     test('getMessages returns list of MessageModel on success', () async {
       // Arrange
@@ -69,24 +79,28 @@ void main() {
             'body': 'Test xabar',
             'sender_id': 1,
             'receiver_id': 2,
-            'sender': {
-              'name': 'Bekmurod Domla'
-            },
+            'sender': {'name': 'Bekmurod Domla'},
             'created_at': '2025-01-01',
             'is_read': true,
-          }
-        ]
+          },
+        ],
       };
 
-      when(() => mockDioClient.get(
-            ApiConstants.messages(tConversationId),
-            queryParameters: any(named: 'queryParameters'),
-            options: any(named: 'options'),
-          )).thenAnswer((_) async => Response(
-            requestOptions: RequestOptions(path: ApiConstants.messages(tConversationId)),
-            data: tResponse,
-            statusCode: 200,
-          ));
+      when(
+        () => mockDioClient.get(
+          ApiConstants.messages(tConversationId),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(
+            path: ApiConstants.messages(tConversationId),
+          ),
+          data: tResponse,
+          statusCode: 200,
+        ),
+      );
 
       // Act
       final result = await chatApi.getMessages(tConversationId);
@@ -99,6 +113,54 @@ void main() {
       expect(message.type, MessageType.text);
       expect(message.senderName, 'Bekmurod Domla');
       expect(message.isRead, true);
+    });
+
+    test('falls back to localized participant and sender names', () async {
+      AppLocalizations.updateCurrent(AppLocalizations(AppLocale.en));
+
+      when(
+        () => mockDioClient.get(
+          ApiConstants.conversations,
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ApiConstants.conversations),
+          data: {
+            'contacts': [
+              {'id': 1},
+            ],
+          },
+          statusCode: 200,
+        ),
+      );
+
+      when(
+        () => mockDioClient.get(
+          ApiConstants.messages(tConversationId),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(
+            path: ApiConstants.messages(tConversationId),
+          ),
+          data: {
+            'messages': [
+              {'id': 100, 'body': 'Hi', 'sender_id': 0, 'receiver_id': 1},
+            ],
+          },
+          statusCode: 200,
+        ),
+      );
+
+      final conversations = await chatApi.getConversations();
+      final messages = await chatApi.getMessages(tConversationId);
+
+      expect(conversations.single.participantName, 'User');
+      expect(messages.single.senderName, 'You');
     });
   });
 }

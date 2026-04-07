@@ -1,12 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:parent_school_app/core/localization/app_locale.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/core/network/dio_client.dart';
 import 'package:parent_school_app/data/datasources/remote/academic_api.dart';
 import 'package:parent_school_app/core/constants/api_constants.dart';
 import 'package:parent_school_app/core/storage/local_cache_service.dart';
 
 class MockDioClient extends Mock implements DioClient {}
+
 class MockLocalCacheService extends Mock implements LocalCacheService {}
 
 void main() {
@@ -18,7 +21,8 @@ void main() {
     mockDioClient = MockDioClient();
     mockLocalCache = MockLocalCacheService();
     when(() => mockLocalCache.save(any(), any())).thenAnswer((_) async {});
-    
+    AppLocalizations.updateCurrent(AppLocalizations(AppLocale.uz));
+
     academicApi = AcademicApi(mockDioClient, mockLocalCache);
     registerFallbackValue(Options());
   });
@@ -39,25 +43,29 @@ void main() {
                 'lessonTime': {
                   'starts_at': '08:00:00',
                   'ends_at': '08:45:00',
-                  'lesson_no': 1
+                  'lesson_no': 1,
                 },
                 'room': {'name': '101A'},
                 'day_of_week': 3,
-              }
-            ]
-          }
-        }
+              },
+            ],
+          },
+        },
       };
 
-      when(() => mockDioClient.get(
-            ApiConstants.schedule(tChildId),
-            queryParameters: any(named: 'queryParameters'),
-            options: any(named: 'options'),
-          )).thenAnswer((_) async => Response(
-            requestOptions: RequestOptions(path: ApiConstants.schedule(tChildId)),
-            data: tResponse,
-            statusCode: 200,
-          ));
+      when(
+        () => mockDioClient.get(
+          ApiConstants.schedule(tChildId),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ApiConstants.schedule(tChildId)),
+          data: tResponse,
+          statusCode: 200,
+        ),
+      );
 
       // Act
       final result = await academicApi.getSchedule(tChildId);
@@ -66,44 +74,102 @@ void main() {
       expect(result.length, 1);
       expect(result.first.id, 100);
       expect(result.first.subjectName, 'Math');
-      verify(() => mockDioClient.get(
-            ApiConstants.schedule(tChildId),
-            queryParameters: any(named: 'queryParameters'),
-            options: any(named: 'options'),
-          )).called(1);
+      verify(
+        () => mockDioClient.get(
+          ApiConstants.schedule(tChildId),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        ),
+      ).called(1);
     });
 
-    test('getGradeSummary returns list of SubjectGradeSummary on success', () async {
-      // Arrange
-      final tResponse = {
-        'by_subject': [
-          {
-            'subject': {'id': 1, 'name': 'Math'},
-            'grades': [
-              {'quarter': 1, 'grade_5': 5},
-              {'quarter': 2, 'grade_5': 4},
-            ],
-          },
-        ],
-      };
+    test(
+      'getGradeSummary returns list of SubjectGradeSummary on success',
+      () async {
+        // Arrange
+        final tResponse = {
+          'by_subject': [
+            {
+              'subject': {'id': 1, 'name': 'Math'},
+              'grades': [
+                {'quarter': 1, 'grade_5': 5},
+                {'quarter': 2, 'grade_5': 4},
+              ],
+            },
+          ],
+        };
 
-      when(() => mockDioClient.get(
+        when(
+          () => mockDioClient.get(
             ApiConstants.grades(tChildId),
             queryParameters: any(named: 'queryParameters'),
             options: any(named: 'options'),
-          )).thenAnswer((_) async => Response(
+          ),
+        ).thenAnswer(
+          (_) async => Response(
             requestOptions: RequestOptions(path: ApiConstants.grades(tChildId)),
             data: tResponse,
             statusCode: 200,
-          ));
+          ),
+        );
 
-      // Act
-      final result = await academicApi.getGradeSummary(tChildId);
+        // Act
+        final result = await academicApi.getGradeSummary(tChildId);
 
-      // Assert
-      expect(result.length, 1);
-      expect(result.first.subjectName, 'Math');
-      expect(result.first.averageGrade, 4.5);
-    });
+        // Assert
+        expect(result.length, 1);
+        expect(result.first.subjectName, 'Math');
+        expect(result.first.averageGrade, 4.5);
+      },
+    );
+
+    test(
+      'getSchedule uses localized fallback names when subject data is missing',
+      () async {
+        AppLocalizations.updateCurrent(AppLocalizations(AppLocale.en));
+
+        final tResponse = {
+          'schedule_by_child': {
+            '1': {
+              '2025-01-01': [
+                {
+                  'id': 100,
+                  'subject': {},
+                  'teacher': {},
+                  'lessonTime': {
+                    'starts_at': '08:00:00',
+                    'ends_at': '08:45:00',
+                    'lesson_no': 1,
+                  },
+                  'room': {'name': '101A'},
+                  'day_of_week': 3,
+                },
+              ],
+            },
+          },
+        };
+
+        when(
+          () => mockDioClient.get(
+            ApiConstants.schedule(tChildId),
+            queryParameters: any(named: 'queryParameters'),
+            options: any(named: 'options'),
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(
+              path: ApiConstants.schedule(tChildId),
+            ),
+            data: tResponse,
+            statusCode: 200,
+          ),
+        );
+
+        final result = await academicApi.getSchedule(tChildId);
+
+        expect(result.single.subjectName, 'Subject');
+        expect(result.single.teacherName, 'Teacher');
+      },
+    );
   });
 }

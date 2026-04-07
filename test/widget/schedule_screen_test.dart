@@ -20,6 +20,7 @@ import 'package:parent_school_app/presentation/screens/academics/schedule_screen
 import 'package:parent_school_app/presentation/widgets/schedule/schedule_card.dart';
 
 class MockUserRepository extends Mock implements UserRepository {}
+
 class MockAcademicRepository extends Mock implements AcademicRepository {}
 
 void main() {
@@ -37,13 +38,30 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await SharedPrefsService.init();
 
-    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
-    const tUser = UserModel(id: 1, fullName: 'John Doe', phone: '+998901234567', children: [tChild]);
-    when(() => mockUserRepository.getProfile()).thenAnswer((_) async => const Right(tUser));
+    const tChild = ChildModel(
+      id: 1,
+      fullName: 'John Jr',
+      className: '5A',
+      classId: 10,
+    );
+    const tUser = UserModel(
+      id: 1,
+      fullName: 'John Doe',
+      phone: '+998901234567',
+      children: [tChild],
+    );
+    when(
+      () => mockUserRepository.getProfile(),
+    ).thenAnswer((_) async => const Right(tUser));
   });
 
   Widget createWidgetUnderTest() {
-    const tChild = ChildModel(id: 1, fullName: 'John Jr', className: '5A', classId: 10);
+    const tChild = ChildModel(
+      id: 1,
+      fullName: 'John Jr',
+      className: '5A',
+      classId: 10,
+    );
     return ProviderScope(
       overrides: [
         userRepositoryProvider.overrideWithValue(mockUserRepository),
@@ -63,7 +81,9 @@ void main() {
   group('ScheduleScreen Widget Tests', () {
     testWidgets('shows loading state initially', (WidgetTester tester) async {
       final completer = Completer<Either<Failure, List<ScheduleModel>>>();
-      when(() => mockAcademicRepository.getSchedule(any())).thenAnswer((_) => completer.future);
+      when(
+        () => mockAcademicRepository.getSchedule(any()),
+      ).thenAnswer((_) => completer.future);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
@@ -71,8 +91,12 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('shows empty message when no schedule exists', (WidgetTester tester) async {
-      when(() => mockAcademicRepository.getSchedule(any())).thenAnswer((_) async => const Right([]));
+    testWidgets('shows empty message when no schedule exists', (
+      WidgetTester tester,
+    ) async {
+      when(
+        () => mockAcademicRepository.getSchedule(any()),
+      ).thenAnswer((_) async => const Right([]));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -80,7 +104,9 @@ void main() {
       expect(find.text('Darslar mavjud emas'), findsOneWidget);
     });
 
-    testWidgets('shows schedule items based on selected day', (WidgetTester tester) async {
+    testWidgets('shows schedule items based on selected day', (
+      WidgetTester tester,
+    ) async {
       final todayWeekday = DateTime.now().weekday;
       final List<ScheduleModel> tSchedule = [
         ScheduleModel(
@@ -96,26 +122,34 @@ void main() {
           markMode: 'grade',
         ),
       ];
-      when(() => mockAcademicRepository.getSchedule(any())).thenAnswer((_) async => Right(tSchedule));
+      when(
+        () => mockAcademicRepository.getSchedule(any()),
+      ).thenAnswer((_) async => Right(tSchedule));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       expect(find.text('Dars jadvali'), findsOneWidget);
       expect(find.text('Fizika'), findsOneWidget);
-      expect(find.textContaining('101'), findsWidgets); // Contains room logic sometimes prefixes strings like Xona
+      expect(
+        find.textContaining('101'),
+        findsWidgets,
+      ); // Contains room logic sometimes prefixes strings like Xona
       expect(find.text('Domla'), findsOneWidget);
       expect(find.byType(ScheduleCard), findsOneWidget);
     });
 
-    testWidgets('shows error state when API fails', (WidgetTester tester) async {
-      when(() => mockAcademicRepository.getSchedule(any()))
-          .thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
+    testWidgets('shows error state when API fails', (
+      WidgetTester tester,
+    ) async {
+      when(
+        () => mockAcademicRepository.getSchedule(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Xatolik: Tarmoq xatosi'), findsOneWidget);
+      expect(find.textContaining('Tarmoq xatosi'), findsOneWidget);
     });
   });
 }

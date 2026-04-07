@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class DailyMenuCard extends StatelessWidget {
   const DailyMenuCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final textTheme = Theme.of(context).textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'So\'nggi yangilik',
-            style: TextStyle(
+            l10n.latestNewsTitle,
+            style: textTheme.titleLarge?.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
             ),
           ),
         ),
@@ -29,10 +31,7 @@ class DailyMenuCard extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF43A047),
-                Color(0xFF66BB6A),
-              ],
+              colors: [Color(0xFF43A047), Color(0xFF66BB6A)],
             ),
           ),
           child: Padding(
@@ -66,21 +65,18 @@ class DailyMenuCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Bugungi Tushlik',
-                  style: TextStyle(
+                Text(
+                  l10n.todayLunchTitle,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Oshxonada yangi taomlar tayyorlandi',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
+                Text(
+                  l10n.todayLunchSubtitle,
+                  style: const TextStyle(fontSize: 13, color: Colors.white),
                 ),
               ],
             ),

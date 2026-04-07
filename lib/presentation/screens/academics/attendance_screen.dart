@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
+
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../data/models/attendance_model.dart';
 import '../../providers/academic_provider.dart';
 import '../../providers/user_provider.dart';
@@ -38,6 +40,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final attendanceAsync = ref.watch(attendanceProvider);
     final attendanceData = attendanceAsync.valueOrNull;
     final hasError = attendanceAsync.hasError;
@@ -67,25 +72,29 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
     if (hasError && attendanceData == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          title: const Text('Davomat statistikasi'),
-          backgroundColor: AppColors.primaryBlue,
-          foregroundColor: Colors.white,
+          title: Text(l10n.attendanceTitle),
+          backgroundColor:
+              theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+          foregroundColor:
+              theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         ),
         body: _AttendanceErrorView(
-          message: errorMessage ?? 'Noma\'lum backend xatoligi',
+          message: errorMessage ?? l10n.errorServer,
           onRetry: () => _loadAttendance(_focusedDay),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Davomat statistikasi'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
+        title: Text(l10n.attendanceTitle),
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -102,7 +111,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 children: [
                   Expanded(
                     child: _StatBox(
-                      label: 'Jami darslar',
+                      label: l10n.attendanceTotalLessonsLabel,
                       value: summary?.totalDays.toString() ?? '-',
                       color: AppColors.primaryBlue,
                     ),
@@ -110,7 +119,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _StatBox(
-                      label: 'Qatnashdi',
+                      label: l10n.attendancePresentLabel,
                       value: summary?.presentDays.toString() ?? '-',
                       color: AppColors.success,
                     ),
@@ -118,7 +127,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _StatBox(
-                      label: 'Sababsiz',
+                      label: l10n.attendanceAbsentLabel,
                       value: summary?.absentDays.toString() ?? '-',
                       color: AppColors.danger,
                     ),
@@ -132,11 +141,14 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 20),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.6),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.shadow.withValues(alpha: 0.05),
+                    color: theme.shadowColor.withValues(alpha: 0.05),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -145,6 +157,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               child: Stack(
                 children: [
                   TableCalendar(
+                    locale: Localizations.localeOf(context).languageCode,
                     firstDay: DateTime.now().subtract(
                       const Duration(days: 365),
                     ),
@@ -203,14 +216,23 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             ),
 
             // ─── Legend ───
-            const Padding(
-              padding: EdgeInsets.all(24),
+            Padding(
+              padding: const EdgeInsets.all(24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _LegendItem(label: 'Bor', color: AppColors.success),
-                  _LegendItem(label: 'Yo\'q', color: AppColors.danger),
-                  _LegendItem(label: 'Kechikkan', color: Colors.amber),
+                  _LegendItem(
+                    label: l10n.attendancePresentLegend,
+                    color: AppColors.success,
+                  ),
+                  _LegendItem(
+                    label: l10n.attendanceAbsentLegend,
+                    color: AppColors.danger,
+                  ),
+                  _LegendItem(
+                    label: l10n.attendanceLateLegend,
+                    color: Colors.amber,
+                  ),
                 ],
               ),
             ),
@@ -226,7 +248,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     bool isToday = false,
   }) {
     Color color = Colors.transparent;
-    Color textColor = AppColors.textPrimary;
+    Color textColor = Theme.of(context).colorScheme.onSurface;
 
     if (status != null) {
       switch (status) {
@@ -279,6 +301,9 @@ class _AttendanceErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -286,30 +311,27 @@ class _AttendanceErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Backend xatoligi',
+            Text(
+              l10n.attendanceBackendErrorTitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
             SelectableText(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: colorScheme.onSurfaceVariant,
                 height: 1.4,
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('Qayta urinish'),
-            ),
+            ElevatedButton(onPressed: onRetry, child: Text(l10n.retry)),
           ],
         ),
       ),
@@ -324,19 +346,21 @@ class _InlineErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
+        color: colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.shade200),
+        border: Border.all(color: colorScheme.error.withValues(alpha: 0.35)),
       ),
       child: SelectableText(
         message,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
-          color: AppColors.textPrimary,
+          color: colorScheme.onErrorContainer,
           height: 1.35,
         ),
       ),
@@ -397,6 +421,8 @@ class _LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
         Container(
@@ -407,9 +433,9 @@ class _LegendItem extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
-            color: AppColors.textSecondary,
+            color: colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
           ),
         ),

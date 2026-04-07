@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/localization/app_localizations.dart';
+import '../../../data/models/grade_model.dart';
 import '../../providers/academic_provider.dart';
 import '../../providers/user_provider.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../data/models/grade_model.dart';
 import '../../widgets/grades/grade_card.dart';
 import '../../widgets/grades/overall_grade_card.dart';
 
@@ -77,6 +78,9 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final gradesAsync = ref.watch(gradesProvider);
     final userState = ref.watch(userProvider);
     final attendanceAsync = ref.watch(attendanceProvider);
@@ -88,6 +92,7 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
     });
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: gradesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => _GradesErrorView(
@@ -99,7 +104,7 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
           final summary = gradesData.summary;
 
           if (grades.isEmpty && summary.isEmpty) {
-            return const Center(child: Text('Baholar mavjud emas'));
+            return Center(child: Text(l10n.noGradesAvailable));
           }
 
           // Calculate stats
@@ -143,26 +148,28 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
               SliverAppBar(
                 expandedHeight: 120,
                 pinned: true,
-                backgroundColor: AppColors.primaryBlue,
+                backgroundColor:
+                    theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+                foregroundColor:
+                    theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.primaryBlue,
-                          AppColors.secondaryBlue,
-                        ],
+                        colors: [colorScheme.primary, colorScheme.secondary],
                       ),
                     ),
                   ),
-                  title: const Text(
-                    'Mening ko\'rsatkichlarim',
+                  title: Text(
+                    l10n.myPerformanceTitle,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color:
+                          theme.appBarTheme.foregroundColor ??
+                          colorScheme.onPrimary,
                     ),
                   ),
                   centerTitle: true,
@@ -197,20 +204,21 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
                     gpa: gpa,
                     totalLessons: summary.length,
                     attendanceRate: attendanceRate,
+                    className: userState.selectedChild?.className ?? '-',
                   ),
                 ),
               ),
 
               // ─── Section Title ───
-              const SliverPadding(
-                padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                 sliver: SliverToBoxAdapter(
                   child: Text(
-                    'Fanlar bo\'yicha',
+                    l10n.gradesBySubjectTitle,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -240,7 +248,7 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
                         teacher:
                             grade.teacherName ??
                             summaryItem?.teacherName ??
-                            'O\'qituvchi',
+                            l10n.teacherLabel,
                         grade: grade.grade,
                         attendance: attendanceRate,
                         average: averagePercent.clamp(0, 100),
@@ -267,6 +275,9 @@ class _GradesErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -274,30 +285,27 @@ class _GradesErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Backend xatoligi',
+            Text(
+              l10n.backendErrorTitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
             SelectableText(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: colorScheme.onSurfaceVariant,
                 height: 1.4,
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('Qayta urinish'),
-            ),
+            ElevatedButton(onPressed: onRetry, child: Text(l10n.retry)),
           ],
         ),
       ),

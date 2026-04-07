@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/constants/app_colors.dart';
+
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../providers/payment_provider.dart';
 import '../../providers/user_provider.dart';
@@ -29,13 +30,14 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
   }
 
   Future<void> _handlePayment() async {
+    final l10n = context.l10n;
     final digits = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
     final amount = int.tryParse(digits);
 
     if (amount == null || amount <= 0) {
       AppSnackBar.show(
         context,
-        'To\'lov summasini to\'g\'ri kiriting',
+        l10n.paymentAmountInvalid,
         type: AppSnackBarType.error,
       );
       return;
@@ -45,7 +47,7 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
     if (selectedStudentId == null || selectedStudentId <= 0) {
       AppSnackBar.show(
         context,
-        'Avval farzandni tanlang',
+        l10n.selectChildFirst,
         type: AppSnackBarType.error,
       );
       return;
@@ -62,8 +64,7 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
 
     if (paymentData == null) {
       final error =
-          ref.read(paymentProvider).error ??
-          'Parent API da to\'lov yaratish qo\'llab-quvvatlanmaydi.';
+          ref.read(paymentProvider).error ?? l10n.paymentCreateUnsupported;
       AppSnackBar.show(context, error, type: AppSnackBarType.error);
       return;
     }
@@ -76,16 +77,14 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {
-          _showError(
-            'Ilovani ochishda xatolik yuz berdi. Iltimos brauzer orqali urining.',
-          );
+          _showError(l10n.paymentRedirectOpenFallback);
           await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
         }
       } catch (e) {
-        _showError('To\'lov havolasiga o\'tib bo\'lmadi');
+        _showError(l10n.paymentLinkOpenFailed);
       }
     } else {
-      AppSnackBar.show(context, 'To\'lov yaratildi, ammo link olinmadi');
+      AppSnackBar.show(context, l10n.paymentCreatedNoLink);
     }
   }
 
@@ -96,15 +95,20 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final paymentState = ref.watch(paymentProvider);
     final isLoading = paymentState.isLoading;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('To\'lov usuli'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
+        title: Text(l10n.paymentMethodTitle),
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -112,21 +116,21 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ─── Amount Input ───
-            const Text(
-              'To\'lov summasi (UZS)',
+            Text(
+              l10n.paymentAmountLabel,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF718096),
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: colorScheme.outline),
               ),
               child: TextField(
                 controller: _amountController,
@@ -136,22 +140,22 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText: '0',
-                  suffixText: 'UZS',
+                  suffixText: l10n.currencyCode,
                 ),
               ),
             ),
             const SizedBox(height: 32),
 
             // ─── Payment Methods ───
-            const Text(
-              'Xo\'sh, qanday to\'laymiz?',
+            Text(
+              l10n.paymentMethodsPrompt,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1A202C),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 16),
@@ -176,19 +180,19 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
 
             // ─── Pay Button ───
             CustomButton(
-              text: 'To\'lovni amalga oshirish',
+              text: l10n.paymentAction,
               onPressed: isLoading ? null : _handlePayment,
               isLoading: isLoading,
               height: 56,
               borderRadius: 16,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Tugmani bosish orqali siz ommaviy oferta shartlariga rozilik bildirasiz.',
+            Text(
+              l10n.paymentAgreementText,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
-                color: Color(0xFF718096),
+                color: colorScheme.onSurfaceVariant,
                 height: 1.5,
               ),
             ),
