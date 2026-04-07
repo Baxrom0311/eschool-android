@@ -7,7 +7,11 @@ class DailyMenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
     final textTheme = Theme.of(context).textTheme;
+    final gradientColors = theme.brightness == Brightness.dark
+        ? const [Color(0xFF1E5F37), Color(0xFF2E7D4F)]
+        : const [Color(0xFF43A047), Color(0xFF66BB6A)];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,11 +32,18 @@ class DailyMenuCard extends StatelessWidget {
           height: 180,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF43A047), Color(0xFF66BB6A)],
+              colors: gradientColors,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowColor.withValues(alpha: 0.14),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
 
 /// Loading indicator widgeti
 class LoadingIndicator extends StatelessWidget {
@@ -7,15 +6,12 @@ class LoadingIndicator extends StatelessWidget {
   final Color? color;
   final String? message;
 
-  const LoadingIndicator({
-    super.key,
-    this.size = 40,
-    this.color,
-    this.message,
-  });
+  const LoadingIndicator({super.key, this.size = 40, this.color, this.message});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -27,7 +23,7 @@ class LoadingIndicator extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                color ?? AppColors.primaryBlue,
+                color ?? colorScheme.primary,
               ),
             ),
           ),
@@ -35,8 +31,8 @@ class LoadingIndicator extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               message!,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
             ),
@@ -47,9 +43,9 @@ class LoadingIndicator extends StatelessWidget {
   }
 
   /// Butun ekranni qoplaydigan loading
-  static Widget fullScreen({String? message}) {
+  static Widget fullScreen({String? message, Color? barrierColor}) {
     return Container(
-      color: AppColors.white.withValues(alpha: 0.8),
+      color: barrierColor ?? Colors.black.withValues(alpha: 0.12),
       child: LoadingIndicator(message: message),
     );
   }

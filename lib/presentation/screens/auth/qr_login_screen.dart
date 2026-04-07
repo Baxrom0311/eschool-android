@@ -94,8 +94,10 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: colorScheme.scrim,
       appBar: AppBar(
         title: Text(l10n.qrLoginTitle),
         backgroundColor: Colors.transparent,
@@ -114,7 +116,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
               height: 260,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: _isProcessing ? AppColors.success : Colors.white,
+                  color: _isProcessing ? colorScheme.primary : Colors.white,
                   width: 3,
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -123,7 +125,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
           ),
 
           // Qorong'i overlay tashqarida
-          _buildOverlay(),
+          _buildOverlay(context),
 
           // Pastda ko'rsatma
           Positioned(
@@ -133,7 +135,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
             child: Column(
               children: [
                 if (_isProcessing)
-                  const CircularProgressIndicator(color: Colors.white)
+                  CircularProgressIndicator(color: colorScheme.primary)
                 else ...[
                   const Icon(
                     Icons.qr_code_scanner_rounded,
@@ -165,7 +167,10 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
     );
   }
 
-  Widget _buildOverlay() {
+  Widget _buildOverlay(BuildContext context) {
+    final overlayColor = Theme.of(
+      context,
+    ).colorScheme.scrim.withValues(alpha: 0.62);
     return LayoutBuilder(
       builder: (context, constraints) {
         const scanArea = 260.0;
@@ -180,7 +185,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
               left: 0,
               right: 0,
               height: top,
-              child: Container(color: Colors.black54),
+              child: Container(color: overlayColor),
             ),
             // Bottom
             Positioned(
@@ -188,7 +193,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: Container(color: Colors.black54),
+              child: Container(color: overlayColor),
             ),
             // Left
             Positioned(
@@ -196,7 +201,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
               left: 0,
               width: left,
               height: scanArea,
-              child: Container(color: Colors.black54),
+              child: Container(color: overlayColor),
             ),
             // Right
             Positioned(
@@ -204,7 +209,7 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
               right: 0,
               width: left,
               height: scanArea,
-              child: Container(color: Colors.black54),
+              child: Container(color: overlayColor),
             ),
           ],
         );

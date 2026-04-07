@@ -14,6 +14,7 @@ class ScheduleList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
     final scheduleAsync = ref.watch(scheduleProvider);
 
     return Column(
@@ -25,10 +26,10 @@ class ScheduleList extends ConsumerWidget {
             children: [
               Text(
                 l10n.todayLessonsSectionTitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: colorScheme.onSurface,
                 ),
               ),
               TextButton(
@@ -49,7 +50,7 @@ class ScheduleList extends ConsumerWidget {
                 return Center(
                   child: Text(
                     l10n.noLessonsTodayShort,
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
                   ),
                 );
               }
@@ -79,6 +80,8 @@ class _ScheduleItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final time = '${classItem.startTime} - ${classItem.endTime}';
     final isActive = classItem.isActive;
     final markText = classItem.markText;
@@ -88,11 +91,16 @@ class _ScheduleItem extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isActive ? AppColors.primaryBlue : Colors.white,
+        color: isActive ? colorScheme.primary : theme.cardColor,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isActive
+              ? colorScheme.primary
+              : colorScheme.outline.withValues(alpha: 0.7),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow.withValues(alpha: 0.1),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -106,7 +114,9 @@ class _ScheduleItem extends StatelessWidget {
               Icon(
                 Icons.schedule_rounded,
                 size: 16,
-                color: isActive ? Colors.white : AppColors.textSecondary,
+                color: isActive
+                    ? colorScheme.onPrimary
+                    : colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 4),
               Text(
@@ -114,8 +124,8 @@ class _ScheduleItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   color: isActive
-                      ? Colors.white.withValues(alpha: 0.9)
-                      : AppColors.textSecondary,
+                      ? colorScheme.onPrimary.withValues(alpha: 0.9)
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -129,7 +139,9 @@ class _ScheduleItem extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isActive ? Colors.white : AppColors.textPrimary,
+                    color: isActive
+                        ? colorScheme.onPrimary
+                        : colorScheme.onSurface,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -144,7 +156,7 @@ class _ScheduleItem extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isActive
-                        ? Colors.white.withValues(alpha: 0.2)
+                        ? colorScheme.onPrimary.withValues(alpha: 0.2)
                         : AppColors.success.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -153,7 +165,9 @@ class _ScheduleItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: isActive ? Colors.white : AppColors.success,
+                      color: isActive
+                          ? colorScheme.onPrimary
+                          : AppColors.success,
                     ),
                   ),
                 ),
@@ -166,8 +180,8 @@ class _ScheduleItem extends StatelessWidget {
                 Icons.room_rounded,
                 size: 14,
                 color: isActive
-                    ? Colors.white.withValues(alpha: 0.9)
-                    : AppColors.textSecondary,
+                    ? colorScheme.onPrimary.withValues(alpha: 0.9)
+                    : colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 4),
               Text(
@@ -175,8 +189,8 @@ class _ScheduleItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   color: isActive
-                      ? Colors.white.withValues(alpha: 0.9)
-                      : AppColors.textSecondary,
+                      ? colorScheme.onPrimary.withValues(alpha: 0.9)
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
             ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../data/models/badge_model.dart';
 import '../../providers/leaderboard_provider.dart';
@@ -44,6 +43,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = ref.watch(leaderboardProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     ref.listen(selectedChildProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
@@ -52,7 +53,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           l10n.leaderboardTitle,
@@ -60,13 +61,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
+        backgroundColor:
+            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor:
+            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppColors.primaryBlue,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: AppColors.primaryBlue,
+          labelColor: colorScheme.primary,
+          unselectedLabelColor: colorScheme.onSurfaceVariant,
+          indicatorColor: colorScheme.primary,
           tabs: [
             Tab(text: l10n.leaderboardClassTab),
             Tab(text: l10n.leaderboardSchoolTab),
@@ -114,7 +117,14 @@ class _RankingTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (ranking.isEmpty) {
-      return Center(child: Text(emptyText));
+      return Center(
+        child: Text(
+          emptyText,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
     }
 
     final top3 = ranking.take(3).toList();
@@ -144,6 +154,8 @@ class _Podium extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return SizedBox(
       height: 280,
       child: Row(
@@ -155,7 +167,7 @@ class _Podium extends StatelessWidget {
               data: top3[1],
               rank: 2,
               height: 118,
-              color: Colors.grey.shade300,
+              color: colorScheme.surfaceContainerHighest,
             ),
           _PodiumItem(
             data: top3[0],
@@ -169,7 +181,7 @@ class _Podium extends StatelessWidget {
               data: top3[2],
               rank: 3,
               height: 102,
-              color: Colors.brown.shade300,
+              color: const Color(0xFFCD7F32),
             ),
         ],
       ),
@@ -194,6 +206,8 @@ class _PodiumItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final avatarUrl = data['avatar_url']?.toString();
     final name = data['name']?.toString() ?? context.l10n.userFallbackName;
 
@@ -202,17 +216,22 @@ class _PodiumItem extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: isFirst ? 34 : 26,
+          backgroundColor: theme.cardColor,
           backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
               ? NetworkImage(avatarUrl)
               : null,
           child: avatarUrl == null || avatarUrl.isEmpty
-              ? const Icon(Icons.person)
+              ? Icon(Icons.person, color: colorScheme.onSurfaceVariant)
               : null,
         ),
         const SizedBox(height: 8),
         Text(
           name.split(' ').first,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+            color: colorScheme.onSurface,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -256,6 +275,8 @@ class _RankTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final avatarUrl = data['avatar_url']?.toString();
     final xp = data['xp']?.toString() ?? '0';
     final level = data['level']?.toString() ?? '1';
@@ -265,13 +286,17 @@ class _RankTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: isMe
-            ? AppColors.primaryBlue.withValues(alpha: 0.08)
-            : Colors.white,
+            ? colorScheme.primary.withValues(alpha: 0.08)
+            : theme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: isMe ? Border.all(color: AppColors.primaryBlue) : null,
+        border: Border.all(
+          color: isMe
+              ? colorScheme.primary
+              : colorScheme.outline.withValues(alpha: 0.7),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -283,9 +308,9 @@ class _RankTile extends StatelessWidget {
             width: 30,
             child: Text(
               '${data['rank'] ?? '-'}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -305,6 +330,7 @@ class _RankTile extends StatelessWidget {
               data['name']?.toString() ?? l10n.userFallbackName,
               style: TextStyle(
                 fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
+                color: colorScheme.onSurface,
               ),
             ),
           ),
@@ -313,14 +339,17 @@ class _RankTile extends StatelessWidget {
             children: [
               Text(
                 '$xp XP',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.blueAccent,
+                  color: colorScheme.primary,
                 ),
               ),
               Text(
                 l10n.levelBadge(int.tryParse(level) ?? 1),
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -344,12 +373,21 @@ class _BadgesTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Container(
             padding: const EdgeInsets.all(24),
-            color: AppColors.primaryBlue.withValues(alpha: 0.1),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              border: Border(
+                bottom: BorderSide(
+                  color: colorScheme.outline.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
             child: Column(
               children: [
                 const Icon(
@@ -360,12 +398,16 @@ class _BadgesTab extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   l10n.leaderboardCoins(coins),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
                   ),
                 ),
-                Text(l10n.unlockableBadgesCount(availableBadges.length)),
+                Text(
+                  l10n.unlockableBadgesCount(availableBadges.length),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                ),
               ],
             ),
           ),
@@ -375,14 +417,23 @@ class _BadgesTab extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Text(
               l10n.myBadgesTitle,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
         ),
         if (myBadges.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text(l10n.noBadgesYet)),
+            child: Center(
+              child: Text(
+                l10n.noBadgesYet,
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+            ),
           )
         else
           SliverPadding(
@@ -410,6 +461,7 @@ class _BadgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.all(8),
       child: Padding(
@@ -421,13 +473,16 @@ class _BadgeCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               badge.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
               badge.category,
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ],

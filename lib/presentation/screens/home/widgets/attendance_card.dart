@@ -17,6 +17,8 @@ class AttendanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -30,7 +32,7 @@ class AttendanceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withValues(alpha: 0.3),
+            color: theme.shadowColor.withValues(alpha: 0.18),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -52,13 +54,18 @@ class AttendanceCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: colorScheme.outline.withValues(alpha: 0.35),
+                  ),
                 ),
                 child: Text(
                   l10n.levelBadge(level),
-                  style: const TextStyle(
-                    color: AppColors.primaryBlue,
+                  style: TextStyle(
+                    color: theme.brightness == Brightness.dark
+                        ? colorScheme.onSurface
+                        : AppColors.primaryBlue,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),

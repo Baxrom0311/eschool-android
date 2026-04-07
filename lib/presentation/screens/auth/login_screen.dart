@@ -221,7 +221,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         .read(appLocaleProvider.notifier)
                                         .setLocale(locale);
                                   },
-                                  color: Colors.white,
+                                  color: theme.cardColor,
                                   itemBuilder: (context) => AppLocale.values
                                       .map(
                                         (locale) => PopupMenuItem<AppLocale>(
@@ -409,7 +409,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               onPressed: isBusy ? null : _handleLogin,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorScheme.primary,
-                                foregroundColor: Colors.white,
+                                foregroundColor: colorScheme.onPrimary,
                                 elevation: 4,
                                 shadowColor: theme.shadowColor,
                                 shape: RoundedRectangleBorder(
@@ -417,14 +417,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                               child: isBusy
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 22,
                                       height: 22,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2.4,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
+                                              colorScheme.onPrimary,
                                             ),
                                       ),
                                     )
@@ -448,10 +448,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const SizedBox(height: 18),
                           Row(
                             children: [
-                              const Expanded(
+                              Expanded(
                                 child: Divider(
                                   thickness: 1,
-                                  color: AppColors.divider,
+                                  color: colorScheme.outline.withValues(
+                                    alpha: 0.7,
+                                  ),
                                 ),
                               ),
                               Padding(
@@ -468,10 +470,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                 ),
                               ),
-                              const Expanded(
+                              Expanded(
                                 child: Divider(
                                   thickness: 1,
-                                  color: AppColors.divider,
+                                  color: colorScheme.outline.withValues(
+                                    alpha: 0.7,
+                                  ),
                                 ),
                               ),
                             ],
@@ -486,7 +490,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   onTap: isBusy
                                       ? null
                                       : () => _showError(l10n.googleSoon),
-                                  iconColor: AppColors.primaryBlue,
+                                  iconColor: colorScheme.primary,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -495,7 +499,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   label: l10n.qrCodeLabel,
                                   icon: Icons.qr_code_2_rounded,
                                   onTap: isBusy ? null : _handleQrLogin,
-                                  iconColor: AppColors.textPrimary,
+                                  iconColor: colorScheme.onSurface,
                                 ),
                               ),
                             ],
@@ -582,7 +586,6 @@ class _AuthOptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     return InkWell(
       onTap: onTap,
@@ -590,12 +593,10 @@ class _AuthOptionCard extends StatelessWidget {
       child: Ink(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isDark ? colorScheme.surface : const Color(0xFFF5F7FC),
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark
-                ? colorScheme.outline.withValues(alpha: 0.7)
-                : const Color(0xFFE6EBF3),
+            color: colorScheme.outline.withValues(alpha: 0.7),
             width: 1,
           ),
         ),
@@ -609,7 +610,7 @@ class _AuthOptionCard extends StatelessWidget {
                 fontSize: 14.5,
                 fontWeight: FontWeight.w600,
                 color:
-                    theme.textTheme.titleMedium?.color ?? AppColors.textPrimary,
+                    theme.textTheme.titleMedium?.color ?? colorScheme.onSurface,
               ),
             ),
           ],
