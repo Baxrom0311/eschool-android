@@ -59,12 +59,14 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 /// Auth holati — barcha auth bilan bog'liq ma'lumotlar
 class AuthState extends Equatable {
   final UserModel? user;
+  final String? token;
   final bool isLoading;
   final String? error;
   final bool isAuthenticated;
 
   const AuthState({
     this.user,
+    this.token,
     this.isLoading = false,
     this.error,
     this.isAuthenticated = false,
@@ -73,6 +75,7 @@ class AuthState extends Equatable {
   /// Boshlang'ich holat — hech narsa yuklanmagan
   const AuthState.initial()
     : user = null,
+      token = null,
       isLoading = false,
       error = null,
       isAuthenticated = false;
@@ -88,9 +91,10 @@ class AuthState extends Equatable {
   }
 
   /// Muvaffaqiyatli auth holati
-  AuthState copyWithSuccess(UserModel user) {
+  AuthState copyWithSuccess(UserModel user, String? token) {
     return AuthState(
       user: user,
+      token: token,
       isLoading: false,
       error: null,
       isAuthenticated: true,
@@ -115,12 +119,14 @@ class AuthState extends Equatable {
   /// CopyWith method for generic updates
   AuthState copyWith({
     UserModel? user,
+    String? token,
     bool? isLoading,
     Object? error = _undefined,
     bool? isAuthenticated,
   }) {
     return AuthState(
       user: user ?? this.user,
+      token: token ?? this.token,
       isLoading: isLoading ?? this.isLoading,
       error: error == _undefined ? this.error : error as String?,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
@@ -128,7 +134,7 @@ class AuthState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [user, isLoading, error, isAuthenticated];
+  List<Object?> get props => [user, token, isLoading, error, isAuthenticated];
 
   @override
   String toString() =>
@@ -159,9 +165,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> checkAuthStatus() async {
     final hasToken = await _repository.hasValidToken();
     if (hasToken) {
-      state = const AuthState(
+      final token = await _repository.getAccessToken(); // Bu metodni qo'shishimiz kerak repository'ga
+      state = AuthState(
         isAuthenticated: true,
-        // User ma'lumotlari keyingi API chaqiruvda yuklanadi
+        token: token,
       );
       updateFCMToken();
     } else {
@@ -184,8 +191,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     result.fold((failure) => state = state.copyWithError(failure.message), (
       user,
-    ) {
-      state = state.copyWithSuccess(user);
+    ) async {
+      final token = await _repository.getAccessToken();
+      state = state.copyWithSuccess(user, token);
       updateFCMToken();
     });
   }
@@ -244,9 +252,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final result = await _repository.qrLogin(qrToken: qrToken);
     result.fold(
       (failure) => state = state.copyWithError(failure.message),
-      (user) {
-        state = state.copyWithSuccess(user);
-        updateFCMToken(); // Login muvaffaqiyatli bo'lsa token yangilanadi
+      (user) async {
+        final token = await _repository.getAccessToken();
+        state = state.copyWithSuccess(user, token);
+        updateFCMToken();
       },
     );
   }

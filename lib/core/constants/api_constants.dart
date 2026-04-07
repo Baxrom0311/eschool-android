@@ -131,6 +131,27 @@ class ApiConstants {
   // ─── Online Payment ───
   static const String createPayment = '/api/parent/payments/create';
 
+  // ─── WebSocket (Laravel Reverb) ───
+  static const String reverbKey = String.fromEnvironment(
+    'REVERB_APP_KEY',
+    defaultValue: 'local', // O'zgartirish kerak
+  );
+  
+  static const String reverbHost = String.fromEnvironment(
+    'REVERB_HOST',
+    defaultValue: 'ranchschool.izlash.uz',
+  );
+  
+  static const int reverbPort = int.fromEnvironment(
+    'REVERB_PORT',
+    defaultValue: 443,
+  );
+  
+  static const String reverbScheme = String.fromEnvironment(
+    'REVERB_SCHEME',
+    defaultValue: 'https',
+  );
+
   // ─── Pagination ───
   static const int defaultPageSize = 20;
 }

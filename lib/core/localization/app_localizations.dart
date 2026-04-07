@@ -374,6 +374,9 @@ class AppLocalizations {
   String get gradeTypeExam => _text('gradeTypeExam');
   String get gradeTypeHomework => _text('gradeTypeHomework');
   String get gradeTypeTest => _text('gradeTypeTest');
+  String get langUz => _text('langUz');
+  String get langRu => _text('langRu');
+  String get langEn => _text('langEn');
 
   String minimumLength(int min) {
     switch (appLocale) {
@@ -1089,6 +1092,9 @@ const Map<String, Map<String, String>> _localizedValues = {
     'gradeTypeExam': 'Imtihon',
     'gradeTypeHomework': 'Uy vazifasi',
     'gradeTypeTest': 'Test',
+    'langUz': 'O\'zbekcha',
+    'langRu': 'Ruscha',
+    'langEn': 'Inglizcha',
   },
   'ru': {
     'appName': 'Ranch School Parent',
@@ -1424,6 +1430,9 @@ const Map<String, Map<String, String>> _localizedValues = {
     'gradeTypeExam': 'Экзамен',
     'gradeTypeHomework': 'Домашнее задание',
     'gradeTypeTest': 'Тест',
+    'langUz': 'Узбекский',
+    'langRu': 'Русский',
+    'langEn': 'Английский',
   },
   'en': {
     'appName': 'Ranch School Parent',
@@ -1758,5 +1767,8 @@ const Map<String, Map<String, String>> _localizedValues = {
     'gradeTypeExam': 'Exam',
     'gradeTypeHomework': 'Homework',
     'gradeTypeTest': 'Test',
+    'langUz': 'Uzbek',
+    'langRu': 'Russian',
+    'langEn': 'English',
   },
 };

@@ -83,6 +83,11 @@ class AuthRepository {
     return token != null && token.isNotEmpty;
   }
 
+  /// Tokenni qaytarish
+  Future<String?> getAccessToken() async {
+    return _secureStorage.getAccessToken();
+  }
+
   /// QR Kod orqali login
   Future<Either<Failure, UserModel>> qrLogin({required String qrToken}) {
     return safeApiCall(() async {

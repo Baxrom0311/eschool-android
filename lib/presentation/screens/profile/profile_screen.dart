@@ -7,6 +7,9 @@ import '../../../core/utils/formatters.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/payment_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/app_locale_provider.dart';
+import '../../providers/app_theme_mode_provider.dart';
+import '../../../core/localization/app_locale.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -219,6 +222,24 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
 
                 _SettingsItem(
+                  icon: Icons.language_rounded,
+                  title: l10n.changeLanguage,
+                  subtitle: ref.watch(appLocaleProvider).code.toUpperCase(),
+                  onTap: () => _showLanguagePicker(context, ref),
+                ),
+                const SizedBox(height: 8),
+
+                _SettingsItem(
+                  icon: theme.brightness == Brightness.dark
+                      ? Icons.dark_mode_rounded
+                      : Icons.light_mode_rounded,
+                  title: l10n.changeTheme,
+                  subtitle: _getThemeName(context, ref.watch(appThemeModeProvider)),
+                  onTap: () => _showThemePicker(context, ref),
+                ),
+                const SizedBox(height: 8),
+
+                _SettingsItem(
                   icon: Icons.info_outline_rounded,
                   title: l10n.aboutAppTitle,
                   subtitle: l10n.versionLabel('1.0.0'),
@@ -294,6 +315,137 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  String _getThemeName(BuildContext context, ThemeMode mode) {
+    final l10n = context.l10n;
+    switch (mode) {
+      case ThemeMode.system:
+        return l10n.themeSystem;
+      case ThemeMode.light:
+        return l10n.themeLight;
+      case ThemeMode.dark:
+        return l10n.themeDark;
+    }
+  }
+
+  void _showLanguagePicker(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  l10n.changeLanguage,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ListTile(
+                title: Text(l10n.langUz),
+                trailing: ref.read(appLocaleProvider) == AppLocale.uz
+                    ? Icon(Icons.check, color: colorScheme.primary)
+                    : null,
+                onTap: () {
+                  ref.read(appLocaleProvider.notifier).setLocale(AppLocale.uz);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: Text(l10n.langRu),
+                trailing: ref.read(appLocaleProvider) == AppLocale.ru
+                    ? Icon(Icons.check, color: colorScheme.primary)
+                    : null,
+                onTap: () {
+                  ref.read(appLocaleProvider.notifier).setLocale(AppLocale.ru);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: Text(l10n.langEn),
+                trailing: ref.read(appLocaleProvider) == AppLocale.en
+                    ? Icon(Icons.check, color: colorScheme.primary)
+                    : null,
+                onTap: () {
+                  ref.read(appLocaleProvider.notifier).setLocale(AppLocale.en);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showThemePicker(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  l10n.changeTheme,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.brightness_auto_rounded),
+                title: Text(l10n.themeSystem),
+                trailing: ref.read(appThemeModeProvider) == ThemeMode.system
+                    ? Icon(Icons.check, color: colorScheme.primary)
+                    : null,
+                onTap: () {
+                  ref.read(appThemeModeProvider.notifier).setThemeMode(ThemeMode.system);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.light_mode_rounded),
+                title: Text(l10n.themeLight),
+                trailing: ref.read(appThemeModeProvider) == ThemeMode.light
+                    ? Icon(Icons.check, color: colorScheme.primary)
+                    : null,
+                onTap: () {
+                  ref.read(appThemeModeProvider.notifier).setThemeMode(ThemeMode.light);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.dark_mode_rounded),
+                title: Text(l10n.themeDark),
+                trailing: ref.read(appThemeModeProvider) == ThemeMode.dark
+                    ? Icon(Icons.check, color: colorScheme.primary)
+                    : null,
+                onTap: () {
+                  ref.read(appThemeModeProvider.notifier).setThemeMode(ThemeMode.dark);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

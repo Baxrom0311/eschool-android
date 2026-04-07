@@ -16,6 +16,7 @@ import 'core/services/firebase_service.dart';
 import 'presentation/providers/app_locale_provider.dart';
 import 'presentation/providers/app_theme_mode_provider.dart';
 import 'presentation/screens/home/widgets/network_status_banner.dart';
+import 'core/services/socket_listener.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -98,6 +99,9 @@ class _ParentSchoolAppState extends ConsumerState<ParentSchoolApp> {
     final l10n = AppLocalizations(locale);
     AppLocalizations.updateCurrent(l10n);
     final router = ref.watch(routerProvider);
+    
+    // WebSocket tinglovchisini ishga tushirish
+    ref.watch(socketListenerProvider);
 
     return MaterialApp.router(
       title: l10n.appName,
