@@ -3,19 +3,18 @@ import 'package:parent_school_app/presentation/providers/user_provider.dart';
 import 'package:parent_school_app/data/repositories/user_repository.dart';
 import 'package:parent_school_app/data/models/user_model.dart';
 import 'package:parent_school_app/data/models/child_model.dart';
-import 'package:parent_school_app/core/error/failures.dart';
-import 'package:dartz/dartz.dart';
+import 'package:parent_school_app/core/error/exceptions.dart';
 
 // Mock UserRepository
 class MockUserRepository implements UserRepository {
   bool shouldReturnError = false;
 
   @override
-  Future<Either<Failure, UserModel>> getProfile() async {
+  Future<UserModel> getProfile() async {
     if (shouldReturnError) {
-      return const Left(ServerFailure('Profile load failed'));
+      throw const ServerException(message: 'Profile load failed');
     }
-    return const Right(UserModel(
+    return const UserModel(
       id: 1,
       fullName: 'Test Parent',
       phone: '+998901234567',
@@ -33,65 +32,70 @@ class MockUserRepository implements UserRepository {
           classId: 3,
         ),
       ],
-    ));
+    );
   }
 
   @override
-  Future<Either<Failure, UserModel>> updateProfile({
+  Future<UserModel> updateProfile({
     String? fullName,
     String? email,
     String? phone,
     bool? notificationsEnabled,
   }) async {
     if (shouldReturnError) {
-      return const Left(ServerFailure('Update failed'));
+      throw const ServerException(message: 'Update failed');
     }
-    return Right(UserModel(
+    return UserModel(
       id: 1,
       fullName: fullName ?? 'Test Parent',
       phone: phone ?? '+998901234567',
       email: email,
       notificationsEnabled: notificationsEnabled ?? true,
-      children: const [], // Simplified for update test
-    ));
+      children: const [],
+    );
   }
 
   @override
-  Future<Either<Failure, String>> uploadAvatar(String filePath) async {
+  Future<String> uploadAvatar(String filePath) async {
     if (shouldReturnError) {
-      return const Left(ServerFailure('Upload failed'));
+      throw const ServerException(message: 'Upload failed');
     }
-    return const Right('https://example.com/avatar.jpg');
+    return 'https://example.com/avatar.jpg';
   }
 
   @override
-  Future<Either<Failure, ChildModel>> getChildDetails(int childId) async {
+  Future<ChildModel> getChildDetails(int childId) async {
     if (shouldReturnError) {
-      return const Left(ServerFailure('Details load failed'));
+      throw const ServerException(message: 'Details load failed');
     }
-    return Right(ChildModel(
+    return ChildModel(
       id: childId,
       fullName: 'Child $childId',
       className: '5-A',
       classId: 5,
-    ));
+    );
   }
 
-  // Unused in these tests
   @override
-  Future<Either<Failure, List<ChildModel>>> getChildren() async => const Right([]);
+  Future<List<ChildModel>> getChildren() async => const [];
 
   @override
-  Future<Either<Failure, void>> changePassword({
+  Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
     required String confirmPassword,
   }) async {
     if (shouldReturnError) {
-      return const Left(ServerFailure('Password change failed'));
+      throw const ServerException(message: 'Password change failed');
     }
-    return const Right(null);
   }
+
+  @override
+  Future<T> safeCall<T>(dynamic call, dynamic mapper) async => throw UnimplementedError();
+  @override
+  Future<List<T>> safeCallList<T>(dynamic call, dynamic mapper, {String? listKey}) async => throw UnimplementedError();
+  @override
+  Future<T> safeExecute<T>(dynamic call) async => throw UnimplementedError();
 }
 
 void main() {
@@ -115,7 +119,7 @@ void main() {
       expect(userNotifier.state.isLoading, false);
       expect(userNotifier.state.user?.fullName, 'Test Parent');
       expect(userNotifier.state.children.length, 2);
-      expect(userNotifier.state.selectedChild?.id, 101); // First child selected by default
+      expect(userNotifier.state.selectedChild?.id, 101);
       expect(userNotifier.state.error, null);
     });
 
@@ -124,11 +128,10 @@ void main() {
       await userNotifier.loadProfile();
 
       expect(userNotifier.state.isLoading, false);
-      expect(userNotifier.state.error, 'Profile load failed');
+      expect(userNotifier.state.error, 'ServerException: Profile load failed');
     });
 
     test('selectChild should update selectedChild in state', () async {
-      // First load profile to populate children
       await userNotifier.loadProfile();
       
       final child2 = userNotifier.state.children[1];
@@ -145,7 +148,6 @@ void main() {
     });
 
     test('uploadAvatar success should update avatar url', () async {
-      // Setup initial user state
       await userNotifier.loadProfile();
       
       await userNotifier.uploadAvatar('/path/to/image.jpg');

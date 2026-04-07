@@ -1,7 +1,5 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:parent_school_app/core/error/failures.dart';
 import 'package:parent_school_app/core/error/exceptions.dart';
 import 'package:parent_school_app/core/localization/app_locale.dart';
 import 'package:parent_school_app/core/localization/app_localizations.dart';
@@ -45,7 +43,7 @@ void main() {
       ),
     ];
 
-    test('getGradeSummary returns Right data on success', () async {
+    test('getGradeSummary returns data on success', () async {
       // Arrange
       when(
         () => mockAcademicApi.getGradeSummary(tChildId),
@@ -55,24 +53,24 @@ void main() {
       final result = await repository.getGradeSummary(tChildId);
 
       // Assert
-      expect(result, Right(tGradeSummary));
+      expect(result, tGradeSummary);
       verify(() => mockAcademicApi.getGradeSummary(tChildId)).called(1);
     });
 
-    test('getGradeSummary returns Left on ServerException', () async {
+    test('getGradeSummary throws ServerException on failure', () async {
       // Arrange
       when(
         () => mockAcademicApi.getGradeSummary(tChildId),
       ).thenThrow(const ServerException(message: 'Server Error'));
 
-      // Act
-      final result = await repository.getGradeSummary(tChildId);
-
-      // Assert
-      expect(result, left(const ServerFailure('Server Error')));
+      // Act & Assert
+      expect(
+        () => repository.getGradeSummary(tChildId),
+        throwsA(isA<ServerException>()),
+      );
     });
 
-    test('getSchedule returns Right data on success', () async {
+    test('getSchedule returns data on success', () async {
       // Arrange
       when(
         () => mockAcademicApi.getSchedule(tChildId),
@@ -82,11 +80,11 @@ void main() {
       final result = await repository.getSchedule(tChildId);
 
       // Assert
-      expect(result, Right(tScheduleList));
+      expect(result, tScheduleList);
       verify(() => mockAcademicApi.getSchedule(tChildId)).called(1);
     });
 
-    test('submitAssignment returns Right on success', () async {
+    test('submitAssignment returns void on success', () async {
       // Arrange
       when(
         () => mockAcademicApi.submitAssignment(
@@ -97,13 +95,12 @@ void main() {
       ).thenAnswer((_) async {});
 
       // Act
-      final result = await repository.submitAssignment(
+      await repository.submitAssignment(
         tAssignmentId,
         text: 'My homework',
       );
 
       // Assert
-      expect(result, const Right(null));
       verify(
         () => mockAcademicApi.submitAssignment(
           tAssignmentId,
@@ -112,30 +109,17 @@ void main() {
       ).called(1);
     });
 
-    test('getAttendance returns Left on NetworkException', () async {
+    test('getAttendance throws NetworkException on failure', () async {
       // Arrange
       when(
         () => mockAcademicApi.getAttendance(tChildId, month: '2025-01'),
       ).thenThrow(const NetworkException(message: 'No internet'));
 
-      // Act
-      final result = await repository.getAttendance(tChildId, month: '2025-01');
-
-      // Assert
-      expect(result, left(const NetworkFailure('No internet')));
-    });
-
-    test('getGrades uses localized fallback on unexpected errors', () async {
-      AppLocalizations.updateCurrent(AppLocalizations(AppLocale.en));
-
-      when(
-        () =>
-            mockAcademicApi.getGrades(tChildId, quarter: any(named: 'quarter')),
-      ).thenThrow('');
-
-      final result = await repository.getGrades(tChildId);
-
-      expect(result, left(const ServerFailure('Failed to load grades')));
+      // Act & Assert
+      expect(
+        () => repository.getAttendance(tChildId, month: '2025-01'),
+        throwsA(isA<NetworkException>()),
+      );
     });
   });
 }

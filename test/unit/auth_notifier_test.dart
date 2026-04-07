@@ -2,8 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:parent_school_app/presentation/providers/auth_provider.dart';
 import 'package:parent_school_app/data/repositories/auth_repository.dart';
 import 'package:parent_school_app/data/models/user_model.dart';
-import 'package:parent_school_app/core/error/failures.dart';
-import 'package:dartz/dartz.dart';
+import 'package:parent_school_app/core/error/exceptions.dart';
 
 // Mock Classes
 class MockAuthRepository implements AuthRepository {
@@ -14,20 +13,18 @@ class MockAuthRepository implements AuthRepository {
   void setShouldFail(bool value) => _shouldFail = value;
 
   @override
-  Future<Either<Failure, UserModel>> login({
+  Future<UserModel> login({
     required String username,
     required String password,
   }) async {
     if (_shouldFail) {
-      return const Left(ServerFailure('Login failed'));
+      throw const ServerException(message: 'Login failed');
     }
-    return const Right(
-      UserModel(
-        id: 1,
-        phone: '+998901234567',
-        fullName: 'Test User',
-        role: 'parent',
-      ),
+    return const UserModel(
+      id: 1,
+      phone: '+998901234567',
+      fullName: 'Test User',
+      role: 'parent',
     );
   }
 
@@ -35,29 +32,34 @@ class MockAuthRepository implements AuthRepository {
   Future<bool> hasValidToken() async => _hasToken;
 
   @override
-  Future<Either<Failure, void>> logout() async {
+  Future<void> logout() async {
     _hasToken = false;
-    return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> forgotPassword({required String phone}) async =>
-      const Right(null);
+  Future<void> forgotPassword({required String phone}) async {}
 
   @override
-  Future<Either<Failure, void>> updateFCMToken(String token) async =>
-      const Right(null);
+  Future<void> updateFCMToken(String token) async {}
 
   @override
-  Future<Either<Failure, UserModel>> qrLogin({required String qrToken}) async =>
-      const Right(
-        UserModel(
-          id: 4,
-          phone: '+998900000000',
-          fullName: 'QR User',
-          role: 'parent',
-        ),
+  Future<String?> getAccessToken() async => _hasToken ? 'fake_token' : null;
+
+  @override
+  Future<UserModel> qrLogin({required String qrToken}) async =>
+      const UserModel(
+        id: 4,
+        phone: '+998900000000',
+        fullName: 'QR User',
+        role: 'parent',
       );
+
+  @override
+  Future<T> safeCall<T>(dynamic call, dynamic mapper) async => throw UnimplementedError();
+  @override
+  Future<List<T>> safeCallList<T>(dynamic call, dynamic mapper, {String? listKey}) async => throw UnimplementedError();
+  @override
+  Future<T> safeExecute<T>(dynamic call) async => throw UnimplementedError();
 }
 
 void main() {

@@ -4,10 +4,9 @@ import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/presentation/providers/chat_provider.dart';
 import 'package:parent_school_app/data/repositories/chat_repository.dart';
 import 'package:parent_school_app/data/models/chat_model.dart';
-import 'package:parent_school_app/core/error/failures.dart';
+import 'package:parent_school_app/core/error/exceptions.dart';
 import 'package:parent_school_app/core/storage/outbox_service.dart';
 import 'package:parent_school_app/data/models/user_model.dart';
-import 'package:dartz/dartz.dart';
 import 'package:mocktail/mocktail.dart';
 
 // Mock ChatRepository
@@ -16,86 +15,80 @@ class MockChatRepository extends Mock implements ChatRepository {
   bool shouldReturnNetworkError = false;
 
   @override
-  Future<Either<Failure, List<ConversationModel>>> getConversations() async {
+  Future<List<ConversationModel>> getConversations() async {
     if (shouldReturnError) {
-      return const Left(ServerFailure('Conversations load failed'));
+      throw const ServerException(message: 'Conversations load failed');
     }
-    return const Right([
+    return const [
       ConversationModel(id: 1, participantName: 'Teacher 1', unreadCount: 2),
       ConversationModel(id: 2, participantName: 'Teacher 2', unreadCount: 0),
-    ]);
+    ];
   }
 
   @override
-  Future<Either<Failure, List<MessageModel>>> getMessages(
+  Future<List<MessageModel>> getMessages(
     int conversationId, {
     int page = 1,
   }) async {
     if (shouldReturnError) {
-      return const Left(ServerFailure('Messages load failed'));
+      throw const ServerException(message: 'Messages load failed');
     }
     // Return 30 messages to test pagination (hasMore = true)
-    return Right(
-      List.generate(
-        30,
-        (index) => MessageModel(
-          id: (page - 1) * 30 + index,
-          content: 'Message $index',
-          type: MessageType.text,
-          senderId: 1,
-          senderName: 'Sender',
-          createdAt: '2023-10-10',
-          isMine: index % 2 == 0,
-        ),
+    return List.generate(
+      30,
+      (index) => MessageModel(
+        id: (page - 1) * 30 + index,
+        content: 'Message $index',
+        type: MessageType.text,
+        senderId: 1,
+        senderName: 'Sender',
+        createdAt: '2023-10-10',
+        isMine: index % 2 == 0,
       ),
     );
   }
 
   @override
-  Future<Either<Failure, MessageModel>> sendMessage(
+  Future<MessageModel> sendMessage(
     int conversationId, {
     required String content,
   }) async {
     if (shouldReturnNetworkError) {
-      return const Left(NetworkFailure('No internet connection'));
+      throw const NetworkException(message: 'No internet connection');
     }
     if (shouldReturnError) {
-      return const Left(ServerFailure('Send failed'));
+      throw const ServerException(message: 'Send failed');
     }
-    return Right(
-      MessageModel(
-        id: 999,
-        content: content,
-        type: MessageType.text,
-        senderId: 100, // My ID
-        senderName: 'Me',
-        createdAt: 'Now',
-        isMine: true,
-      ),
+    return MessageModel(
+      id: 999,
+      content: content,
+      type: MessageType.text,
+      senderId: 100, // My ID
+      senderName: 'Me',
+      createdAt: 'Now',
+      isMine: true,
     );
   }
 
   @override
-  Future<Either<Failure, MessageModel>> sendFile(
+  Future<MessageModel> sendFile(
     int conversationId,
     String filePath,
   ) async {
     if (shouldReturnNetworkError) {
-      return const Left(NetworkFailure('No internet connection'));
+      throw const NetworkException(message: 'No internet connection');
     }
     if (shouldReturnError) {
-      return const Left(ServerFailure('File send failed'));
+      throw const ServerException(message: 'File send failed');
     }
-    return const Right(
-      MessageModel(
-        id: 1000,
-        type: MessageType.image,
-        senderId: 100,
-        senderName: 'Me',
-        createdAt: 'Now',
-        isMine: true,
-        fileUrl: 'http://example.com/image.jpg',
-      ),
+    return const MessageModel(
+      id: 1000,
+      type: MessageType.image,
+      senderId: 100,
+      senderName: 'Me',
+      createdAt: 'Now',
+      isMine: true,
+      fileUrl: 'http://example.com/image.jpg',
     );
   }
 }
@@ -172,7 +165,7 @@ void main() {
       await conversationsNotifier.loadConversations();
 
       expect(conversationsNotifier.state.isLoading, false);
-      expect(conversationsNotifier.state.error, 'Conversations load failed');
+      expect(conversationsNotifier.state.error, 'ServerException: Conversations load failed');
     });
   });
 
@@ -183,12 +176,11 @@ void main() {
       expect(chatRoomNotifier.state.isLoading, false);
       expect(chatRoomNotifier.state.conversationId, 1);
       expect(chatRoomNotifier.state.messages.length, 30);
-      expect(chatRoomNotifier.state.hasMore, true); // 30 items returned
+      expect(chatRoomNotifier.state.hasMore, true);
     });
 
     test('loadMore success', () async {
       await chatRoomNotifier.openConversation(1); // Load page 1 (30 items)
-
       await chatRoomNotifier.loadMore(); // Load page 2 (30 items)
 
       expect(chatRoomNotifier.state.isLoading, false);
@@ -202,7 +194,7 @@ void main() {
 
       expect(success, true);
       expect(chatRoomNotifier.state.messages.first.content, 'Hello');
-      expect(chatRoomNotifier.state.messages.length, 31); // 30 + 1 new
+      expect(chatRoomNotifier.state.messages.length, 31);
     });
 
     test('sendMessage failure', () async {
@@ -212,7 +204,7 @@ void main() {
       final success = await chatRoomNotifier.sendMessage('Hello');
 
       expect(success, false);
-      expect(chatRoomNotifier.state.error, 'Send failed');
+      expect(chatRoomNotifier.state.error, 'ServerException: Send failed');
     });
 
     test('sendFile success', () async {
@@ -223,7 +215,7 @@ void main() {
       expect(chatRoomNotifier.state.messages.first.type, MessageType.image);
     });
 
-    test('sendFile queues localized placeholder on network error', () async {
+    test('sendFile queues placeholder on network error', () async {
       AppLocalizations.updateCurrent(AppLocalizations(AppLocale.en));
       await chatRoomNotifier.openConversation(1);
       mockRepository.shouldReturnNetworkError = true;

@@ -1,7 +1,5 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:parent_school_app/core/error/failures.dart';
 import 'package:parent_school_app/core/error/exceptions.dart';
 import 'package:parent_school_app/data/datasources/remote/chat_api.dart';
 import 'package:parent_school_app/data/models/chat_model.dart';
@@ -41,7 +39,7 @@ void main() {
       )
     ];
 
-    test('getConversations returns Right data on success', () async {
+    test('getConversations returns data on success', () async {
       // Arrange
       when(() => mockChatApi.getConversations())
           .thenAnswer((_) async => tConversationList);
@@ -50,23 +48,23 @@ void main() {
       final result = await repository.getConversations();
 
       // Assert
-      expect(result, Right(tConversationList));
+      expect(result, tConversationList);
       verify(() => mockChatApi.getConversations()).called(1);
     });
 
-    test('getConversations returns Left on ServerException', () async {
+    test('getConversations throws ServerException on failure', () async {
       // Arrange
       when(() => mockChatApi.getConversations())
           .thenThrow(const ServerException(message: 'Server Error'));
 
-      // Act
-      final result = await repository.getConversations();
-
-      // Assert
-      expect(result, left(const ServerFailure('Server Error')));
+      // Act & Assert
+      expect(
+        () => repository.getConversations(),
+        throwsA(isA<ServerException>()),
+      );
     });
 
-    test('getMessages returns Right data on success', () async {
+    test('getMessages returns data on success', () async {
       // Arrange
       when(() => mockChatApi.getMessages(tConversationId, page: 1))
           .thenAnswer((_) async => tMessageList);
@@ -75,11 +73,11 @@ void main() {
       final result = await repository.getMessages(tConversationId, page: 1);
 
       // Assert
-      expect(result, Right(tMessageList));
+      expect(result, tMessageList);
       verify(() => mockChatApi.getMessages(tConversationId, page: 1)).called(1);
     });
 
-    test('sendMessage returns Right on success', () async {
+    test('sendMessage returns data on success', () async {
       // Arrange
       when(() => mockChatApi.sendMessage(
             tConversationId,
@@ -93,7 +91,7 @@ void main() {
       );
 
       // Assert
-      expect(result, Right(tMessageList.first));
+      expect(result, tMessageList.first);
       verify(() => mockChatApi.sendMessage(
             tConversationId,
             content: 'Hello',

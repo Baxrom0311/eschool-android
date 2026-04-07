@@ -1,7 +1,5 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:parent_school_app/core/error/failures.dart';
 import 'package:parent_school_app/core/error/exceptions.dart';
 import 'package:parent_school_app/data/datasources/remote/menu_api.dart';
 import 'package:parent_school_app/data/models/menu_model.dart';
@@ -31,7 +29,7 @@ void main() {
       )
     ];
 
-    test('getDailyMenu returns Right data on success', () async {
+    test('getDailyMenu returns data on success', () async {
       // Arrange
       when(() => mockMenuApi.getDailyMenu(
             date: any(named: 'date'),
@@ -42,25 +40,25 @@ void main() {
       final result = await repository.getDailyMenu(date: tDate, studentId: tStudentId);
 
       // Assert
-      expect(result, Right(tMenuList));
+      expect(result, tMenuList);
       verify(() => mockMenuApi.getDailyMenu(date: tDate, studentId: tStudentId)).called(1);
     });
 
-    test('getDailyMenu returns Left on exception', () async {
+    test('getDailyMenu throws exception on error', () async {
       // Arrange
       when(() => mockMenuApi.getDailyMenu(
             date: any(named: 'date'),
             studentId: any(named: 'studentId'),
           )).thenThrow(const ServerException(message: 'Server xatoligi'));
 
-      // Act
-      final result = await repository.getDailyMenu(date: tDate, studentId: tStudentId);
-
-      // Assert
-      expect(result, equals(left(const ServerFailure('Server xatoligi'))));
+      // Act & Assert
+      expect(
+        () => repository.getDailyMenu(date: tDate, studentId: tStudentId),
+        throwsA(isA<ServerException>()),
+      );
     });
 
-    test('getWeeklyMenu returns Right data on success', () async {
+    test('getWeeklyMenu returns data on success', () async {
       // Arrange
       when(() => mockMenuApi.getWeeklyMenu(
             weekStart: any(named: 'weekStart'),
@@ -71,7 +69,7 @@ void main() {
       final result = await repository.getWeeklyMenu(weekStart: tDate, studentId: tStudentId);
 
       // Assert
-      expect(result, Right(tMenuList));
+      expect(result, tMenuList);
       verify(() => mockMenuApi.getWeeklyMenu(weekStart: tDate, studentId: tStudentId)).called(1);
     });
   });
