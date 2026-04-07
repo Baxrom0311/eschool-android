@@ -122,43 +122,40 @@ class UserNotifier extends StateNotifier<UserState> {
 
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await _repository.getProfile();
+    try {
+      final user = await _repository.getProfile();
+      SharedPrefsService.setUserScope(user.id);
+      final selectedChild = _resolveSelectedChild(user.children);
 
-    result.fold(
-      (failure) {
-        if (failure is AuthFailure) {
-          unawaited(_clearCachedProfile());
-          state = const UserState.initial().copyWith(error: failure.message);
-          return;
-        }
+      state = state.copyWith(
+        user: user,
+        children: user.children,
+        selectedChild: selectedChild,
+        isLoading: false,
+        error: null,
+      );
+      unawaited(_saveCachedProfile(user, selectedChild?.id));
+    } catch (e) {
+      final message = e.toString();
+      if (message.toLowerCase().contains('401') || message.toLowerCase().contains('unauthorized')) {
+        unawaited(_clearCachedProfile());
+        state = const UserState.initial().copyWith(error: message);
+        return;
+      }
 
-        if (state.user != null) {
-          state = state.copyWith(isLoading: false, error: failure.message);
-          return;
-        }
+      if (state.user != null) {
+        state = state.copyWith(isLoading: false, error: message);
+        return;
+      }
 
-        state = state.copyWith(
-          user: null,
-          children: const [],
-          selectedChild: null,
-          isLoading: false,
-          error: failure.message,
-        );
-      },
-      (user) {
-        SharedPrefsService.setUserScope(user.id);
-        final selectedChild = _resolveSelectedChild(user.children);
-
-        state = state.copyWith(
-          user: user,
-          children: user.children,
-          selectedChild: selectedChild,
-          isLoading: false,
-          error: null,
-        );
-        unawaited(_saveCachedProfile(user, selectedChild?.id));
-      },
-    );
+      state = state.copyWith(
+        user: null,
+        children: const [],
+        selectedChild: null,
+        isLoading: false,
+        error: message,
+      );
+    }
   }
 
   /// Farzandni tanlash (dropdown yoki ro'yxatdan)
@@ -188,48 +185,42 @@ class UserNotifier extends StateNotifier<UserState> {
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await _repository.updateProfile(
-      fullName: fullName,
-      email: email,
-      phone: phone,
-      notificationsEnabled: notificationsEnabled,
-    );
-
-    result.fold(
-      (failure) =>
-          state = state.copyWith(isLoading: false, error: failure.message),
-      (user) {
-        final selectedChild = _resolveSelectedChild(user.children);
-        state = state.copyWith(
-          user: user,
-          children: user.children,
-          selectedChild: selectedChild,
-          isLoading: false,
-        );
-        unawaited(_saveCachedProfile(user, selectedChild?.id));
-      },
-    );
+    try {
+      final user = await _repository.updateProfile(
+        fullName: fullName,
+        email: email,
+        phone: phone,
+        notificationsEnabled: notificationsEnabled,
+      );
+      final selectedChild = _resolveSelectedChild(user.children);
+      state = state.copyWith(
+        user: user,
+        children: user.children,
+        selectedChild: selectedChild,
+        isLoading: false,
+      );
+      unawaited(_saveCachedProfile(user, selectedChild?.id));
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   /// Avatar yuklash va profilni yangilash
   Future<void> uploadAvatar(String filePath) async {
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await _repository.uploadAvatar(filePath);
-
-    result.fold(
-      (failure) =>
-          state = state.copyWith(isLoading: false, error: failure.message),
-      (avatarUrl) {
-        if (state.user != null) {
-          final updatedUser = state.user!.copyWith(avatarUrl: avatarUrl);
-          state = state.copyWith(user: updatedUser, isLoading: false);
-          unawaited(_saveCachedProfile(updatedUser, state.selectedChild?.id));
-        } else {
-          state = state.copyWith(isLoading: false);
-        }
-      },
-    );
+    try {
+      final avatarUrl = await _repository.uploadAvatar(filePath);
+      if (state.user != null) {
+        final updatedUser = state.user!.copyWith(avatarUrl: avatarUrl);
+        state = state.copyWith(user: updatedUser, isLoading: false);
+        unawaited(_saveCachedProfile(updatedUser, state.selectedChild?.id));
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   /// Parol o'zgartirish
@@ -242,22 +233,19 @@ class UserNotifier extends StateNotifier<UserState> {
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await _repository.changePassword(
-      currentPassword: currentPassword,
-      newPassword: newPassword,
-      confirmPassword: confirmPassword,
-    );
-
-    return result.fold(
-      (failure) {
-        state = state.copyWith(isLoading: false, error: failure.message);
-        return failure.message;
-      },
-      (_) {
-        state = state.copyWith(isLoading: false);
-        return null; // muvaffaqiyatli
-      },
-    );
+    try {
+      await _repository.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+        confirmPassword: confirmPassword,
+      );
+      state = state.copyWith(isLoading: false);
+      return null; // muvaffaqiyatli
+    } catch (e) {
+      final message = e.toString();
+      state = state.copyWith(isLoading: false, error: message);
+      return message;
+    }
   }
 
   /// Auth dan kelgan user ni set qilish

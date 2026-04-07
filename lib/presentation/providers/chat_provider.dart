@@ -77,25 +77,21 @@ class ConversationsNotifier extends StateNotifier<ConversationsState> {
       state = state.copyWith(isLoading: true, error: null);
     }
 
-    final result = await _repository.getConversations();
-
-    result.fold(
-      (f) {
-        if (cached != null) {
-          state = cached.copyWith(isLoading: false, error: null);
-          return;
-        }
-        state = state.copyWith(isLoading: false, error: f.message);
-      },
-      (conversations) {
-        state = state.copyWith(
-          conversations: conversations,
-          isLoading: false,
-          error: null,
-        );
-        unawaited(_saveCache(state));
-      },
-    );
+    try {
+      final conversations = await _repository.getConversations();
+      state = state.copyWith(
+        conversations: conversations,
+        isLoading: false,
+        error: null,
+      );
+      unawaited(_saveCache(state));
+    } catch (e) {
+      if (cached != null) {
+        state = cached.copyWith(isLoading: false, error: null);
+        return;
+      }
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   ConversationsState? _readCache() {
@@ -216,32 +212,28 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
       state = ChatRoomState(conversationId: conversationId, isLoading: true);
     }
 
-    final result = await _repository.getMessages(conversationId);
-
-    result.fold(
-      (f) {
-        if (cached != null) {
-          state = cached.copyWith(
-            conversationId: conversationId,
-            isLoading: false,
-            error: null,
-          );
-          return;
-        }
-        state = state.copyWith(isLoading: false, error: f.message);
-      },
-      (messages) {
-        state = state.copyWith(
+    try {
+      final messages = await _repository.getMessages(conversationId);
+      state = state.copyWith(
+        conversationId: conversationId,
+        messages: messages,
+        isLoading: false,
+        error: null,
+        currentPage: 1,
+        hasMore: messages.length >= 30,
+      );
+      unawaited(_saveRoomCache(state));
+    } catch (e) {
+      if (cached != null) {
+        state = cached.copyWith(
           conversationId: conversationId,
-          messages: messages,
           isLoading: false,
           error: null,
-          currentPage: 1,
-          hasMore: messages.length >= 30,
         );
-        unawaited(_saveRoomCache(state));
-      },
-    );
+        return;
+      }
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   /// Eski xabarlarni yuklash (scroll up)
@@ -253,21 +245,22 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
     state = state.copyWith(isLoading: true);
     final nextPage = state.currentPage + 1;
 
-    final result = await _repository.getMessages(
-      state.conversationId!,
-      page: nextPage,
-    );
-
-    result.fold(
-      (f) => state = state.copyWith(isLoading: false, error: f.message),
-      (newMessages) => state = state.copyWith(
+    try {
+      final newMessages = await _repository.getMessages(
+        state.conversationId!,
+        page: nextPage,
+      );
+      state = state.copyWith(
         messages: [...state.messages, ...newMessages],
         isLoading: false,
         error: null,
         currentPage: nextPage,
         hasMore: newMessages.length >= 30,
-      ),
-    );
+      );
+      unawaited(_saveRoomCache(state));
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
     if (!state.isLoading && state.error == null) {
       unawaited(_saveRoomCache(state));
     }
@@ -279,30 +272,27 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
 
     state = state.copyWith(isSending: true, error: null);
 
-    final result = await _repository.sendMessage(
-      state.conversationId!,
-      content: content,
-    );
-
-    return result.fold(
-      (f) {
-        if (_isNetworkError(f.message)) {
-          _queueOfflineMessage(content, 'text', null);
-          return true;
-        }
-        state = state.copyWith(isSending: false, error: f.message);
-        return false;
-      },
-      (message) {
-        state = state.copyWith(
-          messages: [message, ...state.messages],
-          isSending: false,
-          error: null,
-        );
-        unawaited(_saveRoomCache(state));
+    try {
+      final message = await _repository.sendMessage(
+        state.conversationId!,
+        content: content,
+      );
+      state = state.copyWith(
+        messages: [message, ...state.messages],
+        isSending: false,
+        error: null,
+      );
+      unawaited(_saveRoomCache(state));
+      return true;
+    } catch (e) {
+      final message = e.toString();
+      if (_isNetworkError(message)) {
+        _queueOfflineMessage(content, 'text', null);
         return true;
-      },
-    );
+      }
+      state = state.copyWith(isSending: false, error: message);
+      return false;
+    }
   }
 
   /// Fayl yuborish
@@ -311,31 +301,28 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
 
     state = state.copyWith(isSending: true, error: null);
 
-    final result = await _repository.sendFile(state.conversationId!, filePath);
-
-    return result.fold(
-      (f) {
-        if (_isNetworkError(f.message)) {
-          _queueOfflineMessage(
-            AppLocalizations.current.fileAttached,
-            'file',
-            filePath,
-          );
-          return true;
-        }
-        state = state.copyWith(isSending: false, error: f.message);
-        return false;
-      },
-      (message) {
-        state = state.copyWith(
-          messages: [message, ...state.messages],
-          isSending: false,
-          error: null,
+    try {
+      final message = await _repository.sendFile(state.conversationId!, filePath);
+      state = state.copyWith(
+        messages: [message, ...state.messages],
+        isSending: false,
+        error: null,
+      );
+      unawaited(_saveRoomCache(state));
+      return true;
+    } catch (e) {
+      final message = e.toString();
+      if (_isNetworkError(message)) {
+        _queueOfflineMessage(
+          AppLocalizations.current.fileAttached,
+          'file',
+          filePath,
         );
-        unawaited(_saveRoomCache(state));
         return true;
-      },
-    );
+      }
+      state = state.copyWith(isSending: false, error: message);
+      return false;
+    }
   }
 
   /// Suhbatni yopish

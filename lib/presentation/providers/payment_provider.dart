@@ -130,55 +130,29 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
       );
     }
 
-    // Parallel yuklash — tezroq, typed tuple bilan runtime castlardan qochamiz.
-    final (balanceResult, historyResult, methodsResult) = await (
-      _repository.getBalance(studentId: studentId),
-      _repository.getPaymentHistory(page: 1, studentId: studentId),
-      _repository.getPaymentMethods(),
-    ).wait;
-
-    // Natijalarni tekshirish
-    BalanceInfo? balance = cached?.balance;
-    List<PaymentModel> payments = cached?.payments ?? [];
-    List<Map<String, dynamic>> methods = cached?.paymentMethods ?? [];
+    // Parallel yuklash
+    BalanceInfo? balance;
+    List<PaymentModel> payments = [];
+    List<Map<String, dynamic>> methods = [];
+    bool hasFreshData = false;
     String? error;
-    var hasFreshData = false;
 
-    balanceResult.fold(
-      (f) {
-        if (cached == null) {
-          error = f.message;
-        }
-      },
-      (b) {
-        hasFreshData = true;
-        balance = b;
-      },
-    );
+    try {
+      final results = await Future.wait([
+        _repository.getBalance(studentId: studentId),
+        _repository.getPaymentHistory(page: 1, studentId: studentId),
+        _repository.getPaymentMethods(),
+      ]);
 
-    historyResult.fold(
-      (f) {
-        if (cached == null) {
-          error ??= f.message;
-        }
-      },
-      (p) {
-        hasFreshData = true;
-        payments = p;
-      },
-    );
-
-    methodsResult.fold(
-      (f) {
-        if (cached == null) {
-          error ??= f.message;
-        }
-      },
-      (m) {
-        hasFreshData = true;
-        methods = m;
-      },
-    );
+      balance = results[0] as BalanceInfo;
+      payments = results[1] as List<PaymentModel>;
+      methods = results[2] as List<Map<String, dynamic>>;
+      hasFreshData = true;
+    } catch (e) {
+      if (cached == null) {
+        error = e.toString();
+      }
+    }
 
     if (!hasFreshData && cached != null) {
       state = cached.copyWith(
@@ -209,24 +183,21 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
     state = state.copyWith(isLoading: true);
 
     final nextPage = state.currentPage + 1;
-    final result = await _repository.getPaymentHistory(
-      page: nextPage,
-      studentId: state.selectedStudentId,
-    );
-
-    result.fold(
-      (failure) =>
-          state = state.copyWith(isLoading: false, error: failure.message),
-      (newPayments) {
-        state = state.copyWith(
-          payments: [...state.payments, ...newPayments],
-          isLoading: false,
-          currentPage: nextPage,
-          hasMore: newPayments.length >= 20,
-        );
-        unawaited(_saveCache(state));
-      },
-    );
+    try {
+      final newPayments = await _repository.getPaymentHistory(
+        page: nextPage,
+        studentId: state.selectedStudentId,
+      );
+      state = state.copyWith(
+        payments: [...state.payments, ...newPayments],
+        isLoading: false,
+        currentPage: nextPage,
+        hasMore: newPayments.length >= 20,
+      );
+      unawaited(_saveCache(state));
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   /// Yangi to'lov yaratish
@@ -246,33 +217,29 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
       return null;
     }
 
-    final result = await _repository.createPayment(
-      amount: amount,
-      method: method,
-      studentId: effectiveStudentId,
-    );
-
-    return result.fold(
-      (failure) {
-        state = state.copyWith(isLoading: false, error: failure.message);
-        return null;
-      },
-      (paymentData) {
-        state = state.copyWith(isLoading: false);
-        return paymentData;
-      },
-    );
+    try {
+      final paymentData = await _repository.createPayment(
+        amount: amount,
+        method: method,
+        studentId: effectiveStudentId,
+      );
+      state = state.copyWith(isLoading: false);
+      return paymentData;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return null;
+    }
   }
 
   /// Faqat balansni yangilash
   Future<void> refreshBalance() async {
-    final result = await _repository.getBalance(
-      studentId: state.selectedStudentId,
-    );
-    result.fold((_) {}, (balance) {
+    try {
+      final balance = await _repository.getBalance(
+        studentId: state.selectedStudentId,
+      );
       state = state.copyWith(balance: balance);
       unawaited(_saveCache(state));
-    });
+    } catch (_) {}
   }
 
   /// Hammasini yangilash

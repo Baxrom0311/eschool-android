@@ -122,4 +122,20 @@ class ApiErrorHandler {
 
     return message.trim();
   }
+
+  /// Maps an error to a custom exception and throws it immediately.
+  static Never throwAsException(dynamic error, [StackTrace? stackTrace]) {
+    final message = handleError(error);
+
+    if (error is DioException) {
+      final status = error.response?.statusCode;
+      if (status == 401) throw AuthException(message);
+      if (status == 403) throw AuthException(message); // Standardized 403 as auth related
+      if (status == 422) throw ValidationException(message);
+      throw ServerException(message);
+    }
+
+    if (error is Exception) throw error;
+    throw ServerException(message);
+  }
 }

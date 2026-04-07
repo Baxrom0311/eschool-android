@@ -83,19 +83,11 @@ class GradesNotifier extends AutoDisposeAsyncNotifier<GradesData> {
     }
 
     try {
-      final gradesResult = await repository.getGrades(
+      final grades = await repository.getGrades(
         childId,
         quarter: targetQuarter,
       );
-      final grades = gradesResult.fold(
-        (l) => throw ApiErrorHandler.readableMessage(l.message),
-        (r) => r,
-      );
-      final summaryResult = await repository.getGradeSummary(childId);
-      final summary = summaryResult.fold(
-        (_) => _buildSummaryFromGrades(grades),
-        (rows) => rows.isNotEmpty ? rows : _buildSummaryFromGrades(grades),
-      );
+      final summary = await repository.getGradeSummary(childId);
 
       final data = GradesData(
         grades: grades,
@@ -236,11 +228,10 @@ class ScheduleNotifier extends AutoDisposeAsyncNotifier<ScheduleData> {
     }
 
     try {
-      final result = await repository.getSchedule(childId);
-      final data = result.fold(
-        (l) => throw ApiErrorHandler.readableMessage(l.message),
-        (r) =>
-            ScheduleData(fullSchedule: r, selectedDay: DateTime.now().weekday),
+      final r = await repository.getSchedule(childId);
+      final data = ScheduleData(
+        fullSchedule: r,
+        selectedDay: DateTime.now().weekday,
       );
       state = AsyncValue.data(data);
       unawaited(_saveScheduleCache(childId, data));
@@ -350,11 +341,7 @@ class AssignmentsNotifier extends AutoDisposeAsyncNotifier<AssignmentsData> {
     final repository = ref.read(academicRepositoryProvider);
 
     try {
-      final result = await repository.getAssignments(childId, status: status);
-      final assignments = result.fold(
-        (l) => throw ApiErrorHandler.readableMessage(l.message),
-        (r) => r,
-      );
+      final assignments = await repository.getAssignments(childId, status: status);
 
       final selectedAssignment = _resolveSelectedAssignment(
         currentSelected,
@@ -408,42 +395,34 @@ class AssignmentsNotifier extends AutoDisposeAsyncNotifier<AssignmentsData> {
     }
 
     final repository = ref.read(academicRepositoryProvider);
-    final result = await repository.getAssignmentDetails(
-      assignmentId,
-      childId: childId,
-    );
-
-    result.fold(
-      (l) {
-        if (cachedDetails != null) return;
-        state = AsyncValue.error(
-          ApiErrorHandler.readableMessage(l.message),
-          StackTrace.current,
-        );
-      },
-      (details) {
-        final baseAssignments =
-            state.valueOrNull?.assignments.isNotEmpty == true
-            ? state.valueOrNull!.assignments
-            : previousState.assignments;
-        final updatedAssignments = _replaceAssignment(baseAssignments, details);
-        state = AsyncValue.data(
-          AssignmentsData(
-            assignments: updatedAssignments,
-            selectedAssignment: details,
+    try {
+      final details = await repository.getAssignmentDetails(
+        assignmentId,
+        childId: childId,
+      );
+      final baseAssignments = state.valueOrNull?.assignments.isNotEmpty == true
+          ? state.valueOrNull!.assignments
+          : previousState.assignments;
+      final updatedAssignments = _replaceAssignment(baseAssignments, details);
+      state = AsyncValue.data(
+        AssignmentsData(
+          assignments: updatedAssignments,
+          selectedAssignment: details,
+        ),
+      );
+      unawaited(_saveAssignmentDetailsCache(details));
+      if (_lastChildId != null) {
+        unawaited(
+          _saveAssignmentsCache(
+            _assignmentsCacheKey(_lastChildId!, _lastStatus),
+            updatedAssignments,
           ),
         );
-        unawaited(_saveAssignmentDetailsCache(details));
-        if (_lastChildId != null) {
-          unawaited(
-            _saveAssignmentsCache(
-              _assignmentsCacheKey(_lastChildId!, _lastStatus),
-              updatedAssignments,
-            ),
-          );
-        }
-      },
-    );
+      }
+    } catch (e, st) {
+      if (cachedDetails != null) return;
+      state = AsyncValue.error(e, st);
+    }
   }
 
   Future<bool> submitAssignment(
@@ -452,13 +431,16 @@ class AssignmentsNotifier extends AutoDisposeAsyncNotifier<AssignmentsData> {
     String? filePath,
   }) async {
     final repository = ref.read(academicRepositoryProvider);
-    final result = await repository.submitAssignment(
-      assignmentId,
-      text: text,
-      filePath: filePath,
-    );
-
-    return result.fold((l) => false, (r) => true);
+    try {
+      await repository.submitAssignment(
+        assignmentId,
+        text: text,
+        filePath: filePath,
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   AssignmentModel? _resolveSelectedAssignment(
@@ -571,13 +553,9 @@ class AttendanceNotifier extends AutoDisposeAsyncNotifier<AttendanceData> {
     }
 
     try {
-      final recordsResult = await repository.getAttendance(
+      final records = await repository.getAttendance(
         childId,
         month: month,
-      );
-      final records = recordsResult.fold(
-        (l) => throw ApiErrorHandler.readableMessage(l.message),
-        (r) => r,
       );
       final summary = _buildSummaryFromRecords(records);
 

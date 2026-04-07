@@ -1,44 +1,26 @@
-import 'package:dartz/dartz.dart';
-
-import '../../core/error/failures.dart';
-import '../../core/localization/app_localizations.dart';
-import '../../core/utils/safe_api_call.dart';
 import '../datasources/remote/chat_api.dart';
 import '../models/chat_model.dart';
+import 'base_repository.dart';
 
-/// Chat Repository
-class ChatRepository {
+/// Chat Repository — muloqot va xabarlar biznes logikasi
+class ChatRepository extends BaseRepository {
   final ChatApi _chatApi;
 
   ChatRepository({required ChatApi chatApi}) : _chatApi = chatApi;
 
-  Future<Either<Failure, List<ConversationModel>>> getConversations() =>
-      safeApiCall(
-        () => _chatApi.getConversations(),
-        errorMessage: AppLocalizations.current.conversationsLoadFailed,
-      );
+  /// Barcha suhbatlar ro'yxatini olish
+  Future<List<ConversationModel>> getConversations() =>
+      _chatApi.getConversations();
 
-  Future<Either<Failure, List<MessageModel>>> getMessages(
-    int conversationId, {
-    int page = 1,
-  }) => safeApiCall(
-    () => _chatApi.getMessages(conversationId, page: page),
-    errorMessage: AppLocalizations.current.messagesLoadFailed,
-  );
+  /// Suhbatdagi xabarlarni olish (pagination bilan)
+  Future<List<MessageModel>> getMessages(int conversationId, {int page = 1}) =>
+      _chatApi.getMessages(conversationId, page: page);
 
-  Future<Either<Failure, MessageModel>> sendMessage(
-    int conversationId, {
-    required String content,
-  }) => safeApiCall(
-    () => _chatApi.sendMessage(conversationId, content: content),
-    errorMessage: AppLocalizations.current.chatMessageSendFailed,
-  );
+  /// Matnli xabar yuborish
+  Future<MessageModel> sendMessage(int conversationId, {required String content}) =>
+      _chatApi.sendMessage(conversationId, content: content);
 
-  Future<Either<Failure, MessageModel>> sendFile(
-    int conversationId,
-    String filePath,
-  ) => safeApiCall(
-    () => _chatApi.sendFile(conversationId, filePath),
-    errorMessage: AppLocalizations.current.chatFileSendFailed,
-  );
+  /// Fayl yuborish (rasm, hujjat va h.k.)
+  Future<MessageModel> sendFile(int conversationId, String filePath) =>
+      _chatApi.sendFile(conversationId, filePath);
 }

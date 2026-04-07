@@ -88,18 +88,21 @@ class OutboxService {
     final messages = await getQueuedMessages();
     for (final message in messages) {
       bool success = false;
-      if (message.type == 'text') {
-        final res = await repository.sendMessage(
-          message.conversationId,
-          content: message.content,
-        );
-        success = res.isRight();
-      } else if (message.type == 'file' && message.filePath != null) {
-        final res = await repository.sendFile(
-          message.conversationId,
-          message.filePath!,
-        );
-        success = res.isRight();
+      try {
+        if (message.type == 'text') {
+          await repository.sendMessage(
+            message.conversationId,
+            content: message.content,
+          );
+        } else if (message.type == 'file' && message.filePath != null) {
+          await repository.sendFile(
+            message.conversationId,
+            message.filePath!,
+          );
+        }
+        success = true;
+      } catch (_) {
+        success = false;
       }
 
       if (success) {

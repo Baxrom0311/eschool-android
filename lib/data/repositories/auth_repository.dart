@@ -1,22 +1,12 @@
-import 'package:dartz/dartz.dart';
-
-import '../../core/error/failures.dart';
-import '../../core/localization/app_localizations.dart';
 import '../../core/storage/secure_storage.dart';
-import '../../core/utils/safe_api_call.dart';
 import '../datasources/remote/auth_api.dart';
 import '../models/user_model.dart';
+import 'base_repository.dart';
 
 /// Auth Repository — Autentifikatsiya biznes logikasi
 ///
 /// [AuthApi] va [SecureStorageService] ni birlashtiradi.
-/// API so'rov → token saqlash → xatolik qayta ishlash
-/// hammasi shu yerda amalga oshiriladi.
-///
-/// Har bir metod [Either<Failure, T>] qaytaradi:
-/// - `Left(Failure)` — xatolik
-/// - `Right(T)` — muvaffaqiyat
-class AuthRepository {
+class AuthRepository extends BaseRepository {
   final AuthApi _authApi;
   final SecureStorageService _secureStorage;
 
@@ -27,55 +17,37 @@ class AuthRepository {
        _secureStorage = secureStorage;
 
   /// Login — tizimga kirish
-  ///
-  /// 1. API ga so'rov yuboradi
-  /// 2. Tokenlarni xavfsiz saqlaydi
-  /// 3. UserModel qaytaradi
-  Future<Either<Failure, UserModel>> login({
+  Future<UserModel> login({
     required String username,
     required String password,
-  }) {
-    return safeApiCall(() async {
+  }) async {
+    return safeExecute(() async {
       final response = await _authApi.login(
         username: username,
         password: password,
       );
       await _secureStorage.saveAccessToken(response.accessToken);
       return response.user;
-    }, errorMessage: AppLocalizations.current.loginFailed);
+    });
   }
 
   /// Logout — tizimdan chiqish
-  ///
-  /// Server dagi tokenni bekor qiladi (ixtiyoriy — xatolik bo'lsa ham davom etadi).
-  /// Lokal tokenlarni tozalaydi (albatta bajariladi).
-  Future<Either<Failure, void>> logout() async {
+  Future<void> logout() async {
     try {
-      try {
-        await _authApi.logout();
-      } catch (_) {
-        // Server logout xatoligi sessiyani tugatishga to'sqinlik qilmaydi
-      }
+      await _authApi.logout();
+    } catch (_) {
+      // Server logout xatoligi sessiyani tugatishga to'sqinlik qilmaydi
+    } finally {
       await _secureStorage.clearAll();
-      return const Right(null);
-    } catch (e) {
-      await _secureStorage.clearAll();
-      return const Right(null);
     }
   }
 
   /// FCM tokenni serverga yuborish
-  Future<Either<Failure, void>> updateFCMToken(String token) {
-    return safeApiCall(() => _authApi.updateFcmToken(token));
-  }
+  Future<void> updateFCMToken(String token) => _authApi.updateFcmToken(token);
 
-  /// Parolni tiklash — SMS yuborish
-  Future<Either<Failure, void>> forgotPassword({required String phone}) {
-    return safeApiCall(
-      () => _authApi.forgotPassword(phone: phone),
-      errorMessage: AppLocalizations.current.verificationCodeSendFailed,
-    );
-  }
+  /// Parol tiklash
+  Future<void> forgotPassword({required String phone}) => 
+      _authApi.forgotPassword(phone: phone);
 
   /// Token mavjudligini tekshirish (tez auth holat tekshiruvi)
   Future<bool> hasValidToken() async {
@@ -89,11 +61,11 @@ class AuthRepository {
   }
 
   /// QR Kod orqali login
-  Future<Either<Failure, UserModel>> qrLogin({required String qrToken}) {
-    return safeApiCall(() async {
+  Future<UserModel> qrLogin({required String qrToken}) async {
+    return safeExecute(() async {
       final response = await _authApi.qrLogin(qrToken: qrToken);
       await _secureStorage.saveAccessToken(response.accessToken);
       return response.user;
-    }, errorMessage: AppLocalizations.current.qrLoginFailed);
+    });
   }
 }

@@ -1,30 +1,18 @@
-import 'package:dartz/dartz.dart';
-
-import '../../core/error/failures.dart';
-import '../../core/localization/app_localizations.dart';
-import '../../core/utils/safe_api_call.dart';
 import '../datasources/remote/menu_api.dart';
 import '../models/menu_model.dart';
+import 'base_repository.dart';
 
-/// Menu Repository
-class MenuRepository {
+/// Menu (Taomnoma) Repozitoriyasi
+class MenuRepository extends BaseRepository {
   final MenuApi _menuApi;
 
   MenuRepository({required MenuApi menuApi}) : _menuApi = menuApi;
 
-  Future<Either<Failure, List<MenuModel>>> getDailyMenu({
-    String? date,
-    int? studentId,
-  }) => safeApiCall(
-    () => _menuApi.getDailyMenu(date: date, studentId: studentId),
-    errorMessage: AppLocalizations.current.menuLoadFailed,
-  );
+  /// Bir kunlik taomnomani olish
+  Future<List<MenuModel>> getDailyMenu({String? date, int? studentId}) =>
+      _menuApi.getDailyMenu(date: date, studentId: studentId);
 
-  Future<Either<Failure, List<MenuModel>>> getWeeklyMenu({
-    String? weekStart,
-    int? studentId,
-  }) => safeApiCall(
-    () => _menuApi.getWeeklyMenu(weekStart: weekStart, studentId: studentId),
-    errorMessage: AppLocalizations.current.weeklyMenuLoadFailed,
-  );
+  /// Bir haftalik taomnomani olish
+  Future<List<MenuModel>> getWeeklyMenu({String? weekStart, int? studentId}) =>
+      _menuApi.getWeeklyMenu(weekStart: weekStart, studentId: studentId);
 }

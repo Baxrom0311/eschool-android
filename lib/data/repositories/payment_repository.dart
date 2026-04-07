@@ -1,59 +1,44 @@
-import 'package:dartz/dartz.dart';
-
-import '../../core/error/failures.dart';
-import '../../core/localization/app_localizations.dart';
-import '../../core/utils/safe_api_call.dart';
 import '../datasources/remote/payment_api.dart';
 import '../models/payment_model.dart';
+import 'base_repository.dart';
 
-/// Payment Repository — to'lov biznes logikasi
-class PaymentRepository {
+/// To'lovlar va balans bilan ishlash uchun repozitoriy
+class PaymentRepository extends BaseRepository {
   final PaymentApi _paymentApi;
 
-  PaymentRepository({required PaymentApi paymentApi})
-    : _paymentApi = paymentApi;
+  PaymentRepository({required PaymentApi paymentApi}) : _paymentApi = paymentApi;
 
-  /// Balans va shartnoma ma'lumotlari
-  Future<Either<Failure, BalanceInfo>> getBalance({int? studentId}) =>
-      safeApiCall(
-        () => _paymentApi.getBalance(studentId: studentId),
-        errorMessage: AppLocalizations.current.balanceLoadFailed,
-      );
+  /// Joriy balansni olish
+  Future<BalanceInfo> getBalance({int? studentId}) =>
+      _paymentApi.getBalance(studentId: studentId);
 
-  /// To'lovlar tarixi
-  Future<Either<Failure, List<PaymentModel>>> getPaymentHistory({
-    int? studentId,
+  /// To'lovlar tarixini olish
+  Future<List<PaymentModel>> getPaymentHistory({
     int page = 1,
     int perPage = 20,
     String? status,
-  }) => safeApiCall(
-    () => _paymentApi.getPaymentHistory(
-      studentId: studentId,
-      page: page,
-      perPage: perPage,
-      status: status,
-    ),
-    errorMessage: AppLocalizations.current.paymentHistoryLoadFailed,
-  );
+    int? studentId,
+  }) =>
+      _paymentApi.getPaymentHistory(
+        page: page,
+        perPage: perPage,
+        status: status,
+        studentId: studentId,
+      );
 
-  /// Yangi to'lov yaratish
-  Future<Either<Failure, Map<String, dynamic>>> createPayment({
+  /// Mavjud to'lov tizimlarini olish (Click, Payme, va h.k.)
+  Future<List<Map<String, dynamic>>> getPaymentMethods() =>
+      _paymentApi.getPaymentMethods();
+
+  /// Yangi to'lov yaratish (Invoys/Check yaratish)
+  Future<Map<String, dynamic>> createPayment({
     required int amount,
     required String method,
     int? studentId,
-  }) => safeApiCall(
-    () => _paymentApi.createPayment(
-      amount: amount,
-      method: method,
-      studentId: studentId,
-    ),
-    errorMessage: AppLocalizations.current.paymentCreateFailed,
-  );
-
-  /// To'lov usullari
-  Future<Either<Failure, List<Map<String, dynamic>>>> getPaymentMethods() =>
-      safeApiCall(
-        () => _paymentApi.getPaymentMethods(),
-        errorMessage: AppLocalizations.current.paymentMethodsLoadFailed,
+  }) =>
+      _paymentApi.createPayment(
+        amount: amount,
+        method: method,
+        studentId: studentId,
       );
 }

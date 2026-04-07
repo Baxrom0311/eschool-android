@@ -184,18 +184,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWithLoading();
 
-    final result = await _repository.login(
-      username: username,
-      password: password,
-    );
-
-    result.fold((failure) => state = state.copyWithError(failure.message), (
-      user,
-    ) async {
+    try {
+      final user = await _repository.login(
+        username: username,
+        password: password,
+      );
       final token = await _repository.getAccessToken();
       state = state.copyWithSuccess(user, token);
       updateFCMToken();
-    });
+    } catch (e) {
+      state = state.copyWithError(e.toString());
+    }
   }
 
 
@@ -222,17 +221,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> forgotPassword({required String phone}) async {
     state = state.copyWithLoading();
 
-    final result = await _repository.forgotPassword(phone: phone);
-
-    result.fold(
-      (failure) => state = state.copyWithError(failure.message),
-      (_) => state = AuthState(
+    try {
+      await _repository.forgotPassword(phone: phone);
+      state = AuthState(
         user: state.user,
         isLoading: false,
         error: null,
         isAuthenticated: state.isAuthenticated,
-      ),
-    );
+      );
+    } catch (e) {
+      state = state.copyWithError(e.toString());
+    }
   }
 
   /// Xatolik xabarini tozalash
@@ -249,15 +248,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// QR Kod orqali login
   Future<void> qrLogin({required String qrToken}) async {
     state = state.copyWithLoading();
-    final result = await _repository.qrLogin(qrToken: qrToken);
-    result.fold(
-      (failure) => state = state.copyWithError(failure.message),
-      (user) async {
-        final token = await _repository.getAccessToken();
-        state = state.copyWithSuccess(user, token);
-        updateFCMToken();
-      },
-    );
+    try {
+      final user = await _repository.qrLogin(qrToken: qrToken);
+      final token = await _repository.getAccessToken();
+      state = state.copyWithSuccess(user, token);
+      updateFCMToken();
+    } catch (e) {
+      state = state.copyWithError(e.toString());
+    }
   }
 
   /// FCM Tokenni yangilash

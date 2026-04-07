@@ -1,70 +1,47 @@
-import 'package:dartz/dartz.dart';
-
-import '../../core/error/failures.dart';
-import '../../core/localization/app_localizations.dart';
-import '../../core/utils/safe_api_call.dart';
 import '../datasources/remote/user_api.dart';
 import '../models/child_model.dart';
 import '../models/user_model.dart';
+import 'base_repository.dart';
 
 /// User Repository — profil va farzandlar biznes logikasi
-class UserRepository {
+class UserRepository extends BaseRepository {
   final UserApi _userApi;
 
   UserRepository({required UserApi userApi}) : _userApi = userApi;
 
   /// Profil ma'lumotlarini olish
-  Future<Either<Failure, UserModel>> getProfile() => safeApiCall(
-    () => _userApi.getProfile(),
-    errorMessage: AppLocalizations.current.profileLoadError,
-  );
+  Future<UserModel> getProfile() => _userApi.getProfile();
 
   /// Profilni yangilash
-  Future<Either<Failure, UserModel>> updateProfile({
+  Future<UserModel> updateProfile({
     String? fullName,
     String? email,
     String? phone,
     bool? notificationsEnabled,
-  }) => safeApiCall(
-    () => _userApi.updateProfile(
-      fullName: fullName,
-      email: email,
-      phone: phone,
-      notificationsEnabled: notificationsEnabled,
-    ),
-    errorMessage: AppLocalizations.current.profileUpdateFailed,
+  }) => _userApi.updateProfile(
+    fullName: fullName,
+    email: email,
+    phone: phone,
+    notificationsEnabled: notificationsEnabled,
   );
 
   /// Avatar yuklash
-  Future<Either<Failure, String>> uploadAvatar(String filePath) => safeApiCall(
-    () => _userApi.uploadAvatar(filePath),
-    errorMessage: AppLocalizations.current.imageUploadFailed,
-  );
+  Future<String> uploadAvatar(String filePath) => _userApi.uploadAvatar(filePath);
 
   /// Farzandlar ro'yxati
-  Future<Either<Failure, List<ChildModel>>> getChildren() => safeApiCall(
-    () => _userApi.getChildren(),
-    errorMessage: AppLocalizations.current.childrenLoadFailed,
-  );
+  Future<List<ChildModel>> getChildren() => _userApi.getChildren();
 
   /// Bitta farzand tafsilotlari
-  Future<Either<Failure, ChildModel>> getChildDetails(int childId) =>
-      safeApiCall(
-        () => _userApi.getChildDetails(childId),
-        errorMessage: AppLocalizations.current.dataLoadFailed,
-      );
+  Future<ChildModel> getChildDetails(int childId) => _userApi.getChildDetails(childId);
 
   /// Parol o'zgartirish
-  Future<Either<Failure, void>> changePassword({
+  Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
     required String confirmPassword,
-  }) => safeApiCall(
-    () => _userApi.changePassword(
-      currentPassword: currentPassword,
-      newPassword: newPassword,
-      confirmPassword: confirmPassword,
-    ),
-    errorMessage: AppLocalizations.current.changePasswordFailed,
+  }) => _userApi.changePassword(
+    currentPassword: currentPassword,
+    newPassword: newPassword,
+    confirmPassword: confirmPassword,
   );
 }

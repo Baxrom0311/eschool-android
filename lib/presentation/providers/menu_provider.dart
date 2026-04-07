@@ -84,21 +84,19 @@ class MenuNotifier extends StateNotifier<MenuState> {
       state = state.copyWith(isLoading: true, error: null, selectedDate: date);
     }
 
-    final result = await _repository.getDailyMenu(
-      date: date,
-      studentId: studentId,
-    );
-
-    result.fold(
-      (f) => state = state.copyWith(
+    try {
+      final menu = await _repository.getDailyMenu(
+        date: date,
+        studentId: studentId,
+      );
+      state = state.copyWith(dailyMenu: menu, isLoading: false);
+      unawaited(_saveMenuCache(cacheKey, menu));
+    } catch (e) {
+      state = state.copyWith(
         isLoading: false,
-        error: cached == null ? f.message : null,
-      ),
-      (menu) {
-        state = state.copyWith(dailyMenu: menu, isLoading: false);
-        unawaited(_saveMenuCache(cacheKey, menu));
-      },
-    );
+        error: cached == null ? e.toString() : null,
+      );
+    }
   }
 
   Future<void> loadWeeklyMenu({String? weekStart, int? studentId}) async {
@@ -110,21 +108,19 @@ class MenuNotifier extends StateNotifier<MenuState> {
       state = state.copyWith(isLoading: true, error: null);
     }
 
-    final result = await _repository.getWeeklyMenu(
-      weekStart: weekStart,
-      studentId: studentId,
-    );
-
-    result.fold(
-      (f) => state = state.copyWith(
+    try {
+      final menu = await _repository.getWeeklyMenu(
+        weekStart: weekStart,
+        studentId: studentId,
+      );
+      state = state.copyWith(weeklyMenu: menu, isLoading: false);
+      unawaited(_saveMenuCache(cacheKey, menu));
+    } catch (e) {
+      state = state.copyWith(
         isLoading: false,
-        error: cached == null ? f.message : null,
-      ),
-      (menu) {
-        state = state.copyWith(weeklyMenu: menu, isLoading: false);
-        unawaited(_saveMenuCache(cacheKey, menu));
-      },
-    );
+        error: cached == null ? e.toString() : null,
+      );
+    }
   }
 
   List<MenuModel>? _readMenuCache(String key) {
