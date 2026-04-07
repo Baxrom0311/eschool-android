@@ -44,9 +44,16 @@ class LoadingIndicator extends StatelessWidget {
 
   /// Butun ekranni qoplaydigan loading
   static Widget fullScreen({String? message, Color? barrierColor}) {
-    return Container(
-      color: barrierColor ?? Colors.black.withValues(alpha: 0.12),
-      child: LoadingIndicator(message: message),
+    return Builder(
+      builder: (context) {
+        final overlayColor =
+            barrierColor ??
+            Theme.of(context).colorScheme.scrim.withValues(alpha: 0.12);
+        return Container(
+          color: overlayColor,
+          child: LoadingIndicator(message: message),
+        );
+      },
     );
   }
 }

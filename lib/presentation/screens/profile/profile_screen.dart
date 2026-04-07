@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/routing/route_names.dart';
 import '../../../core/utils/formatters.dart';
@@ -33,13 +32,13 @@ class ProfileScreen extends ConsumerWidget {
           // ═══════════════════════════════════════════════════════
           Container(
             width: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
+                colors: [colorScheme.primary, colorScheme.secondary],
               ),
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(32),
                 bottomRight: Radius.circular(32),
               ),
@@ -53,20 +52,22 @@ class ProfileScreen extends ConsumerWidget {
                     // ─── Avatar and Name ───
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: Colors.white,
+                      backgroundColor: colorScheme.onPrimary.withValues(
+                        alpha: 0.94,
+                      ),
                       child: CircleAvatar(
                         radius: 47,
-                        backgroundColor: colorScheme.primary.withValues(
+                        backgroundColor: colorScheme.onPrimary.withValues(
                           alpha: 0.12,
                         ),
                         backgroundImage: user?.avatarUrl != null
                             ? NetworkImage(user!.avatarUrl!)
                             : null,
                         child: user?.avatarUrl == null
-                            ? const Icon(
+                            ? Icon(
                                 Icons.person_rounded,
                                 size: 50,
-                                color: AppColors.primaryBlue,
+                                color: colorScheme.primary,
                               )
                             : null,
                       ),
@@ -75,10 +76,10 @@ class ProfileScreen extends ConsumerWidget {
 
                     Text(
                       user?.fullName ?? l10n.userFallbackName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -87,7 +88,7 @@ class ProfileScreen extends ConsumerWidget {
                       l10n.phoneDisplay(user?.phone ?? '---'),
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: colorScheme.onPrimary.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -227,10 +228,10 @@ class ProfileScreen extends ConsumerWidget {
                       context: context,
                       applicationName: l10n.schoolAppName,
                       applicationVersion: '1.0.0',
-                      applicationIcon: const Icon(
+                      applicationIcon: Icon(
                         Icons.school_rounded,
                         size: 48,
-                        color: AppColors.primaryBlue,
+                        color: colorScheme.primary,
                       ),
                     );
                   },
@@ -245,11 +246,8 @@ class ProfileScreen extends ConsumerWidget {
                     icon: const Icon(Icons.logout_rounded),
                     label: Text(l10n.logoutTitle),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.danger,
-                      side: const BorderSide(
-                        color: AppColors.danger,
-                        width: 1.5,
-                      ),
+                      foregroundColor: colorScheme.error,
+                      side: BorderSide(color: colorScheme.error, width: 1.5),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -268,6 +266,7 @@ class ProfileScreen extends ConsumerWidget {
 
   void _handleLogout(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -290,7 +289,7 @@ class ProfileScreen extends ConsumerWidget {
             },
             child: Text(
               l10n.logoutAction,
-              style: const TextStyle(color: AppColors.danger),
+              style: TextStyle(color: colorScheme.error),
             ),
           ),
         ],
@@ -316,34 +315,32 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onHeroColor = Theme.of(context).colorScheme.onPrimary;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        color: onHeroColor.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: onHeroColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         children: [
-          Icon(icon, color: Colors.white, size: 28),
+          Icon(icon, color: onHeroColor, size: 28),
           const SizedBox(height: 8),
           Text(
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.9),
+              color: onHeroColor.withValues(alpha: 0.9),
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: Colors.white,
+              color: onHeroColor,
               fontWeight: FontWeight.bold,
             ),
           ),

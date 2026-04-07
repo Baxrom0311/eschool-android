@@ -15,25 +15,25 @@ class ServicesGrid extends StatelessWidget {
       _ServiceItem(
         title: l10n.conferenceServiceTitle,
         icon: Icons.people_alt_rounded,
-        color: Colors.blue,
+        color: colorScheme.primary,
         route: RouteNames.conference,
       ),
       _ServiceItem(
         title: l10n.absenceServiceTitle,
         icon: Icons.assignment_rounded,
-        color: Colors.orange,
+        color: colorScheme.tertiary,
         route: RouteNames.absences,
       ),
       _ServiceItem(
         title: l10n.libraryServiceTitle,
         icon: Icons.menu_book_rounded,
-        color: Colors.green,
+        color: colorScheme.secondary,
         route: RouteNames.library,
       ),
       _ServiceItem(
         title: l10n.ratingServiceTitle,
         icon: Icons.leaderboard_rounded,
-        color: Colors.amber,
+        color: colorScheme.error,
         route: RouteNames.leaderboard,
       ),
     ];

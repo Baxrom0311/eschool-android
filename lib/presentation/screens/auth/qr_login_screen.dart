@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/api_error_handler.dart';
 import '../../../core/routing/route_names.dart';
@@ -86,8 +85,15 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
 
   void _showError(String message) {
     if (!mounted) return;
+    final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.danger),
+      SnackBar(
+        backgroundColor: colorScheme.errorContainer,
+        content: Text(
+          message,
+          style: TextStyle(color: colorScheme.onErrorContainer),
+        ),
+      ),
     );
   }
 
@@ -96,12 +102,13 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final overlayForeground = colorScheme.onPrimary;
     return Scaffold(
       backgroundColor: colorScheme.scrim,
       appBar: AppBar(
         title: Text(l10n.qrLoginTitle),
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
+        foregroundColor: overlayForeground,
         elevation: 0,
       ),
       body: Stack(
@@ -116,7 +123,9 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
               height: 260,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: _isProcessing ? colorScheme.primary : Colors.white,
+                  color: _isProcessing
+                      ? colorScheme.primary
+                      : overlayForeground,
                   width: 3,
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -137,16 +146,16 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
                 if (_isProcessing)
                   CircularProgressIndicator(color: colorScheme.primary)
                 else ...[
-                  const Icon(
+                  Icon(
                     Icons.qr_code_scanner_rounded,
-                    color: Colors.white70,
+                    color: overlayForeground.withValues(alpha: 0.78),
                     size: 40,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     l10n.qrScanInstruction,
-                    style: const TextStyle(
-                      color: Colors.white70,
+                    style: TextStyle(
+                      color: overlayForeground.withValues(alpha: 0.78),
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -155,7 +164,10 @@ class _QrLoginScreenState extends ConsumerState<QrLoginScreen> {
                   const SizedBox(height: 4),
                   Text(
                     l10n.qrAdminInstruction,
-                    style: const TextStyle(color: Colors.white38, fontSize: 13),
+                    style: TextStyle(
+                      color: overlayForeground.withValues(alpha: 0.5),
+                      fontSize: 13,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],

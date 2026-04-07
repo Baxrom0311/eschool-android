@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
 import '../../core/localization/app_localizations.dart';
 
 /// Asosiy pastki navigatsiya paneli
@@ -16,15 +15,21 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.white,
+      decoration: BoxDecoration(
+        color:
+            theme.bottomNavigationBarTheme.backgroundColor ?? theme.cardColor,
+        border: Border(
+          top: BorderSide(color: colorScheme.outline.withValues(alpha: 0.4)),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: theme.shadowColor.withValues(alpha: 0.08),
             blurRadius: 10,
-            offset: Offset(0, -2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
@@ -87,7 +92,12 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? AppColors.primaryBlue : AppColors.textHint;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final color = isActive
+        ? colorScheme.primary
+        : theme.bottomNavigationBarTheme.unselectedItemColor ??
+              colorScheme.onSurfaceVariant;
 
     return InkWell(
       onTap: onTap,

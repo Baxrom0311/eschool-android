@@ -50,7 +50,7 @@ class MessageBubble extends StatelessWidget {
                 Text(
                   text,
                   style: TextStyle(
-                    color: isMe ? Colors.white : colorScheme.onSurface,
+                    color: isMe ? colorScheme.onPrimary : colorScheme.onSurface,
                     fontSize: 15,
                     height: 1.4,
                   ),
@@ -59,7 +59,9 @@ class MessageBubble extends StatelessWidget {
                 Text(
                   time,
                   style: TextStyle(
-                    color: isMe ? Colors.white70 : colorScheme.onSurfaceVariant,
+                    color: isMe
+                        ? colorScheme.onPrimary.withValues(alpha: 0.78)
+                        : colorScheme.onSurfaceVariant,
                     fontSize: 10,
                   ),
                 ),

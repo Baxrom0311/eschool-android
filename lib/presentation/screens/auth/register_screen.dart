@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/routing/route_names.dart';
 import '../../widgets/common/custom_button.dart';
@@ -49,6 +48,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final onHeroColor = colorScheme.onPrimary;
     final size = MediaQuery.of(context).size;
     final topHeight = size.height * 0.4;
 
@@ -65,13 +65,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             right: 0,
             child: Container(
               height: topHeight,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
+                  colors: [colorScheme.primary, colorScheme.secondary],
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(40),
                   bottomRight: Radius.circular(40),
                 ),
@@ -85,13 +85,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: onHeroColor.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.school_rounded,
                         size: 60,
-                        color: Colors.white,
+                        color: onHeroColor,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -99,10 +99,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     // Register Title
                     Text(
                       l10n.registerTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: onHeroColor,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -111,7 +111,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       l10n.registerSubtitle,
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: onHeroColor.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w400,
                       ),
                     ),

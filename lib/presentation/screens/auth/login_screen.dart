@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_locale.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/api_error_handler.dart';
@@ -112,8 +111,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _showError(String message) {
     if (!mounted) return;
+    final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.danger),
+      SnackBar(
+        backgroundColor: colorScheme.errorContainer,
+        content: Text(
+          message,
+          style: TextStyle(color: colorScheme.onErrorContainer),
+        ),
+      ),
     );
   }
 
@@ -124,10 +130,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final currentThemeMode = ref.watch(appThemeModeProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-    final inputFillColor = isDark
-        ? colorScheme.surface.withValues(alpha: 0.92)
-        : const Color(0xFFF2F5FA);
+    final inputFillColor = colorScheme.surfaceContainerHighest.withValues(
+      alpha: theme.brightness == Brightness.dark ? 0.65 : 0.55,
+    );
+    final onHeroColor = colorScheme.onPrimary;
     final size = MediaQuery.of(context).size;
     final topHeight = size.height * 0.4;
     final isLoading = ref.watch(authProvider).isLoading;
@@ -143,13 +149,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             right: 0,
             child: Container(
               height: topHeight,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
+                  colors: [colorScheme.primary, colorScheme.secondary],
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(38),
                   bottomRight: Radius.circular(38),
                 ),
@@ -171,8 +177,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               children: [
                                 Text(
                                   l10n.loginHeader,
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: onHeroColor,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -207,7 +213,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   child: _buildHeaderChip(
                                     child: Icon(
                                       _themeModeIcon(currentThemeMode),
-                                      color: Colors.white,
+                                      color: onHeroColor,
                                       size: 18,
                                     ),
                                   ),
@@ -233,8 +239,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   child: _buildHeaderChip(
                                     child: Text(
                                       currentLocale.code.toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: TextStyle(
+                                        color: onHeroColor,
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -249,22 +255,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             width: 88,
                             height: 88,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.18),
+                              color: onHeroColor.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(24),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.school_rounded,
                               size: 52,
-                              color: Colors.white,
+                              color: onHeroColor,
                             ),
                           ),
                           const SizedBox(height: 18),
                           Text(
                             l10n.welcome,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                              color: onHeroColor,
                               height: 1.05,
                             ),
                           ),
@@ -274,7 +280,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 17,
-                              color: Colors.white.withValues(alpha: 0.9),
+                              color: onHeroColor.withValues(alpha: 0.9),
                               fontWeight: FontWeight.w500,
                               height: 1.35,
                             ),
@@ -557,12 +563,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildHeaderChip({required Widget child}) {
+    final onHeroColor = Theme.of(context).colorScheme.onPrimary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
+        color: onHeroColor.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        border: Border.all(color: onHeroColor.withValues(alpha: 0.2)),
       ),
       child: child,
     );

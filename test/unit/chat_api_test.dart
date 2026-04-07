@@ -162,5 +162,45 @@ void main() {
       expect(conversations.single.participantName, 'User');
       expect(messages.single.senderName, 'You');
     });
+
+    test(
+      'uses created_at timestamp when backend returns zero message id',
+      () async {
+        const createdAt = '2025-01-01T10:30:45.123456Z';
+
+        when(
+          () => mockDioClient.get(
+            ApiConstants.messages(tConversationId),
+            queryParameters: any(named: 'queryParameters'),
+            options: any(named: 'options'),
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(
+              path: ApiConstants.messages(tConversationId),
+            ),
+            data: {
+              'messages': [
+                {
+                  'id': 0,
+                  'body': 'Generated id',
+                  'sender_id': 1,
+                  'receiver_id': 2,
+                  'created_at': createdAt,
+                },
+              ],
+            },
+            statusCode: 200,
+          ),
+        );
+
+        final messages = await chatApi.getMessages(tConversationId);
+
+        expect(
+          messages.single.id,
+          DateTime.parse(createdAt).microsecondsSinceEpoch.abs(),
+        );
+      },
+    );
   });
 }

@@ -18,6 +18,15 @@ class ChatApi with ApiHelpers {
     return isMine ? _l10n.meLabel : _l10n.teacherLabel;
   }
 
+  int _fallbackMessageId(Map<String, dynamic> row) {
+    final createdAt = DateTime.tryParse((row['created_at'] ?? '').toString());
+    if (createdAt != null) {
+      return createdAt.microsecondsSinceEpoch.abs();
+    }
+
+    return DateTime.now().microsecondsSinceEpoch.abs();
+  }
+
   /// Suhbatlar ro'yxati
   Future<List<ConversationModel>> getConversations() async {
     try {
@@ -74,7 +83,7 @@ class ChatApi with ApiHelpers {
         final senderName = asMap(row['sender'])['name']?.toString();
         return MessageModel.fromJson({
           'id': toInt(row['id']) == 0
-              ? row.toString().hashCode.abs()
+              ? _fallbackMessageId(row)
               : toInt(row['id']),
           'content': (row['body'] ?? row['content'] ?? '').toString(),
           'type': row['file_url'] != null ? 'file' : 'text',
@@ -125,7 +134,7 @@ class ChatApi with ApiHelpers {
       final senderName = asMap(message['sender'])['name']?.toString();
       return MessageModel.fromJson({
         'id': toInt(message['id']) == 0
-            ? message.toString().hashCode.abs()
+            ? _fallbackMessageId(message)
             : toInt(message['id']),
         'content': (message['body'] ?? message['content'] ?? content)
             .toString(),
@@ -191,7 +200,7 @@ class ChatApi with ApiHelpers {
 
       return MessageModel.fromJson({
         'id': toInt(message['id']) == 0
-            ? message.toString().hashCode.abs()
+            ? _fallbackMessageId(message)
             : toInt(message['id']),
         'content': (message['body'] ?? fileName).toString(),
         'type': 'file',

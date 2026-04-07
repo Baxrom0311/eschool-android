@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/chat_provider.dart';
@@ -85,9 +84,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: AppColors.primaryBlue.withValues(
-                      alpha: 0.1,
-                    ),
+                    backgroundColor: colorScheme.primaryContainer,
                     backgroundImage: chat.participantAvatar != null
                         ? NetworkImage(chat.participantAvatar!)
                         : null,
@@ -96,10 +93,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                             chat.participantName.isNotEmpty
                                 ? chat.participantName[0]
                                 : '?',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.primaryBlue,
+                              color: colorScheme.onPrimaryContainer,
                             ),
                           )
                         : null,
@@ -112,9 +109,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                         width: 14,
                         height: 14,
                         decoration: BoxDecoration(
-                          color: AppColors.success,
+                          color: colorScheme.tertiary,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(
+                            color: theme.scaffoldBackgroundColor,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -172,8 +172,8 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                         ),
                         child: Text(
                           chat.unreadCount.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: colorScheme.onPrimary,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),

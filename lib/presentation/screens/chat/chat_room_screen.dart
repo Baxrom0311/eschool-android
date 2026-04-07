@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../widgets/chat/message_bubble.dart';
 
@@ -144,13 +143,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
+              backgroundColor: colorScheme.primaryContainer,
               child: Text(
                 chatName.isNotEmpty ? chatName[0] : '?',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primaryBlue,
+                  color: colorScheme.onPrimaryContainer,
                 ),
               ),
             ),
@@ -170,7 +169,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     color: isOnline
-                        ? AppColors.success
+                        ? colorScheme.tertiary
                         : colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -258,7 +257,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                   ),
                   child: IconButton(
                     icon: const Icon(Icons.attach_file_rounded),
-                    color: AppColors.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                     onPressed: state.isSending ? null : _sendFile,
                   ),
                 ),
@@ -283,20 +282,20 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: state.isSending
-                      ? const Padding(
-                          padding: EdgeInsets.all(8.0),
+                      ? Padding(
+                          padding: const EdgeInsets.all(8.0),
                           child: SizedBox(
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(
-                              color: Colors.white,
+                              color: colorScheme.onPrimary,
                               strokeWidth: 2,
                             ),
                           ),
                         )
                       : IconButton(
                           icon: const Icon(Icons.send_rounded),
-                          color: Colors.white,
+                          color: colorScheme.onPrimary,
                           onPressed: _sendMessage,
                         ),
                 ),

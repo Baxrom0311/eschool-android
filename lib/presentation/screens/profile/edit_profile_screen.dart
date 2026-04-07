@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../providers/user_provider.dart';
@@ -268,8 +267,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   const SizedBox(height: 16),
                   Text(
                     userState.error!,
-                    style: const TextStyle(
-                      color: AppColors.danger,
+                    style: TextStyle(
+                      color: colorScheme.error,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

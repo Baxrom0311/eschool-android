@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/api_error_handler.dart';
 import '../../../core/utils/validators.dart';
@@ -92,8 +91,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.passwordResetSuccess),
-          backgroundColor: AppColors.success,
+          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          content: Text(
+            l10n.passwordResetSuccess,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            ),
+          ),
         ),
       );
 
@@ -101,10 +105,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       context.pop();
     } catch (e) {
       _showError(
-        ApiErrorHandler.readableMessage(
-          e,
-          fallback: l10n.passwordResetFailed,
-        ),
+        ApiErrorHandler.readableMessage(e, fallback: l10n.passwordResetFailed),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -113,15 +114,29 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   void _showError(String message) {
     if (!mounted) return;
+    final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.danger),
+      SnackBar(
+        backgroundColor: colorScheme.errorContainer,
+        content: Text(
+          message,
+          style: TextStyle(color: colorScheme.onErrorContainer),
+        ),
+      ),
     );
   }
 
   void _showSuccess(String message) {
     if (!mounted) return;
+    final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.success),
+      SnackBar(
+        backgroundColor: colorScheme.secondaryContainer,
+        content: Text(
+          message,
+          style: TextStyle(color: colorScheme.onSecondaryContainer),
+        ),
+      ),
     );
   }
 
@@ -130,9 +145,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final l10n = context.l10n;
     final size = MediaQuery.of(context).size;
     final topHeight = size.height * 0.32;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final inputFillColor = colorScheme.surfaceContainerHighest.withValues(
+      alpha: theme.brightness == Brightness.dark ? 0.65 : 0.55,
+    );
+    final onHeroColor = colorScheme.onPrimary;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           // ─── Top blue header ───
@@ -142,13 +163,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             right: 0,
             child: Container(
               height: topHeight,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
+                  colors: [colorScheme.primary, colorScheme.secondary],
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(38),
                   bottomRight: Radius.circular(38),
                 ),
@@ -161,13 +182,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
+                        color: onHeroColor.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.lock_reset_rounded,
                         size: 36,
-                        color: Colors.white,
+                        color: onHeroColor,
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -176,7 +197,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: onHeroColor,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -186,7 +207,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           : l10n.forgotPasswordPhoneSubtitle,
                       style: TextStyle(
                         fontSize: 15,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: onHeroColor.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -208,13 +229,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 22),
                 child: Card(
                   elevation: 7,
-                  shadowColor: AppColors.shadow,
+                  shadowColor: theme.shadowColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(26),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
-                    child: _codeSent ? _buildResetForm() : _buildPhoneForm(),
+                    child: _codeSent
+                        ? _buildResetForm(inputFillColor)
+                        : _buildPhoneForm(inputFillColor),
                   ),
                 ),
               ),
@@ -227,8 +250,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   // ────────── BOSQICH 1: telefon raqam formasi ──────────
 
-  Widget _buildPhoneForm() {
+  Widget _buildPhoneForm(Color inputFillColor) {
     final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
     return Form(
       key: _phoneFormKey,
       child: Column(
@@ -243,12 +267,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             validator: Validators.phone,
             decoration: InputDecoration(
               hintText: '+998 90 123 45 67',
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 Icons.phone_outlined,
-                color: AppColors.textHint,
+                color: colorScheme.onSurfaceVariant,
               ),
               filled: true,
-              fillColor: const Color(0xFFF2F5FA),
+              fillColor: inputFillColor,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide.none,
@@ -261,24 +285,26 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             child: ElevatedButton(
               onPressed: _isLoading ? null : _handleSendCode,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
               child: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.4,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.onPrimary,
+                        ),
                       ),
                     )
                   : Text(
                       l10n.sendCodeAction,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                       ),
@@ -292,7 +318,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               child: Text(
                 l10n.backToLoginAction,
                 style: TextStyle(
-                  color: AppColors.primaryBlue,
+                  color: colorScheme.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -305,8 +331,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   // ────────── BOSQICH 2: kod + yangi parol formasi ──────────
 
-  Widget _buildResetForm() {
+  Widget _buildResetForm(Color inputFillColor) {
     final l10n = context.l10n;
+    final colorScheme = Theme.of(context).colorScheme;
     return Form(
       key: _resetFormKey,
       child: Column(
@@ -327,12 +354,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             decoration: InputDecoration(
               hintText: l10n.verificationCodeHint,
               counterText: '',
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 Icons.sms_outlined,
-                color: AppColors.textHint,
+                color: colorScheme.onSurfaceVariant,
               ),
               filled: true,
-              fillColor: const Color(0xFFF2F5FA),
+              fillColor: inputFillColor,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide.none,
@@ -353,9 +380,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             },
             decoration: InputDecoration(
               hintText: '••••••••',
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 Icons.lock_outline_rounded,
-                color: AppColors.textHint,
+                color: colorScheme.onSurfaceVariant,
               ),
               suffixIcon: IconButton(
                 onPressed: () {
@@ -365,11 +392,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   _isPasswordVisible
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
-                  color: AppColors.textHint,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
               filled: true,
-              fillColor: const Color(0xFFF2F5FA),
+              fillColor: inputFillColor,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide.none,
@@ -384,15 +411,19 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             obscureText: !_isConfirmVisible,
             textInputAction: TextInputAction.done,
             validator: (v) {
-              if (v == null || v.isEmpty) return l10n.confirmPasswordRequired;
-              if (v != _passwordController.text) return l10n.passwordsDoNotMatch;
+              if (v == null || v.isEmpty) {
+                return l10n.confirmPasswordRequired;
+              }
+              if (v != _passwordController.text) {
+                return l10n.passwordsDoNotMatch;
+              }
               return null;
             },
             decoration: InputDecoration(
               hintText: '••••••••',
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 Icons.lock_outline_rounded,
-                color: AppColors.textHint,
+                color: colorScheme.onSurfaceVariant,
               ),
               suffixIcon: IconButton(
                 onPressed: () {
@@ -402,11 +433,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   _isConfirmVisible
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
-                  color: AppColors.textHint,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
               filled: true,
-              fillColor: const Color(0xFFF2F5FA),
+              fillColor: inputFillColor,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide.none,
@@ -419,24 +450,26 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             child: ElevatedButton(
               onPressed: _isLoading ? null : _handleResetPassword,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
               child: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.4,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.onPrimary,
+                        ),
                       ),
                     )
                   : Text(
                       l10n.resetPasswordAction,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                       ),
@@ -457,7 +490,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               child: Text(
                 l10n.resendCodeAction,
                 style: TextStyle(
-                  color: AppColors.primaryBlue,
+                  color: colorScheme.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -469,13 +502,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Widget _buildLabel(String text) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 12.5,
         letterSpacing: 0.6,
         fontWeight: FontWeight.w700,
-        color: AppColors.textSecondary,
+        color: colorScheme.onSurfaceVariant,
       ),
     );
   }
