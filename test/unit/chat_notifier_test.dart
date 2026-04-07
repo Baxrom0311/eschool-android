@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:parent_school_app/core/localization/app_locale.dart';
-import 'package:parent_school_app/core/localization/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import 'package:parent_school_app/presentation/providers/chat_provider.dart';
 import 'package:parent_school_app/data/repositories/chat_repository.dart';
 import 'package:parent_school_app/data/models/chat_model.dart';
@@ -95,6 +95,11 @@ class MockChatRepository extends Mock implements ChatRepository {
 
 class MockOutboxService extends Mock implements OutboxService {}
 
+class MockAppLocalizations extends Mock implements AppLocalizations {
+  @override
+  String get fileAttached => 'File attached';
+}
+
 void main() {
   setUpAll(() {
     registerFallbackValue(
@@ -122,7 +127,7 @@ void main() {
   setUp(() {
     mockRepository = MockChatRepository();
     mockOutbox = MockOutboxService();
-    AppLocalizations.updateCurrent(AppLocalizations(AppLocale.uz));
+    AppLocalizationsRegistry.update(MockAppLocalizations());
     when(() => mockOutbox.queueMessage(any())).thenAnswer((_) async {});
     when(() => mockOutbox.createDummyMessage(any(), any(), any())).thenAnswer((
       invocation,
@@ -216,7 +221,6 @@ void main() {
     });
 
     test('sendFile queues placeholder on network error', () async {
-      AppLocalizations.updateCurrent(AppLocalizations(AppLocale.en));
       await chatRoomNotifier.openConversation(1);
       mockRepository.shouldReturnNetworkError = true;
 

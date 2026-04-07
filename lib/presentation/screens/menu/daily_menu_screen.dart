@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-import '../../../core/localization/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../data/models/menu_model.dart';
 import '../../providers/menu_provider.dart';
 import '../../providers/user_provider.dart';

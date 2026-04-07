@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/localization/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:parent_school_app/core/localization/l10n_extension.dart';
 
 /// Balance Header - Visual display of account balance
 class BalanceHeader extends StatelessWidget {

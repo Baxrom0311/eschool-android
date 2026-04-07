@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/localization/app_locale.dart';
-import 'core/localization/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'core/routing/app_router.dart';
 import 'core/storage/shared_prefs_service.dart';
 import 'core/theme/app_theme.dart';
@@ -55,7 +55,7 @@ class _ParentSchoolAppState extends ConsumerState<ParentSchoolApp> {
   void initState() {
     super.initState();
     _fcmSubscription = FirebaseService.onMessage.listen((message) {
-      final l10n = AppLocalizations.current;
+      final l10n = AppLocalizations.of(context)!;
       final title =
           message.notification?.title ?? l10n.notificationFallbackTitle;
       final body = message.notification?.body ?? '';
@@ -96,15 +96,13 @@ class _ParentSchoolAppState extends ConsumerState<ParentSchoolApp> {
   Widget build(BuildContext context) {
     final locale = ref.watch(appLocaleProvider);
     final themeMode = ref.watch(appThemeModeProvider);
-    final l10n = AppLocalizations(locale);
-    AppLocalizations.updateCurrent(l10n);
     final router = ref.watch(routerProvider);
     
     // WebSocket tinglovchisini ishga tushirish
     ref.watch(socketListenerProvider);
 
     return MaterialApp.router(
-      title: l10n.appName,
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -112,12 +110,7 @@ class _ParentSchoolAppState extends ConsumerState<ParentSchoolApp> {
       routerConfig: router,
       locale: locale.locale,
       supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       scaffoldMessengerKey: scaffoldMessengerKey,
       builder: (context, child) {
         return NetworkStatusBanner(child: child!);

@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
-import '../../../core/localization/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/chat_model.dart';
 import 'api_helpers.dart';

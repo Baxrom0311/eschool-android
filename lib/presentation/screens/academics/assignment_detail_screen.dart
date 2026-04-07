@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/localization/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../data/models/assignment_model.dart';
 import '../../providers/academic_provider.dart';
 import '../../widgets/common/custom_button.dart';

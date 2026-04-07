@@ -10,6 +10,8 @@ import '../../core/storage/secure_storage.dart';
 import '../../data/datasources/remote/auth_api.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/notification_repository.dart';
+import 'notification_provider.dart';
 
 // ═══════════════════════════════════════════════════════════════
 // DEPENDENCY PROVIDERS — bu providerlar dependency injection
@@ -48,6 +50,12 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final authApi = ref.watch(authApiProvider);
   final secureStorage = ref.watch(secureStorageProvider);
   return AuthRepository(authApi: authApi, secureStorage: secureStorage);
+});
+
+/// NotificationRepository instance
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  final api = ref.watch(notificationApiProvider);
+  return NotificationRepository(notificationApi: api);
 });
 
 
@@ -151,11 +159,14 @@ class AuthState extends Equatable {
 /// boshqaradi va [AuthState] ni yangilaydi.
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
+  final NotificationRepository _notificationRepository;
   StreamSubscription<String>? _tokenRefreshSub;
 
   AuthNotifier({
     required AuthRepository repository,
+    required NotificationRepository notificationRepository,
   }) : _repository = repository,
+       _notificationRepository = notificationRepository,
        super(const AuthState.initial());
 
   /// Ilova boshlanganda token mavjudligini tekshirish
@@ -263,16 +274,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final token = await FirebaseService.getFCMToken();
       if (token != null) {
-        await _repository.updateFCMToken(token);
+        await _notificationRepository.saveFcmToken(token);
         if (kDebugMode) {
-          log('FCM token synced to backend');
+          log('FCM token synced to backend via NotificationRepository');
         }
       }
       
-      // Listen to future token rotations to ensure uninterrupted push notifications
+      // Listen to future token rotations
       await _tokenRefreshSub?.cancel();
       _tokenRefreshSub = FirebaseService.onTokenRefresh.listen((newToken) async {
-        await _repository.updateFCMToken(newToken);
+        await _notificationRepository.saveFcmToken(newToken);
         if (kDebugMode) {
           log('Rotated FCM token synced to backend');
         }
@@ -304,5 +315,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 /// ```
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider);
-  return AuthNotifier(repository: repository);
+  final notificationRepository = ref.watch(notificationRepositoryProvider);
+  return AuthNotifier(
+    repository: repository,
+    notificationRepository: notificationRepository,
+  );
 });

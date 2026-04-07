@@ -24,7 +24,6 @@ class MockAuthRepository implements AuthRepository {
       id: 1,
       phone: '+998901234567',
       fullName: 'Test User',
-      role: 'parent',
     );
   }
 
@@ -51,7 +50,6 @@ class MockAuthRepository implements AuthRepository {
         id: 4,
         phone: '+998900000000',
         fullName: 'QR User',
-        role: 'parent',
       );
 
   @override
@@ -62,13 +60,30 @@ class MockAuthRepository implements AuthRepository {
   Future<T> safeExecute<T>(dynamic call) async => throw UnimplementedError();
 }
 
+class MockNotificationRepository implements NotificationRepository {
+  @override
+  Future<void> saveFcmToken(String token) async {}
+
+  @override
+  // ignore: override_on_non_overriding_member
+  Future<T> safeCall<T>(dynamic call, dynamic mapper) async => throw UnimplementedError();
+  @override
+  // ignore: override_on_non_overriding_member
+  Future<List<T>> safeCallList<T>(dynamic call, dynamic mapper, {String? listKey}) async => throw UnimplementedError();
+}
+
 void main() {
   late AuthNotifier authNotifier;
   late MockAuthRepository mockRepository;
+  late MockNotificationRepository mockNotificationRepository;
 
   setUp(() {
     mockRepository = MockAuthRepository();
-    authNotifier = AuthNotifier(repository: mockRepository);
+    mockNotificationRepository = MockNotificationRepository();
+    authNotifier = AuthNotifier(
+      repository: mockRepository,
+      notificationRepository: mockNotificationRepository,
+    );
   });
 
   group('AuthNotifier Tests', () {

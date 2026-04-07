@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:parent_school_app/core/error/exceptions.dart';
-import 'package:parent_school_app/core/localization/app_locale.dart';
-import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/data/datasources/remote/academic_api.dart';
 import 'package:parent_school_app/data/models/grade_model.dart';
 import 'package:parent_school_app/data/models/schedule_model.dart';
@@ -16,7 +14,6 @@ void main() {
 
   setUp(() {
     mockAcademicApi = MockAcademicApi();
-    AppLocalizations.updateCurrent(AppLocalizations(AppLocale.uz));
     repository = AcademicRepository(academicApi: mockAcademicApi);
   });
 

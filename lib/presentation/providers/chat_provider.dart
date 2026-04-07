@@ -4,7 +4,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/storage_keys.dart';
-import '../../core/localization/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../core/storage/shared_prefs_service.dart';
 import '../../data/datasources/remote/chat_api.dart';
 import '../../data/models/chat_model.dart';
@@ -314,7 +315,7 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
       final message = e.toString();
       if (_isNetworkError(message)) {
         _queueOfflineMessage(
-          AppLocalizations.current.fileAttached,
+        AppLocalizationsRegistry.instance.fileAttached,
           'file',
           filePath,
         );

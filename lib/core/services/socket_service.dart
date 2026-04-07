@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laravel_echo/laravel_echo.dart';
-import 'package:pusher_client_flutter/pusher_client_flutter.dart';
+import 'package:pusher_client/pusher_client.dart';
 
 import '../constants/api_constants.dart';
 import '../storage/secure_storage.dart';
