@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/storage_keys.dart';
-import '../../core/error/failures.dart';
 import '../../core/storage/shared_prefs_service.dart';
 import '../../data/datasources/remote/user_api.dart';
 import '../../data/models/child_model.dart';
@@ -137,7 +136,8 @@ class UserNotifier extends StateNotifier<UserState> {
       unawaited(_saveCachedProfile(user, selectedChild?.id));
     } catch (e) {
       final message = e.toString();
-      if (message.toLowerCase().contains('401') || message.toLowerCase().contains('unauthorized')) {
+      if (message.toLowerCase().contains('401') ||
+          message.toLowerCase().contains('unauthorized')) {
         unawaited(_clearCachedProfile());
         state = const UserState.initial().copyWith(error: message);
         return;
@@ -270,9 +270,11 @@ class UserNotifier extends StateNotifier<UserState> {
   /// Tizimdan chiqqanda state ni tozalash
   void clear() {
     state = const UserState.initial();
-    unawaited(_clearCachedProfile().then((_) {
-      SharedPrefsService.setUserScope(null);
-    }));
+    unawaited(
+      _clearCachedProfile().then((_) {
+        SharedPrefsService.setUserScope(null);
+      }),
+    );
   }
 
   ChildModel? _resolveSelectedChild(List<ChildModel> children) {

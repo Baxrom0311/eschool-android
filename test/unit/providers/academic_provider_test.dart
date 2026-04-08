@@ -1,4 +1,3 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -24,9 +23,7 @@ void main() {
 
   ProviderContainer createContainer() {
     final container = ProviderContainer(
-      overrides: [
-        academicRepositoryProvider.overrideWithValue(mockRepository),
-      ],
+      overrides: [academicRepositoryProvider.overrideWithValue(mockRepository)],
     );
     addTearDown(container.dispose);
     return container;
@@ -42,7 +39,7 @@ void main() {
         gradeType: 'exam',
         subjectName: 'Math',
         teacherName: 'John',
-      )
+      ),
     ];
     final tSummary = <SubjectGradeSummary>[
       const SubjectGradeSummary(
@@ -50,7 +47,7 @@ void main() {
         averageGrade: 5.0,
         totalGrades: 1,
         teacherName: 'John',
-      )
+      ),
     ];
 
     test('initial state is empty AsyncData', () {
@@ -61,13 +58,17 @@ void main() {
 
     test('loadGrades updates state on success', () async {
       final container = createContainer();
-      when(() => mockRepository.getGrades(tChildId, quarter: 1))
-          .thenAnswer((_) async => Right(tGrades));
-      when(() => mockRepository.getGradeSummary(tChildId))
-          .thenAnswer((_) async => Right(tSummary));
+      when(
+        () => mockRepository.getGrades(tChildId, quarter: 1),
+      ).thenAnswer((_) async => tGrades);
+      when(
+        () => mockRepository.getGradeSummary(tChildId),
+      ).thenAnswer((_) async => tSummary);
 
-      final future = container.read(gradesProvider.notifier).loadGrades(tChildId);
-      
+      final future = container
+          .read(gradesProvider.notifier)
+          .loadGrades(tChildId);
+
       // Loading state check
       expect(container.read(gradesProvider).isLoading, true);
 
@@ -84,13 +85,15 @@ void main() {
     test('selectQuarter updates selectedQuarter in state', () async {
       final container = createContainer();
       // Setup initial data
-      when(() => mockRepository.getGrades(tChildId, quarter: 1))
-          .thenAnswer((_) async => Right(tGrades));
-      when(() => mockRepository.getGradeSummary(tChildId))
-          .thenAnswer((_) async => Right(tSummary));
-      
+      when(
+        () => mockRepository.getGrades(tChildId, quarter: 1),
+      ).thenAnswer((_) async => tGrades);
+      when(
+        () => mockRepository.getGradeSummary(tChildId),
+      ).thenAnswer((_) async => tSummary);
+
       await container.read(gradesProvider.notifier).loadGrades(tChildId);
-      
+
       // Select quarter 2
       container.read(gradesProvider.notifier).selectQuarter(2);
 
@@ -110,13 +113,14 @@ void main() {
         endTime: '08:45',
         dayOfWeek: 1,
         lessonNumber: 1,
-      )
+      ),
     ];
 
     test('loadSchedule updates state on success', () async {
       final container = createContainer();
-      when(() => mockRepository.getSchedule(tChildId))
-          .thenAnswer((_) async => Right(tSchedule));
+      when(
+        () => mockRepository.getSchedule(tChildId),
+      ).thenAnswer((_) async => tSchedule);
 
       await container.read(scheduleProvider.notifier).loadSchedule(tChildId);
 
@@ -138,15 +142,18 @@ void main() {
         status: AssignmentStatus.pending,
         subjectName: 'Math',
         teacherName: 'John',
-      )
+      ),
     ];
 
     test('loadAssignments updates state on success', () async {
       final container = createContainer();
-      when(() => mockRepository.getAssignments(tChildId, status: null))
-          .thenAnswer((_) async => Right(tAssignments));
+      when(
+        () => mockRepository.getAssignments(tChildId, status: null),
+      ).thenAnswer((_) async => tAssignments);
 
-      await container.read(assignmentsProvider.notifier).loadAssignments(tChildId);
+      await container
+          .read(assignmentsProvider.notifier)
+          .loadAssignments(tChildId);
 
       final state = container.read(assignmentsProvider);
       expect(state.hasValue, true);
@@ -163,15 +170,18 @@ void main() {
         status: AttendanceStatus.present,
         subjectName: 'Math',
         reason: null,
-      )
+      ),
     ];
 
     test('loadAttendance updates state and computes summary', () async {
       final container = createContainer();
-      when(() => mockRepository.getAttendance(tChildId, month: null))
-          .thenAnswer((_) async => Right(tAttendance));
+      when(
+        () => mockRepository.getAttendance(tChildId, month: null),
+      ).thenAnswer((_) async => tAttendance);
 
-      await container.read(attendanceProvider.notifier).loadAttendance(tChildId);
+      await container
+          .read(attendanceProvider.notifier)
+          .loadAttendance(tChildId);
 
       final state = container.read(attendanceProvider);
       expect(state.hasValue, true);

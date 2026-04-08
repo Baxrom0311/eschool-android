@@ -6,7 +6,7 @@ class NotificationRepository extends BaseRepository {
   final NotificationApi _notificationApi;
 
   NotificationRepository({required NotificationApi notificationApi})
-      : _notificationApi = notificationApi;
+    : _notificationApi = notificationApi;
 
   /// FCM tokenni saqlash
   Future<void> saveFcmToken(String token) async {

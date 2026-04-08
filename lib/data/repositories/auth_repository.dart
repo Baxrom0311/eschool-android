@@ -46,7 +46,7 @@ class AuthRepository extends BaseRepository {
   Future<void> updateFCMToken(String token) => _authApi.updateFcmToken(token);
 
   /// Parol tiklash
-  Future<void> forgotPassword({required String phone}) => 
+  Future<void> forgotPassword({required String phone}) =>
       _authApi.forgotPassword(phone: phone);
 
   /// Token mavjudligini tekshirish (tez auth holat tekshiruvi)

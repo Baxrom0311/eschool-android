@@ -92,10 +92,7 @@ void main() {
       ).thenAnswer((_) async {});
 
       // Act
-      await repository.submitAssignment(
-        tAssignmentId,
-        text: 'My homework',
-      );
+      await repository.submitAssignment(tAssignmentId, text: 'My homework');
 
       // Assert
       verify(

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../data/models/child_model.dart';
 import '../../../data/models/rating_model.dart';
 import '../../providers/rating_provider.dart';

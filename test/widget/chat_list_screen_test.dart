@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:parent_school_app/core/error/failures.dart';
+import 'package:parent_school_app/core/error/exceptions.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/models/chat_model.dart';
 import 'package:parent_school_app/data/repositories/chat_repository.dart';
@@ -27,13 +28,23 @@ void main() {
   Widget createWidgetUnderTest() {
     return ProviderScope(
       overrides: [chatRepositoryProvider.overrideWithValue(mockChatRepository)],
-      child: const MaterialApp(home: ChatListScreen()),
+      child: MaterialApp(
+        locale: const Locale('uz'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const ChatListScreen(),
+      ),
     );
   }
 
   group('ChatListScreen Widget Tests', () {
     testWidgets('shows loading state initially', (WidgetTester tester) async {
-      final completer = Completer<Either<Failure, List<ConversationModel>>>();
+      final completer = Completer<List<ConversationModel>>();
       when(
         () => mockChatRepository.getConversations(),
       ).thenAnswer((_) => completer.future);
@@ -49,7 +60,7 @@ void main() {
     ) async {
       when(
         () => mockChatRepository.getConversations(),
-      ).thenAnswer((_) async => const Right([]));
+      ).thenAnswer((_) async => const []);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -69,7 +80,7 @@ void main() {
       ];
       when(
         () => mockChatRepository.getConversations(),
-      ).thenAnswer((_) async => Right(tConversations));
+      ).thenAnswer((_) async => tConversations);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -86,12 +97,12 @@ void main() {
     ) async {
       when(
         () => mockChatRepository.getConversations(),
-      ).thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
+      ).thenThrow(const ServerException(message: 'Tarmoq xatosi'));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      expect(find.text('Tarmoq xatosi'), findsOneWidget);
+      expect(find.textContaining('Tarmoq xatosi'), findsOneWidget);
     });
   });
 }

@@ -6,7 +6,8 @@ import 'base_repository.dart';
 class PaymentRepository extends BaseRepository {
   final PaymentApi _paymentApi;
 
-  PaymentRepository({required PaymentApi paymentApi}) : _paymentApi = paymentApi;
+  PaymentRepository({required PaymentApi paymentApi})
+    : _paymentApi = paymentApi;
 
   /// Joriy balansni olish
   Future<BalanceInfo> getBalance({int? studentId}) =>
@@ -18,13 +19,12 @@ class PaymentRepository extends BaseRepository {
     int perPage = 20,
     String? status,
     int? studentId,
-  }) =>
-      _paymentApi.getPaymentHistory(
-        page: page,
-        perPage: perPage,
-        status: status,
-        studentId: studentId,
-      );
+  }) => _paymentApi.getPaymentHistory(
+    page: page,
+    perPage: perPage,
+    status: status,
+    studentId: studentId,
+  );
 
   /// Mavjud to'lov tizimlarini olish (Click, Payme, va h.k.)
   Future<List<Map<String, dynamic>>> getPaymentMethods() =>
@@ -35,10 +35,9 @@ class PaymentRepository extends BaseRepository {
     required int amount,
     required String method,
     int? studentId,
-  }) =>
-      _paymentApi.createPayment(
-        amount: amount,
-        method: method,
-        studentId: studentId,
-      );
+  }) => _paymentApi.createPayment(
+    amount: amount,
+    method: method,
+    studentId: studentId,
+  );
 }

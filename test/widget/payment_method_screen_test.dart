@@ -42,9 +42,9 @@ void main() {
 
     expect(find.text('To\'lov usuli'), findsOneWidget);
     expect(find.text('To\'lov summasi (UZS)'), findsOneWidget);
-    expect(find.text('Xo\'sh, qanday to\'laymiz?'), findsOneWidget);
+    expect(find.text('Qanday usulda to\'lamoqchisiz?'), findsOneWidget);
     expect(find.text('Click'), findsOneWidget);
     expect(find.text('PayMe'), findsOneWidget);
-    expect(find.text('To\'lovni amalga oshirish'), findsOneWidget);
+    expect(find.text('To\'lovga o\'tish'), findsOneWidget);
   });
 }

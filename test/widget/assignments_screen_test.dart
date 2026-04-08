@@ -1,10 +1,11 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/models/assignment_model.dart';
 import 'package:parent_school_app/data/models/child_model.dart';
@@ -45,7 +46,7 @@ void main() {
 
     when(
       () => mockUserRepository.getProfile(),
-    ).thenAnswer((_) async => const Right(user));
+    ).thenAnswer((_) async => user);
   });
 
   Widget createWidgetUnderTest() {
@@ -62,7 +63,17 @@ void main() {
         academicRepositoryProvider.overrideWithValue(mockAcademicRepository),
         selectedChildProvider.overrideWithValue(child),
       ],
-      child: const MaterialApp(home: AssignmentsScreen()),
+      child: MaterialApp(
+        locale: const Locale('uz'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const AssignmentsScreen(),
+      ),
     );
   }
 
@@ -88,7 +99,7 @@ void main() {
         status: any(named: 'status'),
         page: any(named: 'page'),
       ),
-    ).thenAnswer((_) async => Right(assignments));
+    ).thenAnswer((_) async => assignments);
 
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
@@ -97,7 +108,7 @@ void main() {
     expect(find.text('Yangi vazifalar'), findsOneWidget);
     expect(find.text('Barchasi'), findsOneWidget);
     expect(find.text('Matematika vazifasi'), findsOneWidget);
-    expect(find.text('Jarayonda'), findsOneWidget);
+    expect(find.text('Kutilmoqda'), findsOneWidget);
     expect(find.text('Yuborish'), findsOneWidget);
   });
 }

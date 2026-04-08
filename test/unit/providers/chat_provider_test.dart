@@ -1,4 +1,3 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -21,9 +20,7 @@ void main() {
 
   ProviderContainer createContainer() {
     final container = ProviderContainer(
-      overrides: [
-        chatRepositoryProvider.overrideWithValue(mockRepository),
-      ],
+      overrides: [chatRepositoryProvider.overrideWithValue(mockRepository)],
     );
     addTearDown(container.dispose);
     return container;
@@ -37,7 +34,7 @@ void main() {
         lastMessage: 'Hello',
         unreadCount: 2,
         lastMessageAt: '2025-01-01',
-      )
+      ),
     ];
 
     test('initial state is correct', () {
@@ -50,10 +47,13 @@ void main() {
 
     test('loadConversations updates state on success', () async {
       final container = createContainer();
-      when(() => mockRepository.getConversations())
-          .thenAnswer((_) async => Right(tConversations));
+      when(
+        () => mockRepository.getConversations(),
+      ).thenAnswer((_) async => tConversations);
 
-      final future = container.read(conversationsProvider.notifier).loadConversations();
+      final future = container
+          .read(conversationsProvider.notifier)
+          .loadConversations();
       expect(container.read(conversationsProvider).isLoading, true);
 
       await future;
@@ -77,7 +77,7 @@ void main() {
         isMine: false,
         isRead: true,
         type: MessageType.text,
-      )
+      ),
     ];
     final tMessagesPage2 = <MessageModel>[
       const MessageModel(
@@ -89,15 +89,18 @@ void main() {
         isMine: false,
         isRead: true,
         type: MessageType.text,
-      )
+      ),
     ];
 
     test('openConversation updates state correctly', () async {
       final container = createContainer();
-      when(() => mockRepository.getMessages(tConversationId))
-          .thenAnswer((_) async => Right(tMessagesPage1));
+      when(
+        () => mockRepository.getMessages(tConversationId),
+      ).thenAnswer((_) async => tMessagesPage1);
 
-      await container.read(chatRoomProvider.notifier).openConversation(tConversationId);
+      await container
+          .read(chatRoomProvider.notifier)
+          .openConversation(tConversationId);
 
       final state = container.read(chatRoomProvider);
       expect(state.isLoading, false);
@@ -108,32 +111,42 @@ void main() {
 
     test('loadMore fetches next page and appends messages', () async {
       final container = createContainer();
-      when(() => mockRepository.getMessages(tConversationId))
-          .thenAnswer((_) async => Right(tMessagesPage1));
-      when(() => mockRepository.getMessages(tConversationId, page: 2))
-          .thenAnswer((_) async => Right(tMessagesPage2));
+      when(
+        () => mockRepository.getMessages(tConversationId),
+      ).thenAnswer((_) async => tMessagesPage1);
+      when(
+        () => mockRepository.getMessages(tConversationId, page: 2),
+      ).thenAnswer((_) async => tMessagesPage2);
 
-      await container.read(chatRoomProvider.notifier).openConversation(tConversationId);
-      
-      // Assume getting 1 item implies hasMore is true initially for the sake of the test, wait, 
+      await container
+          .read(chatRoomProvider.notifier)
+          .openConversation(tConversationId);
+
+      // Assume getting 1 item implies hasMore is true initially for the sake of the test, wait,
       // the real code checks `messages.length >= 30` to set `hasMore`. Let's mock 30 messages for page 1.
-      final t30Messages = List<MessageModel>.generate(30, (i) => MessageModel(
-        id: i,
-        senderId: 10,
-        senderName: 'Teacher A',
-        content: 'M$i',
-        createdAt: '2025-01-01',
-        isMine: false,
-        isRead: true,
-        type: MessageType.text,
-      ));
+      final t30Messages = List<MessageModel>.generate(
+        30,
+        (i) => MessageModel(
+          id: i,
+          senderId: 10,
+          senderName: 'Teacher A',
+          content: 'M$i',
+          createdAt: '2025-01-01',
+          isMine: false,
+          isRead: true,
+          type: MessageType.text,
+        ),
+      );
 
-      when(() => mockRepository.getMessages(tConversationId))
-          .thenAnswer((_) async => Right(t30Messages));
-          
-      await container.read(chatRoomProvider.notifier).openConversation(tConversationId);
+      when(
+        () => mockRepository.getMessages(tConversationId),
+      ).thenAnswer((_) async => t30Messages);
+
+      await container
+          .read(chatRoomProvider.notifier)
+          .openConversation(tConversationId);
       expect(container.read(chatRoomProvider).hasMore, true);
-      
+
       await container.read(chatRoomProvider.notifier).loadMore();
 
       final state = container.read(chatRoomProvider);
@@ -155,19 +168,26 @@ void main() {
         type: MessageType.text,
       );
 
-      when(() => mockRepository.getMessages(tConversationId))
-          .thenAnswer((_) async => Right(tMessagesPage1));
-      when(() => mockRepository.sendMessage(tConversationId, content: 'New message'))
-          .thenAnswer((_) async => const Right(tNewMessage));
+      when(
+        () => mockRepository.getMessages(tConversationId),
+      ).thenAnswer((_) async => tMessagesPage1);
+      when(
+        () =>
+            mockRepository.sendMessage(tConversationId, content: 'New message'),
+      ).thenAnswer((_) async => tNewMessage);
 
-      await container.read(chatRoomProvider.notifier).openConversation(tConversationId);
-      final result = await container.read(chatRoomProvider.notifier).sendMessage('New message');
+      await container
+          .read(chatRoomProvider.notifier)
+          .openConversation(tConversationId);
+      final result = await container
+          .read(chatRoomProvider.notifier)
+          .sendMessage('New message');
 
       expect(result, true);
       final state = container.read(chatRoomProvider);
       expect(state.isSending, false);
       expect(state.messages.length, 2);
-      expect(state.messages.first, tNewMessage); 
+      expect(state.messages.first, tNewMessage);
     });
   });
 }

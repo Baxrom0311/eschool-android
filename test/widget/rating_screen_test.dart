@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/data/models/rating_model.dart';
 import 'package:parent_school_app/data/models/child_model.dart';
 import 'package:parent_school_app/presentation/providers/rating_provider.dart';
@@ -62,7 +64,17 @@ void main() {
         ratingProvider.overrideWith((ref) => mockRatingNotifier),
         selectedChildProvider.overrideWithValue(testChild),
       ],
-      child: const MaterialApp(home: RatingScreen()),
+      child: MaterialApp(
+        locale: const Locale('uz'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const RatingScreen(),
+      ),
     );
   }
 
@@ -97,7 +109,7 @@ void main() {
       // Check remaining list elements
       expect(find.text('Sami'), findsOneWidget);
       expect(find.text('Kari'), findsOneWidget);
-      expect(find.text('70 ball'), findsOneWidget);
+      expect(find.text('70.0 ball'), findsOneWidget);
 
       verify(() => mockRatingNotifier.loadClassRating(10)).called(1);
     });

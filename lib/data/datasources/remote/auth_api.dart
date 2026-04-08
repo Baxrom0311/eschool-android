@@ -2,8 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/error/exceptions.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/auth_response.dart';
 import 'api_helpers.dart';
@@ -18,7 +17,7 @@ class AuthApi with ApiHelpers {
 
   AuthApi(this._client);
 
-  AppLocalizations get _l10n => AppLocalizations.current;
+  dynamic get _l10n => AppLocalizations.current;
 
   /// Login — foydalanuvchi nomi va parol bilan kirish
   ///

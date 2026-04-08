@@ -16,6 +16,7 @@ import 'package:parent_school_app/presentation/providers/auth_provider.dart';
 import 'package:parent_school_app/presentation/providers/user_provider.dart';
 
 class MockAuthApi extends Mock implements AuthApi {}
+
 class MockUserApi extends Mock implements UserApi {}
 
 class FakeSecureStorage extends Fake implements SecureStorageService {
@@ -49,7 +50,7 @@ class FakeSecureStorage extends Fake implements SecureStorageService {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  
+
   late MockAuthApi mockAuthApi;
   late MockUserApi mockUserApi;
   late FakeSecureStorage fakeSecureStorage;
@@ -79,12 +80,20 @@ void main() {
   }
 
   group('Full Authentication E2E Flow test', () {
-    testWidgets('Invalid Login displays error and valid Login routes to Home', (tester) async {
+    testWidgets('Invalid Login displays error and valid Login routes to Home', (
+      tester,
+    ) async {
       // Stub the API responses
-      
+
       // 1st attempt: Invalid credentials
-      when(() => mockAuthApi.login(username: 'wrong', password: 'password'))
-          .thenThrow(const ServerException(message: 'Login yoki parol xato', statusCode: 401));
+      when(
+        () => mockAuthApi.login(username: 'wrong', password: 'password'),
+      ).thenThrow(
+        const ServerException(
+          message: 'Login yoki parol xato',
+          statusCode: 401,
+        ),
+      );
 
       // 2nd attempt: Valid credentials
       const testUser = UserModel(
@@ -93,11 +102,12 @@ void main() {
         phone: '+998901234567',
         role: 'parent',
       );
-      when(() => mockAuthApi.login(username: 'correct', password: 'password'))
-          .thenAnswer((_) async => const AuthResponse(
-                accessToken: 'valid_token_123',
-                user: testUser,
-              ));
+      when(
+        () => mockAuthApi.login(username: 'correct', password: 'password'),
+      ).thenAnswer(
+        (_) async =>
+            const AuthResponse(accessToken: 'valid_token_123', user: testUser),
+      );
 
       // Mock updateFcmToken which is typically called after successful login
       when(() => mockAuthApi.updateFcmToken(any())).thenAnswer((_) async {});
@@ -122,18 +132,23 @@ void main() {
 
       // Enter phone number / username
       await tester.enterText(emailField, 'wrong');
-      
+
       // Enter password
       await tester.enterText(passwordField, 'password');
 
       // Press Login Button
       await tester.tap(loginButton);
       await tester.pump(); // Start request
-      await tester.pump(const Duration(milliseconds: 50)); // Allow failure to propagate
+      await tester.pump(
+        const Duration(milliseconds: 50),
+      ); // Allow failure to propagate
 
       // Wait for snackbar to appear
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.textContaining('Kirish'), findsWidgets); // Depends on how ui displays error
+      expect(
+        find.textContaining('Kirish'),
+        findsWidgets,
+      ); // Depends on how ui displays error
 
       // Wait for snackbar to clear
       await tester.pumpAndSettle(const Duration(seconds: 4));
@@ -145,8 +160,10 @@ void main() {
       // Press Login Button
       await tester.tap(loginButton);
       await tester.pump(); // Request
-      await tester.pumpAndSettle(const Duration(seconds: 1)); // allow navigation
-      
+      await tester.pumpAndSettle(
+        const Duration(seconds: 1),
+      ); // allow navigation
+
       // App should route to home screen (which renders Home/Dashboard)
       // Wait until we see bottom nav bar
       expect(find.byType(Scaffold), findsWidgets);

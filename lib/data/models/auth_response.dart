@@ -50,6 +50,5 @@ class AuthResponse {
   Map<String, dynamic> toJson() => _$AuthResponseToJson(this);
 
   @override
-  String toString() =>
-      'AuthResponse(userId: ${user.id})';
+  String toString() => 'AuthResponse(userId: ${user.id})';
 }

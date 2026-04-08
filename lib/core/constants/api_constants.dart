@@ -72,10 +72,12 @@ class ApiConstants {
   static const String parentGradesQuarter = '/api/parent/grades';
   static const String parentGradesYear = '/api/parent/grades/year';
   static const String parentAttendanceEndpoint = '/api/parent/attendance';
-  
+
   static String grades(int childId) => parentGradesQuarter;
-  static String schedule(int childId) => parentTimetable; // childId queryda ketadi
-  static String assignments(int childId) => parentHomeworks; // childId queryda ketadi
+  static String schedule(int childId) =>
+      parentTimetable; // childId queryda ketadi
+  static String assignments(int childId) =>
+      parentHomeworks; // childId queryda ketadi
   static String attendance(int childId) => parentAttendanceEndpoint;
   static String childRating(int childId) => parentChildProfile(childId);
 
@@ -91,7 +93,8 @@ class ApiConstants {
   static const String submitAbsenceExcuse = '/api/parent/excuses';
   static const String conferenceAvailable = '/api/parent/conferences/available';
   static const String conferenceBook = '/api/parent/conferences/book';
-  static const String conferenceMyBookings = '/api/parent/conferences/my-bookings';
+  static const String conferenceMyBookings =
+      '/api/parent/conferences/my-bookings';
 
   // ─── Library ───
   static const String libraryBooks = '/api/library/books';
@@ -136,17 +139,17 @@ class ApiConstants {
     'REVERB_APP_KEY',
     defaultValue: 'local', // O'zgartirish kerak
   );
-  
+
   static const String reverbHost = String.fromEnvironment(
     'REVERB_HOST',
     defaultValue: 'ranchschool.izlash.uz',
   );
-  
+
   static const int reverbPort = int.fromEnvironment(
     'REVERB_PORT',
     defaultValue: 443,
   );
-  
+
   static const String reverbScheme = String.fromEnvironment(
     'REVERB_SCHEME',
     defaultValue: 'https',

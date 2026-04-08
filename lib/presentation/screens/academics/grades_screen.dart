@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../data/models/grade_model.dart';
 import '../../providers/academic_provider.dart';

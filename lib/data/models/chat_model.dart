@@ -59,7 +59,8 @@ class ConversationModel extends Equatable {
 
   /// UI Helpers
   // bool get isOnline => false; // Removed hardcoded getter
-  DateTime? get lastMessageTime => lastMessageAt != null ? DateTime.tryParse(lastMessageAt!) : null;
+  DateTime? get lastMessageTime =>
+      lastMessageAt != null ? DateTime.tryParse(lastMessageAt!) : null;
 }
 
 /// Xabar turi
@@ -132,7 +133,7 @@ class MessageModel extends Equatable {
   bool get isText => type == MessageType.text;
   bool get isImage => type == MessageType.image;
   bool get isFile => type == MessageType.file;
-  
+
   // UI Helpers
   bool get isMe => isMine;
   DateTime get timestamp => DateTime.tryParse(createdAt) ?? DateTime.now();

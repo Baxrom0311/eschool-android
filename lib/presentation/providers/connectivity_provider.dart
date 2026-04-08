@@ -29,7 +29,7 @@ class ConnectivityNotifier extends StateNotifier<NetworkStatus> {
     } else {
       final wasOffline = state == NetworkStatus.offline;
       state = NetworkStatus.online;
-      
+
       if (wasOffline) {
         _flushOutbox();
       }
@@ -48,5 +48,5 @@ class ConnectivityNotifier extends StateNotifier<NetworkStatus> {
 
 final connectivityProvider =
     StateNotifierProvider<ConnectivityNotifier, NetworkStatus>((ref) {
-  return ConnectivityNotifier(ref);
-});
+      return ConnectivityNotifier(ref);
+    });

@@ -109,12 +109,10 @@ class UserModel extends Equatable {
 
   /// Balansni formatlangan ko'rinishda qaytarish (1,500,000 so'm)
   String get formattedBalance {
-    final formatted = balance
-        .toString()
-        .replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]} ',
-        );
+    final formatted = balance.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]} ',
+    );
     return '$formatted so\'m';
   }
 
@@ -126,19 +124,19 @@ class UserModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        fullName,
-        phone,
-        email,
-        avatarUrl,
-        role,
-        balance,
-        contractNumber,
-        monthlyFee,
-        children,
-        createdAt,
-        notificationsEnabled,
-      ];
+    id,
+    fullName,
+    phone,
+    email,
+    avatarUrl,
+    role,
+    balance,
+    contractNumber,
+    monthlyFee,
+    children,
+    createdAt,
+    notificationsEnabled,
+  ];
 
   @override
   String toString() =>

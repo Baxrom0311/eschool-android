@@ -6,7 +6,9 @@ class ServerException implements Exception {
   const ServerException({this.message = 'Server xatoligi', this.statusCode});
 
   @override
-  String toString() => 'ServerException: $message (code: $statusCode)';
+  String toString() => statusCode == null
+      ? 'ServerException: $message'
+      : 'ServerException: $message (code: $statusCode)';
 }
 
 class NetworkException implements Exception {

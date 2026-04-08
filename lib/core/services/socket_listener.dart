@@ -62,9 +62,11 @@ class SocketListener {
     // 3. To'lovlar (Payments)
     socket.listenPrivate(channelName, 'PaymentReceived', (data) {
       log('WebSocket: Payment event received');
-      _ref.read(paymentProvider.notifier).loadInitialData(
-        studentId: _ref.read(userProvider).selectedChild?.id,
-      );
+      _ref
+          .read(paymentProvider.notifier)
+          .loadInitialData(
+            studentId: _ref.read(userProvider).selectedChild?.id,
+          );
     });
 
     // 4. Uy vazifalari (Homework)
@@ -72,7 +74,9 @@ class SocketListener {
       log('WebSocket: Homework event received');
       final selectedChildId = _ref.read(userProvider).selectedChild?.id;
       if (selectedChildId != null) {
-        _ref.read(assignmentsProvider.notifier).loadAssignments(selectedChildId);
+        _ref
+            .read(assignmentsProvider.notifier)
+            .loadAssignments(selectedChildId);
       }
     });
   }

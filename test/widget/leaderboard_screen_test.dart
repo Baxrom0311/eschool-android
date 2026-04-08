@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/data/models/badge_model.dart';
 import 'package:parent_school_app/data/models/child_model.dart';
 import 'package:parent_school_app/presentation/providers/leaderboard_provider.dart';
@@ -70,7 +72,17 @@ void main() {
         leaderboardProvider.overrideWith((ref) => mockLeaderboardNotifier),
         selectedChildProvider.overrideWithValue(testChild),
       ],
-      child: const MaterialApp(home: LeaderboardScreen()),
+      child: MaterialApp(
+        locale: const Locale('uz'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const LeaderboardScreen(),
+      ),
     );
   }
 
@@ -84,7 +96,7 @@ void main() {
     await tester.tap(find.text('Nishonlar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('120 Tangalar'), findsOneWidget);
+    expect(find.text('120 tanga'), findsOneWidget);
     expect(find.text('Faol o\'quvchi'), findsOneWidget);
     verify(() => mockLeaderboardNotifier.loadData(1)).called(1);
   });

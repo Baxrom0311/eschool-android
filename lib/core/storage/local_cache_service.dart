@@ -60,7 +60,9 @@ class LocalCacheService {
     if (scope == null) {
       await _box!.clear();
     } else {
-      final keysToDelete = _box!.keys.where((k) => k.toString().startsWith(scope)).toList();
+      final keysToDelete = _box!.keys
+          .where((k) => k.toString().startsWith(scope))
+          .toList();
       await _box!.deleteAll(keysToDelete);
     }
   }

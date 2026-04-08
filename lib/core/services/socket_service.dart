@@ -5,16 +5,14 @@ import 'package:laravel_echo/laravel_echo.dart';
 import 'package:pusher_client/pusher_client.dart';
 
 import '../constants/api_constants.dart';
-import '../storage/secure_storage.dart';
 import '../../presentation/providers/auth_provider.dart';
 
 /// Laravel Reverb (WebSocket) bilan ishlash uchun servis
 class SocketService {
   Echo? _echo;
-  final SecureStorageService _storage;
   final String? _token;
 
-  SocketService(this._storage, this._token) {
+  SocketService(this._token) {
     if (_token != null) {
       _initEcho();
     }
@@ -22,10 +20,11 @@ class SocketService {
 
   void _initEcho() {
     try {
-      PusherOptions options = PusherOptions(
+      final options = PusherOptions(
         host: ApiConstants.reverbHost,
-        port: ApiConstants.reverbPort,
-        cluster: 'mt1',
+        wsPort: ApiConstants.reverbPort,
+        wssPort: ApiConstants.reverbPort,
+        encrypted: false,
         auth: PusherAuth(
           '${ApiConstants.baseUrl}/broadcasting/auth',
           headers: {
@@ -36,7 +35,7 @@ class SocketService {
       );
 
       // Reverb uchun PusherClient ishlatiladi
-      PusherClient pusherClient = PusherClient(
+      final pusherClient = PusherClient(
         ApiConstants.reverbKey,
         options,
         autoConnect: true,
@@ -54,7 +53,11 @@ class SocketService {
   }
 
   /// Hususiy kanalga ulanish va eventni tinglash
-  void listenPrivate(String channelName, String eventName, Function(Map<String, dynamic>) onEvent) {
+  void listenPrivate(
+    String channelName,
+    String eventName,
+    Function(Map<String, dynamic>) onEvent,
+  ) {
     if (_echo == null) return;
 
     _echo!.private(channelName).listen(eventName, (data) {
@@ -78,11 +81,12 @@ class SocketService {
 /// SocketService Provider
 final socketServiceProvider = Provider<SocketService?>((ref) {
   final authState = ref.watch(authProvider);
-  final storage = ref.watch(secureStorageProvider);
 
-  if (!authState.isAuthenticated || authState.user == null || authState.token == null) {
+  if (!authState.isAuthenticated ||
+      authState.user == null ||
+      authState.token == null) {
     return null;
   }
 
-  return SocketService(storage, authState.token);
+  return SocketService(authState.token);
 });

@@ -112,11 +112,7 @@ void main() {
       verify(
         () => mockDioClient.post(
           ApiConstants.saveFcmToken,
-          data: {
-            'token': tToken,
-            'fcm_token': tToken,
-            'device_type': 'android',
-          },
+          data: {'token': tToken},
         ),
       ).called(1);
     });

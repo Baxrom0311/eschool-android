@@ -1,12 +1,12 @@
 import 'dart:async';
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:parent_school_app/core/error/failures.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/models/chat_model.dart';
 import 'package:parent_school_app/data/repositories/chat_repository.dart';
@@ -27,9 +27,21 @@ void main() {
   Widget createWidgetUnderTest() {
     return ProviderScope(
       overrides: [chatRepositoryProvider.overrideWithValue(mockChatRepository)],
-      child: const MaterialApp(
-        home: ChatRoomScreen(
-          chatData: {'id': 1, 'name': 'Ali Valiyev', 'isOnline': true},
+      child: MaterialApp(
+        locale: const Locale('uz'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const ChatRoomScreen(
+          chatData: <String, dynamic>{
+            'id': 1,
+            'name': 'Ali Valiyev',
+            'isOnline': true,
+          },
         ),
       ),
     );
@@ -37,10 +49,10 @@ void main() {
 
   group('ChatRoomScreen Widget Tests', () {
     testWidgets('shows loading state initially', (WidgetTester tester) async {
-      final completer = Completer<Either<Failure, List<MessageModel>>>();
-      when(
-        () => mockChatRepository.getMessages(1, page: any(named: 'page')),
-      ).thenAnswer((_) => completer.future);
+      final completer = Completer<List<MessageModel>>();
+      when(() => mockChatRepository.getMessages(1)).thenAnswer(
+        (_) => completer.future,
+      );
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
@@ -60,9 +72,9 @@ void main() {
           createdAt: '2023-11-20T10:00:00.000000Z',
         ),
       ];
-      when(
-        () => mockChatRepository.getMessages(1, page: any(named: 'page')),
-      ).thenAnswer((_) async => Right(tMessages));
+      when(() => mockChatRepository.getMessages(1)).thenAnswer(
+        (_) async => tMessages,
+      );
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -76,9 +88,9 @@ void main() {
     testWidgets('sends a message and clears textfield', (
       WidgetTester tester,
     ) async {
-      when(
-        () => mockChatRepository.getMessages(1, page: any(named: 'page')),
-      ).thenAnswer((_) async => const Right([]));
+      when(() => mockChatRepository.getMessages(1)).thenAnswer(
+        (_) async => const [],
+      );
 
       const tMessage = MessageModel(
         id: 2,
@@ -92,7 +104,7 @@ void main() {
 
       when(
         () => mockChatRepository.sendMessage(1, content: 'Yangi xabar'),
-      ).thenAnswer((_) async => const Right(tMessage));
+      ).thenAnswer((_) async => tMessage);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

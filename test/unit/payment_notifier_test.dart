@@ -72,9 +72,14 @@ class MockPaymentRepository implements PaymentRepository {
   }
 
   @override
-  Future<T> safeCall<T>(dynamic call, dynamic mapper) async => throw UnimplementedError();
+  Future<T> safeCall<T>(dynamic call, dynamic mapper) async =>
+      throw UnimplementedError();
   @override
-  Future<List<T>> safeCallList<T>(dynamic call, dynamic mapper, {String? listKey}) async => throw UnimplementedError();
+  Future<List<T>> safeCallList<T>(
+    dynamic call,
+    dynamic mapper, {
+    String? listKey,
+  }) async => throw UnimplementedError();
   @override
   Future<T> safeExecute<T>(dynamic call) async => throw UnimplementedError();
 }
@@ -136,7 +141,10 @@ void main() {
 
       expect(paymentNotifier.state.isLoading, false);
       expect(result, null);
-      expect(paymentNotifier.state.error, 'ServerException: Payment creation failed');
+      expect(
+        paymentNotifier.state.error,
+        'ServerException: Payment creation failed',
+      );
     });
   });
 }

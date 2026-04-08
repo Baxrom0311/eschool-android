@@ -57,7 +57,7 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
-    expect(find.text('E-Murojaat (Davomat)'), findsOneWidget);
+    expect(find.text('E-murojaat (davomat)'), findsOneWidget);
     expect(find.text('Kasal bo\'ldi'), findsOneWidget);
     expect(find.text('Murojaat qoldirish'), findsOneWidget);
     verify(() => mockAbsenceNotifier.loadExcuses(1)).called(1);

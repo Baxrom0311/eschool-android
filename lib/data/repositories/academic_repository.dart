@@ -28,27 +28,27 @@ class AcademicRepository extends BaseRepository {
     int childId, {
     String? status,
     int page = 1,
-  }) =>
-      _academicApi.getAssignments(childId, status: status, page: page);
+  }) => _academicApi.getAssignments(childId, status: status, page: page);
 
   Future<AssignmentModel> getAssignmentDetails(
     int assignmentId, {
     required int childId,
-  }) =>
-      _academicApi.getAssignmentDetails(assignmentId, childId);
+  }) => _academicApi.getAssignmentDetails(assignmentId, childId);
 
   Future<void> submitAssignment(
     int assignmentId, {
     String? text,
     String? filePath,
-  }) =>
-      _academicApi.submitAssignment(assignmentId, text: text, filePath: filePath);
+  }) => _academicApi.submitAssignment(
+    assignmentId,
+    text: text,
+    filePath: filePath,
+  );
 
   Future<AttachmentModel> uploadAssignmentFile(
     int assignmentId,
     String filePath,
-  ) =>
-      _academicApi.uploadAssignmentFile(assignmentId, filePath);
+  ) => _academicApi.uploadAssignmentFile(assignmentId, filePath);
 
   // ─── Davomat ───
   Future<List<AttendanceModel>> getAttendance(int childId, {String? month}) =>

@@ -53,9 +53,9 @@ void main() {
     await tester.pumpWidget(buildTestWidget(notifier));
     await tester.pumpAndSettle();
 
-    expect(find.text('Farzandlarim'), findsOneWidget);
+    expect(find.text('Mening farzandlarim'), findsOneWidget);
     expect(find.text('Ali Valiyev'), findsOneWidget);
-    expect(find.text('5-A - Sinf'), findsOneWidget);
+    expect(find.text('Sinf: 5-A'), findsOneWidget);
     expect(find.text('Vali Valiyev'), findsOneWidget);
     expect(find.byIcon(Icons.check_circle), findsOneWidget);
   });

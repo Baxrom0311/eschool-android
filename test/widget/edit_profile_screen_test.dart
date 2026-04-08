@@ -53,14 +53,14 @@ void main() {
 
     expect(find.text('Shaxsiy ma\'lumotlar'), findsOneWidget);
     expect(find.text('Saqlash'), findsNWidgets(2));
-    expect(find.text('Avatarni o\'zgartirish'), findsOneWidget);
+    expect(find.text('Rasmni o\'zgartirish'), findsOneWidget);
     expect(find.text('Asosiy ma\'lumotlar'), findsOneWidget);
-    expect(find.text('Ism Familiya'), findsOneWidget);
-    expect(find.text('Telefon raqam'), findsOneWidget);
+    expect(find.text('Ism va familiya'), findsOneWidget);
+    expect(find.text('Telefon raqami'), findsOneWidget);
     expect(find.text('Email'), findsOneWidget);
-    expect(find.text('Bildirishnomalar'), findsOneWidget);
+    expect(find.text('Xabarnomalar'), findsOneWidget);
     expect(
-      find.text('Push xabarnomalarni yoqish yoki o\'chirish'),
+      find.text('Push-xabarnomalarni yoqish yoki o\'chirish'),
       findsOneWidget,
     );
   });

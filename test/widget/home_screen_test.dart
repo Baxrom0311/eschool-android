@@ -1,11 +1,12 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/datasources/remote/rating_api.dart';
 import 'package:parent_school_app/data/datasources/remote/notification_api.dart';
@@ -73,7 +74,7 @@ void main() {
 
     when(
       () => mockUserRepository.getProfile(),
-    ).thenAnswer((_) async => const Right(tUser));
+    ).thenAnswer((_) async => tUser);
     const tRating = RatingModel(
       id: 1,
       studentName: 'Test',
@@ -88,42 +89,45 @@ void main() {
         any(),
         quarter: any(named: 'quarter'),
       ),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const []);
     when(
       () => mockAcademicRepository.getGrades(any()),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const []);
+    when(
+      () => mockAcademicRepository.getGradeSummary(any()),
+    ).thenAnswer((_) async => const []);
     when(
       () => mockAcademicRepository.getSchedule(any()),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const []);
     when(
       () => mockAcademicRepository.getAssignments(
         any(),
         status: any(named: 'status'),
         page: any(named: 'page'),
       ),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const []);
     when(
       () => mockAcademicRepository.getAssignments(any()),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const []);
     when(
       () => mockAcademicRepository.getAttendance(
         any(),
         month: any(named: 'month'),
       ),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const []);
     when(
       () => mockAcademicRepository.getAttendance(any()),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const []);
 
     when(
       () => mockMenuRepository.getDailyMenu(
         date: any(named: 'date'),
         studentId: any(named: 'studentId'),
       ),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const []);
     when(
       () => mockMenuRepository.getDailyMenu(),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const []);
 
     when(
       () => mockRatingApi.getChildRating(any()),
@@ -133,7 +137,7 @@ void main() {
     ).thenAnswer((_) async => []);
     when(
       () => mockChatRepository.getConversations(),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const []);
   });
 
   Widget createWidgetUnderTest() {
@@ -146,7 +150,17 @@ void main() {
         ratingApiProvider.overrideWithValue(mockRatingApi),
         notificationApiProvider.overrideWithValue(mockNotificationApi),
       ],
-      child: const MaterialApp(home: HomeScreen()),
+      child: MaterialApp(
+        locale: const Locale('uz'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const HomeScreen(),
+      ),
     );
   }
 
@@ -159,7 +173,7 @@ void main() {
 
         // Verify Bottom Navigation items
         expect(find.text('Asosiy'), findsOneWidget);
-        expect(find.text('Ta\'lim'), findsOneWidget);
+        expect(find.text('O\'qish'), findsOneWidget);
         expect(find.text('Ovqat'), findsOneWidget);
         expect(find.text('To\'lov'), findsOneWidget);
         expect(find.text('Profil'), findsOneWidget);

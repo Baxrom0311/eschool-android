@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 
 /// Overall Grade Card - Displays GPA and summary info

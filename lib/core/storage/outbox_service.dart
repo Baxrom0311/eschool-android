@@ -27,22 +27,22 @@ class OutboxMessage {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'conversationId': conversationId,
-        'content': content,
-        'type': type,
-        'filePath': filePath,
-        'queuedAt': queuedAt.toIso8601String(),
-      };
+    'id': id,
+    'conversationId': conversationId,
+    'content': content,
+    'type': type,
+    'filePath': filePath,
+    'queuedAt': queuedAt.toIso8601String(),
+  };
 
   factory OutboxMessage.fromJson(Map<String, dynamic> json) => OutboxMessage(
-        id: json['id'] as String,
-        conversationId: json['conversationId'] as int,
-        content: json['content'] as String,
-        type: json['type'] as String,
-        filePath: json['filePath'] as String?,
-        queuedAt: DateTime.parse(json['queuedAt'] as String),
-      );
+    id: json['id'] as String,
+    conversationId: json['conversationId'] as int,
+    content: json['content'] as String,
+    type: json['type'] as String,
+    filePath: json['filePath'] as String?,
+    queuedAt: DateTime.parse(json['queuedAt'] as String),
+  );
 }
 
 class OutboxService {
@@ -95,10 +95,7 @@ class OutboxService {
             content: message.content,
           );
         } else if (message.type == 'file' && message.filePath != null) {
-          await repository.sendFile(
-            message.conversationId,
-            message.filePath!,
-          );
+          await repository.sendFile(message.conversationId, message.filePath!);
         }
         success = true;
       } catch (_) {
@@ -111,9 +108,14 @@ class OutboxService {
     }
   }
 
-  MessageModel createDummyMessage(OutboxMessage outboxMessage, int senderId, String senderName) {
+  MessageModel createDummyMessage(
+    OutboxMessage outboxMessage,
+    int senderId,
+    String senderName,
+  ) {
     return MessageModel(
-      id: -DateTime.now().millisecondsSinceEpoch, // Negative ID implies local/offline
+      id: -DateTime.now()
+          .millisecondsSinceEpoch, // Negative ID implies local/offline
       content: outboxMessage.content,
       type: outboxMessage.type == 'text' ? MessageType.text : MessageType.file,
       senderId: senderId,

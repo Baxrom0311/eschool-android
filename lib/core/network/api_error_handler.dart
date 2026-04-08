@@ -129,13 +129,13 @@ class ApiErrorHandler {
 
     if (error is DioException) {
       final status = error.response?.statusCode;
-      if (status == 401) throw AuthException(message);
-      if (status == 403) throw AuthException(message); // Standardized 403 as auth related
-      if (status == 422) throw ValidationException(message);
-      throw ServerException(message);
+      if (status == 401) throw AuthException(message: message);
+      if (status == 403) throw AuthException(message: message);
+      if (status == 422) throw ValidationException(message: message);
+      throw ServerException(message: message);
     }
 
     if (error is Exception) throw error;
-    throw ServerException(message);
+    throw ServerException(message: message);
   }
 }

@@ -111,11 +111,11 @@ class AttendanceSummary extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalDays,
-        presentDays,
-        absentDays,
-        lateDays,
-        excusedDays,
-        attendancePercentage,
-      ];
+    totalDays,
+    presentDays,
+    absentDays,
+    lateDays,
+    excusedDays,
+    attendancePercentage,
+  ];
 }

@@ -23,7 +23,10 @@ class SharedPrefsService {
     if (userId == null) {
       _userScope = null;
     } else {
-      final tenantStr = ApiConstants.baseUrl.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+      final tenantStr = ApiConstants.baseUrl.replaceAll(
+        RegExp(r'[^a-zA-Z0-9]'),
+        '',
+      );
       _userScope = 't${tenantStr}_u${userId}_';
     }
   }

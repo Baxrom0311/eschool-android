@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/core/routing/route_names.dart';
 import 'package:parent_school_app/data/models/user_model.dart';
 import 'package:parent_school_app/data/models/payment_model.dart';
@@ -85,7 +87,17 @@ void main() {
       ],
       child: InheritedGoRouter(
         goRouter: mockGoRouter,
-        child: const MaterialApp(home: ProfileScreen()),
+        child: MaterialApp(
+          locale: const Locale('uz'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: const ProfileScreen(),
+        ),
       ),
     );
   }
@@ -98,11 +110,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Eshmatov Toshmat'), findsOneWidget);
-      expect(find.text('Tel: +998901234567'), findsOneWidget);
+      expect(find.text('Telefon: +998901234567'), findsOneWidget);
 
       // Formatting might vary based on the formatter, assuming 150 000 UZS
       expect(find.textContaining('UZS'), findsOneWidget);
-      expect(find.text('2 ta'), findsOneWidget); // 2 farzand
+      expect(find.text('2 ta farzand'), findsOneWidget);
       expect(find.text('Balans'), findsOneWidget);
       expect(find.text('Farzandlar'), findsOneWidget);
     });
@@ -133,14 +145,14 @@ void main() {
         verify(() => mockGoRouter.push(RouteNames.changePassword)).called(1);
 
         // Chat / Yordam
-        await tester.ensureVisible(find.text('Chat / Yordam'));
-        await tester.tap(find.text('Chat / Yordam'));
+        await tester.ensureVisible(find.text('Chat / Qo\'llab-quvvatlash'));
+        await tester.tap(find.text('Chat / Qo\'llab-quvvatlash'));
         await tester.pumpAndSettle();
         verify(() => mockGoRouter.push(RouteNames.chatList)).called(1);
 
-        // Bildirishnomalar
-        await tester.ensureVisible(find.text('Bildirishnomalar'));
-        await tester.tap(find.text('Bildirishnomalar'));
+        // Xabarnomalar
+        await tester.ensureVisible(find.text('Xabarnomalar'));
+        await tester.tap(find.text('Xabarnomalar'));
         await tester.pumpAndSettle();
         verify(() => mockGoRouter.push(RouteNames.notifications)).called(1);
       },
@@ -163,7 +175,7 @@ void main() {
       expect(find.byType(AboutDialog), findsOneWidget);
       expect(find.text('E-School'), findsOneWidget);
       // Close dialog
-      await tester.tap(find.text('Close'));
+      await tester.tap(find.byType(TextButton).last);
       await tester.pumpAndSettle();
     });
 
@@ -189,7 +201,7 @@ void main() {
       // Alert Dialog should be present
       expect(find.byType(AlertDialog), findsOneWidget);
       expect(
-        find.text('Rostdan ham tizimdan chiqmoqchimisiz?'),
+        find.text('Haqiqatan ham tizimdan chiqmoqchimisiz?'),
         findsOneWidget,
       );
 

@@ -18,8 +18,8 @@ void main() {
             'full_name': 'Test Child',
             'class_name': '10-A',
             'class_id': 5,
-          }
-        ]
+          },
+        ],
       };
 
       final model = UserModel.fromJson(json);
@@ -51,7 +51,10 @@ void main() {
       expect(model.fullName, 'Unknown Parent');
       expect(model.phone, '');
       expect(model.email, null);
-      expect(model.balance, 0); // Default value expected or null depending on model setup
+      expect(
+        model.balance,
+        0,
+      ); // Default value expected or null depending on model setup
       expect(model.children.length, 0);
     });
   });

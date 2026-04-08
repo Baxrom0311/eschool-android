@@ -6,7 +6,9 @@ abstract class BaseRepository {
   /// Safely executes an API call and handles mapping.
   /// Use this when the API returns a raw Dio [Response].
   Future<T> safeCall<T>(
-      Future<Response> Function() call, T Function(dynamic data) mapper) async {
+    Future<Response> Function() call,
+    T Function(dynamic data) mapper,
+  ) async {
     try {
       final response = await call();
       return mapper(response.data);
@@ -31,7 +33,12 @@ abstract class BaseRepository {
       } else if (data is List) {
         list = data;
       } else if (data is Map) {
-        list = (data['data'] ?? data['items'] ?? data['students'] ?? data['history']) as List?;
+        list =
+            (data['data'] ??
+                    data['items'] ??
+                    data['students'] ??
+                    data['history'])
+                as List?;
       }
 
       return (list ?? []).map((e) => mapper(e)).toList();

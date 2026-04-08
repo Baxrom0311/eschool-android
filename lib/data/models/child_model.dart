@@ -102,21 +102,22 @@ class ChildModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        fullName,
-        className,
-        classId,
-        avatarUrl,
-        averageGrade,
-        attendancePercentage,
-        birthDate,
-        xp,
-        coins,
-        level,
-      ];
+    id,
+    fullName,
+    className,
+    classId,
+    avatarUrl,
+    averageGrade,
+    attendancePercentage,
+    birthDate,
+    xp,
+    coins,
+    level,
+  ];
 
   @override
-  String toString() => 'ChildModel(id: $id, fullName: $fullName, class: $className)';
+  String toString() =>
+      'ChildModel(id: $id, fullName: $fullName, class: $className)';
 }
 
 // JSON Readers

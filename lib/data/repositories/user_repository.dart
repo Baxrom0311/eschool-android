@@ -26,13 +26,15 @@ class UserRepository extends BaseRepository {
   );
 
   /// Avatar yuklash
-  Future<String> uploadAvatar(String filePath) => _userApi.uploadAvatar(filePath);
+  Future<String> uploadAvatar(String filePath) =>
+      _userApi.uploadAvatar(filePath);
 
   /// Farzandlar ro'yxati
   Future<List<ChildModel>> getChildren() => _userApi.getChildren();
 
   /// Bitta farzand tafsilotlari
-  Future<ChildModel> getChildDetails(int childId) => _userApi.getChildDetails(childId);
+  Future<ChildModel> getChildDetails(int childId) =>
+      _userApi.getChildDetails(childId);
 
   /// Parol o'zgartirish
   Future<void> changePassword({

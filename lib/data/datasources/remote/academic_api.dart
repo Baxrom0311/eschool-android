@@ -2,8 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/error/exceptions.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/local_cache_service.dart';
 import '../../models/assignment_model.dart';
@@ -22,7 +21,7 @@ class AcademicApi with ApiHelpers {
 
   AcademicApi(this._client, this._cache);
 
-  AppLocalizations get _l10n => AppLocalizations.current;
+  dynamic get _l10n => AppLocalizations.current;
 
   ValidationException _assignmentFileRequiredException() {
     final message = _l10n.assignmentSelectFileFirst;

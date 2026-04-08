@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:parent_school_app/core/error/failures.dart';
+import 'package:parent_school_app/core/error/exceptions.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/models/attendance_model.dart';
 import 'package:parent_school_app/data/models/child_model.dart';
@@ -49,26 +50,24 @@ void main() {
 
     when(
       () => mockUserRepository.getProfile(),
-    ).thenAnswer((_) async => const Right(tUser));
+    ).thenAnswer((_) async => tUser);
 
     when(
       () => mockAcademicRepository.getAttendance(
         any(),
         month: any(named: 'month'),
       ),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const <AttendanceModel>[]);
     when(
       () => mockAcademicRepository.getAttendance(any()),
-    ).thenAnswer((_) async => const Right([]));
+    ).thenAnswer((_) async => const <AttendanceModel>[]);
 
     when(() => mockAcademicRepository.getAttendanceSummary(any())).thenAnswer(
-      (_) async => const Right(
-        AttendanceSummary(
-          totalDays: 10,
-          presentDays: 10,
-          absentDays: 0,
-          attendancePercentage: 100,
-        ),
+      (_) async => const AttendanceSummary(
+        totalDays: 10,
+        presentDays: 10,
+        absentDays: 0,
+        attendancePercentage: 100,
       ),
     );
   });
@@ -86,15 +85,24 @@ void main() {
         academicRepositoryProvider.overrideWithValue(mockAcademicRepository),
         selectedChildProvider.overrideWithValue(tChild),
       ],
-      child: const MaterialApp(home: GradesScreen()),
+      child: MaterialApp(
+        locale: const Locale('uz'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const GradesScreen(),
+      ),
     );
   }
 
   group('GradesScreen Widget Tests', () {
     testWidgets('shows loading state initially', (WidgetTester tester) async {
-      final gradeCompleter = Completer<Either<Failure, List<GradeModel>>>();
-      final summaryCompleter =
-          Completer<Either<Failure, List<SubjectGradeSummary>>>();
+      final gradeCompleter = Completer<List<GradeModel>>();
+      final summaryCompleter = Completer<List<SubjectGradeSummary>>();
 
       when(
         () => mockAcademicRepository.getGrades(
@@ -123,13 +131,13 @@ void main() {
           any(),
           quarter: any(named: 'quarter'),
         ),
-      ).thenAnswer((_) async => const Right([]));
+      ).thenAnswer((_) async => const <GradeModel>[]);
       when(
         () => mockAcademicRepository.getGrades(any()),
-      ).thenAnswer((_) async => const Right([]));
+      ).thenAnswer((_) async => const <GradeModel>[]);
       when(
         () => mockAcademicRepository.getGradeSummary(any()),
-      ).thenAnswer((_) async => const Right([]));
+      ).thenAnswer((_) async => const <SubjectGradeSummary>[]);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -162,13 +170,13 @@ void main() {
           any(),
           quarter: any(named: 'quarter'),
         ),
-      ).thenAnswer((_) async => Right(tGrades));
+      ).thenAnswer((_) async => tGrades);
       when(
         () => mockAcademicRepository.getGrades(any()),
-      ).thenAnswer((_) async => Right(tGrades));
+      ).thenAnswer((_) async => tGrades);
       when(
         () => mockAcademicRepository.getGradeSummary(any()),
-      ).thenAnswer((_) async => Right(tSummary));
+      ).thenAnswer((_) async => tSummary);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -188,10 +196,10 @@ void main() {
           any(),
           quarter: any(named: 'quarter'),
         ),
-      ).thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
+      ).thenThrow(const ServerException(message: 'Tarmoq xatosi'));
       when(
         () => mockAcademicRepository.getGrades(any()),
-      ).thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
+      ).thenThrow(const ServerException(message: 'Tarmoq xatosi'));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

@@ -63,7 +63,7 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
       final coins = await _api.getCoins(childId);
       final myBadges = await _api.getMyBadges(childId);
       final availableBadges = await _api.getBadges(childId: childId);
-      
+
       final globalResp = await _api.getGlobalLeaderboard();
       final classResp = await _api.getClassLeaderboard();
 
@@ -71,8 +71,12 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
         coins: coins,
         myBadges: myBadges,
         availableBadges: availableBadges,
-        globalRanking: List<Map<String, dynamic>>.from(globalResp['leaderboard'] ?? []),
-        classRanking: List<Map<String, dynamic>>.from(classResp['leaderboard'] ?? []),
+        globalRanking: List<Map<String, dynamic>>.from(
+          globalResp['leaderboard'] ?? [],
+        ),
+        classRanking: List<Map<String, dynamic>>.from(
+          classResp['leaderboard'] ?? [],
+        ),
         globalRank: globalResp['my_rank'],
         classRank: classResp['my_rank'],
         isLoading: false,
@@ -83,6 +87,7 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   }
 }
 
-final leaderboardProvider = StateNotifierProvider<LeaderboardNotifier, LeaderboardState>((ref) {
-  return LeaderboardNotifier(ref.watch(leaderboardApiProvider));
-});
+final leaderboardProvider =
+    StateNotifierProvider<LeaderboardNotifier, LeaderboardState>((ref) {
+      return LeaderboardNotifier(ref.watch(leaderboardApiProvider));
+    });

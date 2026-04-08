@@ -24,7 +24,7 @@ void main() {
         participantName: 'Teacher',
         unreadCount: 0,
         isOnline: true,
-      )
+      ),
     ];
     final tMessageList = [
       const MessageModel(
@@ -36,13 +36,14 @@ void main() {
         isMine: true,
         createdAt: '2025-01-01',
         isRead: true,
-      )
+      ),
     ];
 
     test('getConversations returns data on success', () async {
       // Arrange
-      when(() => mockChatApi.getConversations())
-          .thenAnswer((_) async => tConversationList);
+      when(
+        () => mockChatApi.getConversations(),
+      ).thenAnswer((_) async => tConversationList);
 
       // Act
       final result = await repository.getConversations();
@@ -54,8 +55,9 @@ void main() {
 
     test('getConversations throws ServerException on failure', () async {
       // Arrange
-      when(() => mockChatApi.getConversations())
-          .thenThrow(const ServerException(message: 'Server Error'));
+      when(
+        () => mockChatApi.getConversations(),
+      ).thenThrow(const ServerException(message: 'Server Error'));
 
       // Act & Assert
       expect(
@@ -66,8 +68,9 @@ void main() {
 
     test('getMessages returns data on success', () async {
       // Arrange
-      when(() => mockChatApi.getMessages(tConversationId, page: 1))
-          .thenAnswer((_) async => tMessageList);
+      when(
+        () => mockChatApi.getMessages(tConversationId, page: 1),
+      ).thenAnswer((_) async => tMessageList);
 
       // Act
       final result = await repository.getMessages(tConversationId, page: 1);
@@ -79,10 +82,12 @@ void main() {
 
     test('sendMessage returns data on success', () async {
       // Arrange
-      when(() => mockChatApi.sendMessage(
-            tConversationId,
-            content: any(named: 'content'),
-          )).thenAnswer((_) async => tMessageList.first);
+      when(
+        () => mockChatApi.sendMessage(
+          tConversationId,
+          content: any(named: 'content'),
+        ),
+      ).thenAnswer((_) async => tMessageList.first);
 
       // Act
       final result = await repository.sendMessage(
@@ -92,10 +97,9 @@ void main() {
 
       // Assert
       expect(result, tMessageList.first);
-      verify(() => mockChatApi.sendMessage(
-            tConversationId,
-            content: 'Hello',
-          )).called(1);
+      verify(
+        () => mockChatApi.sendMessage(tConversationId, content: 'Hello'),
+      ).called(1);
     });
   });
 }

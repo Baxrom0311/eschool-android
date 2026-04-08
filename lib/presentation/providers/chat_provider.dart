@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/storage_keys.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../core/storage/shared_prefs_service.dart';
 import '../../data/datasources/remote/chat_api.dart';
@@ -303,7 +302,10 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
     state = state.copyWith(isSending: true, error: null);
 
     try {
-      final message = await _repository.sendFile(state.conversationId!, filePath);
+      final message = await _repository.sendFile(
+        state.conversationId!,
+        filePath,
+      );
       state = state.copyWith(
         messages: [message, ...state.messages],
         isSending: false,
@@ -315,7 +317,7 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
       final message = e.toString();
       if (_isNetworkError(message)) {
         _queueOfflineMessage(
-        AppLocalizationsRegistry.instance.fileAttached,
+          AppLocalizationsRegistry.instance.fileAttached,
           'file',
           filePath,
         );

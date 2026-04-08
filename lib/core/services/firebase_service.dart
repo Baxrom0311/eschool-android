@@ -31,7 +31,8 @@ class FirebaseService {
       StreamController<RemoteMessage>.broadcast();
 
   static Stream<RemoteMessage> get onMessage => _messageStreamController.stream;
-  static Stream<String> get onTokenRefresh => FirebaseMessaging.instance.onTokenRefresh;
+  static Stream<String> get onTokenRefresh =>
+      FirebaseMessaging.instance.onTokenRefresh;
 
   static Future<void> init() async {
     if (_initialized) return;
@@ -113,4 +114,3 @@ class FirebaseService {
     }
   }
 }
-

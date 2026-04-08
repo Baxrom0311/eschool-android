@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:parent_school_app/core/error/failures.dart';
+import 'package:parent_school_app/core/error/exceptions.dart';
 import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/models/attendance_model.dart';
@@ -56,7 +55,7 @@ void main() {
 
     when(
       () => mockUserRepository.getProfile(),
-    ).thenAnswer((_) async => const Right(tUser));
+    ).thenAnswer((_) async => tUser);
   });
 
   Widget createWidgetUnderTest() {
@@ -88,7 +87,7 @@ void main() {
 
   group('AttendanceScreen Widget Tests', () {
     testWidgets('shows loading state initially', (WidgetTester tester) async {
-      final completer = Completer<Either<Failure, List<AttendanceModel>>>();
+      final completer = Completer<List<AttendanceModel>>();
       when(
         () => mockAcademicRepository.getAttendance(
           any(),
@@ -111,7 +110,7 @@ void main() {
           any(),
           month: any(named: 'month'),
         ),
-      ).thenAnswer((_) async => const Right([]));
+      ).thenAnswer((_) async => const []);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -146,7 +145,7 @@ void main() {
           any(),
           month: any(named: 'month'),
         ),
-      ).thenAnswer((_) async => Right(tRecords));
+      ).thenAnswer((_) async => tRecords);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -168,7 +167,7 @@ void main() {
           any(),
           month: any(named: 'month'),
         ),
-      ).thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
+      ).thenThrow(const ServerException(message: 'Tarmoq xatosi'));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

@@ -7,7 +7,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:parent_school_app/presentation/providers/user_provider.dart';
 import 'package:parent_school_app/presentation/screens/profile/change_password_screen.dart';
 
-class MockUserNotifier extends StateNotifier<UserState> with Mock implements UserNotifier {
+class MockUserNotifier extends StateNotifier<UserState>
+    with Mock
+    implements UserNotifier {
   MockUserNotifier() : super(const UserState());
 }
 
@@ -20,12 +22,8 @@ void main() {
 
   Widget createWidgetUnderTest() {
     return ProviderScope(
-      overrides: [
-        userProvider.overrideWith((ref) => mockNotifier),
-      ],
-      child: const MaterialApp(
-        home: ChangePasswordScreen(),
-      ),
+      overrides: [userProvider.overrideWith((ref) => mockNotifier)],
+      child: const MaterialApp(home: ChangePasswordScreen()),
     );
   }
 
@@ -42,7 +40,9 @@ void main() {
       expect(find.text('Saqlash'), findsOneWidget);
     });
 
-    testWidgets('shows validation errors when fields are empty', (tester) async {
+    testWidgets('shows validation errors when fields are empty', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -50,16 +50,20 @@ void main() {
       await tester.tap(submitBtn);
       await tester.pumpAndSettle();
 
-      expect(find.text('Bu maydon to\'ldirilishi shart'), findsOneWidget);
-      expect(find.text('Kamida 8 ta belgi kiritilishi kerak'), findsOneWidget);
-      verifyNever(() => mockNotifier.changePassword(
-            currentPassword: any(named: 'currentPassword'),
-            newPassword: any(named: 'newPassword'),
-            confirmPassword: any(named: 'confirmPassword'),
-          ));
+      expect(find.text('Ushbu maydon majburiy'), findsOneWidget);
+      expect(find.text('Kamida 8 ta belgi kiriting'), findsOneWidget);
+      verifyNever(
+        () => mockNotifier.changePassword(
+          currentPassword: any(named: 'currentPassword'),
+          newPassword: any(named: 'newPassword'),
+          confirmPassword: any(named: 'confirmPassword'),
+        ),
+      );
     });
 
-    testWidgets('shows validation error when passwords do not match', (tester) async {
+    testWidgets('shows validation error when passwords do not match', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -72,21 +76,25 @@ void main() {
       await tester.tap(submitBtn);
       await tester.pumpAndSettle();
 
-      expect(find.text('Parollar mos kelmayapti'), findsOneWidget);
-      verifyNever(() => mockNotifier.changePassword(
-            currentPassword: any(named: 'currentPassword'),
-            newPassword: any(named: 'newPassword'),
-            confirmPassword: any(named: 'confirmPassword'),
-          ));
+      expect(find.text('Parollar mos kelmadi'), findsOneWidget);
+      verifyNever(
+        () => mockNotifier.changePassword(
+          currentPassword: any(named: 'currentPassword'),
+          newPassword: any(named: 'newPassword'),
+          confirmPassword: any(named: 'confirmPassword'),
+        ),
+      );
     });
 
     testWidgets('submits data and shows success snackbar', (tester) async {
       final completer = Completer<String?>();
-      when(() => mockNotifier.changePassword(
-            currentPassword: any(named: 'currentPassword'),
-            newPassword: any(named: 'newPassword'),
-            confirmPassword: any(named: 'confirmPassword'),
-          )).thenAnswer((_) => completer.future); 
+      when(
+        () => mockNotifier.changePassword(
+          currentPassword: any(named: 'currentPassword'),
+          newPassword: any(named: 'newPassword'),
+          confirmPassword: any(named: 'confirmPassword'),
+        ),
+      ).thenAnswer((_) => completer.future);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -98,28 +106,34 @@ void main() {
 
       final submitBtn = find.text('Saqlash');
       await tester.tap(submitBtn);
-      
-      await tester.pump(); 
+
+      await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      
+
       completer.complete(null);
       await tester.pump(const Duration(milliseconds: 100)); // Render snackbar
 
-      verify(() => mockNotifier.changePassword(
-            currentPassword: 'old_pwd123',
-            newPassword: 'new_pwd123',
-            confirmPassword: 'new_pwd123',
-          )).called(1);
+      verify(
+        () => mockNotifier.changePassword(
+          currentPassword: 'old_pwd123',
+          newPassword: 'new_pwd123',
+          confirmPassword: 'new_pwd123',
+        ),
+      ).called(1);
 
       expect(find.text("Parol muvaffaqiyatli o'zgartirildi!"), findsOneWidget);
     });
 
-    testWidgets('submits data and shows error snackbar on failure', (tester) async {
-      when(() => mockNotifier.changePassword(
-            currentPassword: any(named: 'currentPassword'),
-            newPassword: any(named: 'newPassword'),
-            confirmPassword: any(named: 'confirmPassword'),
-          )).thenAnswer((_) async => 'Noto\'g\'ri joriy parol'); 
+    testWidgets('submits data and shows error snackbar on failure', (
+      tester,
+    ) async {
+      when(
+        () => mockNotifier.changePassword(
+          currentPassword: any(named: 'currentPassword'),
+          newPassword: any(named: 'newPassword'),
+          confirmPassword: any(named: 'confirmPassword'),
+        ),
+      ).thenAnswer((_) async => 'Noto\'g\'ri joriy parol');
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -134,11 +148,13 @@ void main() {
 
       await tester.pump(const Duration(milliseconds: 100)); // Render snackbar
 
-      verify(() => mockNotifier.changePassword(
-            currentPassword: 'wrong_old',
-            newPassword: 'new_pwd123',
-            confirmPassword: 'new_pwd123',
-          )).called(1);
+      verify(
+        () => mockNotifier.changePassword(
+          currentPassword: 'wrong_old',
+          newPassword: 'new_pwd123',
+          confirmPassword: 'new_pwd123',
+        ),
+      ).called(1);
 
       expect(find.text('Noto\'g\'ri joriy parol'), findsOneWidget);
     });

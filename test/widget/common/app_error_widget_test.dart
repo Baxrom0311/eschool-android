@@ -26,7 +26,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Internet bilan aloqa yo\'q'), findsOneWidget);
+    expect(find.text('Internet aloqasi yo\'q'), findsOneWidget);
     expect(find.text('Qayta urinish'), findsOneWidget);
     expect(find.byIcon(Icons.wifi_off_outlined), findsOneWidget);
   });

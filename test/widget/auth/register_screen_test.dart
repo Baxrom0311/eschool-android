@@ -29,8 +29,8 @@ void main() {
 
     expect(find.text('Ro\'yxatdan o\'tish'), findsOneWidget);
     expect(find.text('Yangi hisob yaratish'), findsOneWidget);
-    expect(find.text('Ism Familiya'), findsOneWidget);
-    expect(find.text('Telefon raqam'), findsOneWidget);
+    expect(find.text('Ism va familiya'), findsOneWidget);
+    expect(find.text('Telefon raqami'), findsOneWidget);
     expect(find.text('Parol'), findsOneWidget);
     await tester.dragUntilVisible(
       find.text('Parolni tasdiqlang'),
@@ -61,7 +61,7 @@ void main() {
 
     expect(
       find.textContaining(
-        'Tenant API da ro\'yxatdan o\'tish endpointi mavjud emas',
+        'Tenant API\'da ro\'yxatdan o\'tish endpoint\'i yo\'q',
       ),
       findsOneWidget,
     );

@@ -26,30 +26,39 @@ void main() {
         mealType: MealType.breakfast,
         dishes: [],
         totalCalories: 0,
-      )
+      ),
     ];
 
     test('getDailyMenu returns data on success', () async {
       // Arrange
-      when(() => mockMenuApi.getDailyMenu(
-            date: any(named: 'date'),
-            studentId: any(named: 'studentId'),
-          )).thenAnswer((_) async => tMenuList);
+      when(
+        () => mockMenuApi.getDailyMenu(
+          date: any(named: 'date'),
+          studentId: any(named: 'studentId'),
+        ),
+      ).thenAnswer((_) async => tMenuList);
 
       // Act
-      final result = await repository.getDailyMenu(date: tDate, studentId: tStudentId);
+      final result = await repository.getDailyMenu(
+        date: tDate,
+        studentId: tStudentId,
+      );
 
       // Assert
       expect(result, tMenuList);
-      verify(() => mockMenuApi.getDailyMenu(date: tDate, studentId: tStudentId)).called(1);
+      verify(
+        () => mockMenuApi.getDailyMenu(date: tDate, studentId: tStudentId),
+      ).called(1);
     });
 
     test('getDailyMenu throws exception on error', () async {
       // Arrange
-      when(() => mockMenuApi.getDailyMenu(
-            date: any(named: 'date'),
-            studentId: any(named: 'studentId'),
-          )).thenThrow(const ServerException(message: 'Server xatoligi'));
+      when(
+        () => mockMenuApi.getDailyMenu(
+          date: any(named: 'date'),
+          studentId: any(named: 'studentId'),
+        ),
+      ).thenThrow(const ServerException(message: 'Server xatoligi'));
 
       // Act & Assert
       expect(
@@ -60,17 +69,25 @@ void main() {
 
     test('getWeeklyMenu returns data on success', () async {
       // Arrange
-      when(() => mockMenuApi.getWeeklyMenu(
-            weekStart: any(named: 'weekStart'),
-            studentId: any(named: 'studentId'),
-          )).thenAnswer((_) async => tMenuList);
+      when(
+        () => mockMenuApi.getWeeklyMenu(
+          weekStart: any(named: 'weekStart'),
+          studentId: any(named: 'studentId'),
+        ),
+      ).thenAnswer((_) async => tMenuList);
 
       // Act
-      final result = await repository.getWeeklyMenu(weekStart: tDate, studentId: tStudentId);
+      final result = await repository.getWeeklyMenu(
+        weekStart: tDate,
+        studentId: tStudentId,
+      );
 
       // Assert
       expect(result, tMenuList);
-      verify(() => mockMenuApi.getWeeklyMenu(weekStart: tDate, studentId: tStudentId)).called(1);
+      verify(
+        () =>
+            mockMenuApi.getWeeklyMenu(weekStart: tDate, studentId: tStudentId),
+      ).called(1);
     });
   });
 }

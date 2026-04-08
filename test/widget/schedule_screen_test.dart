@@ -1,13 +1,14 @@
 import 'dart:async';
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:parent_school_app/core/error/failures.dart';
+import 'package:parent_school_app/core/error/exceptions.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/models/child_model.dart';
 import 'package:parent_school_app/data/models/schedule_model.dart';
@@ -52,7 +53,7 @@ void main() {
     );
     when(
       () => mockUserRepository.getProfile(),
-    ).thenAnswer((_) async => const Right(tUser));
+    ).thenAnswer((_) async => tUser);
   });
 
   Widget createWidgetUnderTest() {
@@ -68,19 +69,23 @@ void main() {
         academicRepositoryProvider.overrideWithValue(mockAcademicRepository),
         selectedChildProvider.overrideWithValue(tChild),
       ],
-      child: const MaterialApp(
-        localizationsDelegates: [
-          DefaultMaterialLocalizations.delegate,
-          DefaultWidgetsLocalizations.delegate,
+      child: MaterialApp(
+        locale: const Locale('uz'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
         ],
-        home: ScheduleScreen(),
+        home: const ScheduleScreen(),
       ),
     );
   }
 
   group('ScheduleScreen Widget Tests', () {
     testWidgets('shows loading state initially', (WidgetTester tester) async {
-      final completer = Completer<Either<Failure, List<ScheduleModel>>>();
+      final completer = Completer<List<ScheduleModel>>();
       when(
         () => mockAcademicRepository.getSchedule(any()),
       ).thenAnswer((_) => completer.future);
@@ -96,7 +101,7 @@ void main() {
     ) async {
       when(
         () => mockAcademicRepository.getSchedule(any()),
-      ).thenAnswer((_) async => const Right([]));
+      ).thenAnswer((_) async => const <ScheduleModel>[]);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -124,7 +129,7 @@ void main() {
       ];
       when(
         () => mockAcademicRepository.getSchedule(any()),
-      ).thenAnswer((_) async => Right(tSchedule));
+      ).thenAnswer((_) async => tSchedule);
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -144,7 +149,7 @@ void main() {
     ) async {
       when(
         () => mockAcademicRepository.getSchedule(any()),
-      ).thenAnswer((_) async => const Left(ServerFailure('Tarmoq xatosi')));
+      ).thenThrow(const ServerException(message: 'Tarmoq xatosi'));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

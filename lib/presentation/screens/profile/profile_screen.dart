@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../core/routing/route_names.dart';
 import '../../../core/utils/formatters.dart';
@@ -235,7 +234,10 @@ class ProfileScreen extends ConsumerWidget {
                       ? Icons.dark_mode_rounded
                       : Icons.light_mode_rounded,
                   title: l10n.changeTheme,
-                  subtitle: _getThemeName(context, ref.watch(appThemeModeProvider)),
+                  subtitle: _getThemeName(
+                    context,
+                    ref.watch(appThemeModeProvider),
+                  ),
                   onTap: () => _showThemePicker(context, ref),
                 ),
                 const SizedBox(height: 8),
@@ -334,7 +336,7 @@ class ProfileScreen extends ConsumerWidget {
   void _showLanguagePicker(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -349,7 +351,10 @@ class ProfileScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
                   l10n.changeLanguage,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               ListTile(
@@ -407,7 +412,10 @@ class ProfileScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
                   l10n.changeTheme,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               ListTile(
@@ -417,7 +425,9 @@ class ProfileScreen extends ConsumerWidget {
                     ? Icon(Icons.check, color: colorScheme.primary)
                     : null,
                 onTap: () {
-                  ref.read(appThemeModeProvider.notifier).setThemeMode(ThemeMode.system);
+                  ref
+                      .read(appThemeModeProvider.notifier)
+                      .setThemeMode(ThemeMode.system);
                   Navigator.pop(context);
                 },
               ),
@@ -428,7 +438,9 @@ class ProfileScreen extends ConsumerWidget {
                     ? Icon(Icons.check, color: colorScheme.primary)
                     : null,
                 onTap: () {
-                  ref.read(appThemeModeProvider.notifier).setThemeMode(ThemeMode.light);
+                  ref
+                      .read(appThemeModeProvider.notifier)
+                      .setThemeMode(ThemeMode.light);
                   Navigator.pop(context);
                 },
               ),
@@ -439,7 +451,9 @@ class ProfileScreen extends ConsumerWidget {
                     ? Icon(Icons.check, color: colorScheme.primary)
                     : null,
                 onTap: () {
-                  ref.read(appThemeModeProvider.notifier).setThemeMode(ThemeMode.dark);
+                  ref
+                      .read(appThemeModeProvider.notifier)
+                      .setThemeMode(ThemeMode.dark);
                   Navigator.pop(context);
                 },
               ),

@@ -17,8 +17,10 @@ class ChatRepository extends BaseRepository {
       _chatApi.getMessages(conversationId, page: page);
 
   /// Matnli xabar yuborish
-  Future<MessageModel> sendMessage(int conversationId, {required String content}) =>
-      _chatApi.sendMessage(conversationId, content: content);
+  Future<MessageModel> sendMessage(
+    int conversationId, {
+    required String content,
+  }) => _chatApi.sendMessage(conversationId, content: content);
 
   /// Fayl yuborish (rasm, hujjat va h.k.)
   Future<MessageModel> sendFile(int conversationId, String filePath) =>

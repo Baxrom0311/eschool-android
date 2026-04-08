@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/services/firebase_service.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/storage/secure_storage.dart';
+import '../../core/error/exceptions.dart';
 import '../../data/datasources/remote/auth_api.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -29,14 +30,17 @@ final secureStorageProvider = Provider<SecureStorageService>((ref) {
 /// DioClient instance — HTTP so'rovlar uchun
 final Provider<DioClient> dioClientProvider = Provider<DioClient>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
-  return DioClient(secureStorage, onUnauthorized: () {
-    // 401 Unauthorized sodir bo'lganda AuthNotifier holatini yangilash
-    Future.microtask(() {
-      try {
-        ref.read(authProvider.notifier).clearLocalSession();
-      } catch (_) {}
-    });
-  });
+  return DioClient(
+    secureStorage,
+    onUnauthorized: () {
+      // 401 Unauthorized sodir bo'lganda AuthNotifier holatini yangilash
+      Future.microtask(() {
+        try {
+          ref.read(authProvider.notifier).clearLocalSession();
+        } catch (_) {}
+      });
+    },
+  );
 });
 
 /// AuthApi instance — auth endpointlari uchun
@@ -57,8 +61,6 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   final api = ref.watch(notificationApiProvider);
   return NotificationRepository(notificationApi: api);
 });
-
-
 
 // ═══════════════════════════════════════════════════════════════
 // AUTH STATE — immutable state klassi
@@ -169,6 +171,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
        _notificationRepository = notificationRepository,
        super(const AuthState.initial());
 
+  String _readErrorMessage(Object error) {
+    return switch (error) {
+      ServerException() => error.message,
+      NetworkException() => error.message,
+      AuthException() => error.message,
+      ValidationException() => error.message,
+      _ => error.toString(),
+    };
+  }
+
   /// Ilova boshlanganda token mavjudligini tekshirish
   ///
   /// Splash screen dan chaqiriladi.
@@ -176,11 +188,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> checkAuthStatus() async {
     final hasToken = await _repository.hasValidToken();
     if (hasToken) {
-      final token = await _repository.getAccessToken(); // Bu metodni qo'shishimiz kerak repository'ga
-      state = AuthState(
-        isAuthenticated: true,
-        token: token,
-      );
+      final token = await _repository
+          .getAccessToken(); // Bu metodni qo'shishimiz kerak repository'ga
+      state = AuthState(isAuthenticated: true, token: token);
       updateFCMToken();
     } else {
       state = state.copyWithLogout();
@@ -204,13 +214,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWithSuccess(user, token);
       updateFCMToken();
     } catch (e) {
-      state = state.copyWithError(e.toString());
+      state = state.copyWithError(_readErrorMessage(e));
     }
   }
-
-
-
-
 
   /// Logout — tizimdan chiqish
   Future<void> logout() async {
@@ -241,7 +247,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isAuthenticated: state.isAuthenticated,
       );
     } catch (e) {
-      state = state.copyWithError(e.toString());
+      state = state.copyWithError(_readErrorMessage(e));
     }
   }
 
@@ -265,7 +271,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWithSuccess(user, token);
       updateFCMToken();
     } catch (e) {
-      state = state.copyWithError(e.toString());
+      state = state.copyWithError(_readErrorMessage(e));
     }
   }
 
@@ -279,16 +285,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
           log('FCM token synced to backend via NotificationRepository');
         }
       }
-      
+
       // Listen to future token rotations
       await _tokenRefreshSub?.cancel();
-      _tokenRefreshSub = FirebaseService.onTokenRefresh.listen((newToken) async {
+      _tokenRefreshSub = FirebaseService.onTokenRefresh.listen((
+        newToken,
+      ) async {
         await _notificationRepository.saveFcmToken(newToken);
         if (kDebugMode) {
           log('Rotated FCM token synced to backend');
         }
       });
-      
     } catch (e) {
       if (kDebugMode) {
         log('FCM token update error: $e');

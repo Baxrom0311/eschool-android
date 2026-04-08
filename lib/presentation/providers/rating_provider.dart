@@ -5,8 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/storage_keys.dart';
 import '../../core/error/exceptions.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_error_handler.dart';
 import '../../data/datasources/remote/rating_api.dart';
 import '../../data/models/rating_model.dart';

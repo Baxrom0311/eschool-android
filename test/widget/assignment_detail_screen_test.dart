@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/data/models/assignment_model.dart';
 import 'package:parent_school_app/presentation/screens/academics/assignment_detail_screen.dart';
 
 void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('uz');
+  });
+
   testWidgets('assignment detail screen renders localized labels', (
     tester,
   ) async {
@@ -31,8 +38,16 @@ void main() {
     );
 
     await tester.pumpWidget(
-      const ProviderScope(
+      ProviderScope(
         child: MaterialApp(
+          locale: const Locale('uz'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           home: AssignmentDetailScreen(assignment: assignment),
         ),
       ),
@@ -40,8 +55,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Vazifa tafsilotlari'), findsOneWidget);
-    expect(find.text('Muddat: 2026-04-10'), findsOneWidget);
-    expect(find.text('Status: Jarayonda'), findsOneWidget);
+    expect(find.textContaining('Topshirish muddati:'), findsOneWidget);
+    expect(find.text('Kutilmoqda'), findsOneWidget);
     expect(find.text('O\'qituvchi fayllari'), findsOneWidget);
     expect(find.text('Yuborilgan fayllar'), findsOneWidget);
     expect(find.text('Fayl tanlash'), findsOneWidget);

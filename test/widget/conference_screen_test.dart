@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/data/models/child_model.dart';
 import 'package:parent_school_app/data/models/conference_model.dart';
 import 'package:parent_school_app/presentation/providers/conference_provider.dart';
@@ -61,7 +63,17 @@ void main() {
         conferenceProvider.overrideWith((ref) => mockConferenceNotifier),
         selectedChildProvider.overrideWithValue(testChild),
       ],
-      child: const MaterialApp(home: ConferenceScreen()),
+      child: MaterialApp(
+        locale: const Locale('uz'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const ConferenceScreen(),
+      ),
     );
   }
 
@@ -71,7 +83,7 @@ void main() {
 
     expect(find.text('Ota-onalar majlisi'), findsOneWidget);
     expect(find.text('Matematika domla bilan uchrashuv'), findsOneWidget);
-    expect(find.text('Bo\'sh slotlar (1)'), findsOneWidget);
+    expect(find.text('1 ta bo\'sh vaqt'), findsOneWidget);
     verify(() => mockConferenceNotifier.loadBookings(1)).called(1);
   });
 }

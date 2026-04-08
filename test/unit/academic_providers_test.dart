@@ -1,200 +1,110 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dartz/dartz.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// Imports from the app
-import 'package:parent_school_app/presentation/providers/academic_provider.dart';
-import 'package:parent_school_app/data/repositories/academic_repository.dart';
-import 'package:parent_school_app/data/models/grade_model.dart';
-import 'package:parent_school_app/data/models/schedule_model.dart';
+import 'package:parent_school_app/core/storage/shared_prefs_service.dart';
 import 'package:parent_school_app/data/models/assignment_model.dart';
 import 'package:parent_school_app/data/models/attendance_model.dart';
-import 'package:parent_school_app/core/error/failures.dart';
+import 'package:parent_school_app/data/models/grade_model.dart';
+import 'package:parent_school_app/data/models/schedule_model.dart';
+import 'package:parent_school_app/data/repositories/academic_repository.dart';
+import 'package:parent_school_app/presentation/providers/academic_provider.dart';
 
-// ─── MOCK REPOSITORY ───
-class MockAcademicRepository implements AcademicRepository {
-  bool shouldReturnError = false;
+class MockAcademicRepository extends Mock implements AcademicRepository {}
 
-  MockAcademicRepository();
-
-  @override
-  Future<Either<Failure, List<GradeModel>>> getGrades(
-    int childId, {
-    int? quarter,
-  }) async {
-    if (shouldReturnError) {
-      return const Left(ServerFailure('Grades load failed'));
-    }
-    return const Right([
-      GradeModel(
-        id: 1,
-        subjectName: 'Math',
-        grade: 5,
-        createdAt: '2023-10-10',
-        comment: 'Good',
-        quarter: 1,
-        gradeType: '5',
-      ),
-    ]);
-  }
-
-  @override
-  Future<Either<Failure, List<SubjectGradeSummary>>> getGradeSummary(
-    int childId,
-  ) async {
-    if (shouldReturnError) {
-      return const Left(ServerFailure('Summary load failed'));
-    }
-    return const Right([
-      SubjectGradeSummary(
-        subjectName: 'Math',
-        averageGrade: 4.5,
-        totalGrades: 10,
-        teacherName: 'Mr. Smith',
-      ),
-    ]);
-  }
-
-  @override
-  Future<Either<Failure, List<ScheduleModel>>> getSchedule(int childId) async {
-    if (shouldReturnError) {
-      return const Left(ServerFailure('Schedule load failed'));
-    }
-    return const Right([
-      ScheduleModel(
-        id: 1,
-        subjectName: 'Math',
-        dayOfWeek: 1,
-        startTime: '08:00',
-        endTime: '09:00',
-        roomNumber: '101',
-        teacherName: 'Mr. Smith',
-        lessonNumber: 1,
-      ),
-    ]);
-  }
-
-  @override
-  Future<Either<Failure, List<AssignmentModel>>> getAssignments(
-    int childId, {
-    String? status,
-    int? page,
-  }) async {
-    if (shouldReturnError) {
-      return const Left(ServerFailure('Assignments load failed'));
-    }
-    return const Right([
-      AssignmentModel(
-        id: 1,
-        subjectName: 'Math',
-        title: 'Homework 1',
-        dueDate: '2023-10-15',
-        status: AssignmentStatus.pending,
-        teacherName: 'Mr. Smith',
-        createdAt: '2023-10-10',
-      ),
-    ]);
-  }
-
-  @override
-  Future<Either<Failure, AssignmentModel>> getAssignmentDetails(
-    int assignmentId, {
-    required int childId,
-  }) async {
-    if (shouldReturnError) {
-      return const Left(ServerFailure('Assignment details failed'));
-    }
-    return const Right(
-      AssignmentModel(
-        id: 1,
-        subjectName: 'Math',
-        title: 'Homework 1',
-        dueDate: '2023-10-15',
-        status: AssignmentStatus.pending,
-        teacherName: 'Mr. Smith',
-        createdAt: '2023-10-10',
-        description: 'Solve problems 1-10',
-      ),
-    );
-  }
-
-  @override
-  Future<Either<Failure, void>> submitAssignment(
-    int assignmentId, {
-    String? text,
-    String? filePath,
-  }) async {
-    if (shouldReturnError) {
-      return const Left(ServerFailure('Submission failed'));
-    }
-    return const Right(null);
-  }
-
-  @override
-  Future<Either<Failure, AttachmentModel>> uploadAssignmentFile(
-    int assignmentId,
-    String filePath,
-  ) async {
-    if (shouldReturnError) {
-      return const Left(ServerFailure('Upload failed'));
-    }
-    return const Right(
-      AttachmentModel(
-        id: 1,
-        name: 'file.pdf',
-        url: 'http://example.com/file.pdf',
-        fileSize: 1024,
-        mimeType: 'application/pdf',
-      ),
-    );
-  }
-
-  @override
-  Future<Either<Failure, List<AttendanceModel>>> getAttendance(
-    int childId, {
-    String? month,
-  }) async {
-    if (shouldReturnError) {
-      return const Left(ServerFailure('Attendance load failed'));
-    }
-    return const Right([
-      AttendanceModel(
-        id: 1,
-        date: '2023-10-01',
-        status: AttendanceStatus.present,
-        subjectName: 'Math',
-        markedBy: 'Teacher',
-      ),
-    ]);
-  }
-
-  @override
-  Future<Either<Failure, AttendanceSummary>> getAttendanceSummary(
-    int childId,
-  ) async {
-    if (shouldReturnError) {
-      return const Left(ServerFailure('Attendance summary failed'));
-    }
-    return const Right(
-      AttendanceSummary(
-        presentDays: 20,
-        absentDays: 2,
-        lateDays: 1,
-        excusedDays: 0,
-        totalDays: 23,
-        attendancePercentage: 95.0,
-      ),
-    );
-  }
-}
-
-// ─── TESTS ───
 void main() {
   late ProviderContainer container;
   late MockAcademicRepository mockRepository;
 
-  setUp(() {
+  setUp(() async {
     mockRepository = MockAcademicRepository();
+    SharedPreferences.setMockInitialValues({});
+    await SharedPrefsService.init();
+
+    when(
+      () => mockRepository.getGrades(any(), quarter: any(named: 'quarter')),
+    ).thenAnswer(
+      (_) async => const [
+        GradeModel(
+          id: 1,
+          subjectName: 'Math',
+          grade: 5,
+          createdAt: '2023-10-10',
+          comment: 'Good',
+          quarter: 1,
+          gradeType: '5',
+        ),
+      ],
+    );
+    when(
+      () => mockRepository.getGradeSummary(any()),
+    ).thenAnswer(
+      (_) async => const [
+        SubjectGradeSummary(
+          subjectName: 'Math',
+          averageGrade: 4.5,
+          totalGrades: 10,
+          teacherName: 'Mr. Smith',
+        ),
+      ],
+    );
+    when(
+      () => mockRepository.getSchedule(any()),
+    ).thenAnswer(
+      (_) async => const [
+        ScheduleModel(
+          id: 1,
+          subjectName: 'Math',
+          dayOfWeek: 1,
+          startTime: '08:00',
+          endTime: '09:00',
+          roomNumber: '101',
+          teacherName: 'Mr. Smith',
+          lessonNumber: 1,
+        ),
+      ],
+    );
+    when(
+      () => mockRepository.getAssignments(
+        any(),
+        status: any(named: 'status'),
+        page: any(named: 'page'),
+      ),
+    ).thenAnswer(
+      (_) async => const [
+        AssignmentModel(
+          id: 1,
+          subjectName: 'Math',
+          title: 'Homework 1',
+          dueDate: '2023-10-15',
+          status: AssignmentStatus.pending,
+          teacherName: 'Mr. Smith',
+          createdAt: '2023-10-10',
+        ),
+      ],
+    );
+    when(
+      () => mockRepository.submitAssignment(
+        any(),
+        text: any(named: 'text'),
+        filePath: any(named: 'filePath'),
+      ),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockRepository.getAttendance(any(), month: any(named: 'month')),
+    ).thenAnswer(
+      (_) async => const [
+        AttendanceModel(
+          id: 1,
+          date: '2023-10-01',
+          status: AttendanceStatus.present,
+          subjectName: 'Math',
+          markedBy: 'Teacher',
+        ),
+      ],
+    );
+
     container = ProviderContainer(
       overrides: [academicRepositoryProvider.overrideWithValue(mockRepository)],
     );
@@ -223,19 +133,18 @@ void main() {
     });
 
     test('loadGrades sets error state on failure', () async {
-      mockRepository.shouldReturnError = true;
-      final notifier = container.read(gradesProvider.notifier);
+      when(
+        () => mockRepository.getGrades(1, quarter: any(named: 'quarter')),
+      ).thenThrow(Exception('Grades load failed'));
 
-      try {
-        await notifier.loadGrades(1);
-      } catch (_) {}
+      final notifier = container.read(gradesProvider.notifier);
+      await notifier.loadGrades(1);
 
       final state = container.read(gradesProvider);
       expect(state.hasError, true);
     });
 
     test('selectQuarter updates selectedQuarter', () {
-      // Default state is GradesData()
       expect(container.read(gradesProvider).value?.selectedQuarter, 1);
 
       final notifier = container.read(gradesProvider.notifier);

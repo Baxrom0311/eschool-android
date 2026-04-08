@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:parent_school_app/l10n/app_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/localization/app_locale.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'core/localization/l10n_extension.dart';
 import 'core/routing/app_router.dart';
 import 'core/storage/shared_prefs_service.dart';
 import 'core/theme/app_theme.dart';
@@ -55,7 +55,7 @@ class _ParentSchoolAppState extends ConsumerState<ParentSchoolApp> {
   void initState() {
     super.initState();
     _fcmSubscription = FirebaseService.onMessage.listen((message) {
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizationsRegistry.instance;
       final title =
           message.notification?.title ?? l10n.notificationFallbackTitle;
       final body = message.notification?.body ?? '';
@@ -97,7 +97,7 @@ class _ParentSchoolAppState extends ConsumerState<ParentSchoolApp> {
     final locale = ref.watch(appLocaleProvider);
     final themeMode = ref.watch(appThemeModeProvider);
     final router = ref.watch(routerProvider);
-    
+
     // WebSocket tinglovchisini ishga tushirish
     ref.watch(socketListenerProvider);
 
@@ -113,6 +113,10 @@ class _ParentSchoolAppState extends ConsumerState<ParentSchoolApp> {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       scaffoldMessengerKey: scaffoldMessengerKey,
       builder: (context, child) {
+        final l10n = AppLocalizations.of(context);
+        if (l10n != null) {
+          AppLocalizationsRegistry.update(l10n);
+        }
         return NetworkStatusBanner(child: child!);
       },
     );

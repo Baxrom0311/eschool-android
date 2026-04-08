@@ -105,31 +105,6 @@ class GradesNotifier extends AutoDisposeAsyncNotifier<GradesData> {
     }
   }
 
-  List<SubjectGradeSummary> _buildSummaryFromGrades(List<GradeModel> grades) {
-    final bySubject = <String, List<int>>{};
-    final teacherBySubject = <String, String?>{};
-
-    for (final grade in grades) {
-      final subject = grade.subjectName.trim();
-      if (subject.isEmpty) continue;
-      bySubject.putIfAbsent(subject, () => <int>[]).add(grade.grade);
-      teacherBySubject.putIfAbsent(subject, () => grade.teacherName);
-    }
-
-    return bySubject.entries.map((entry) {
-      final values = entry.value;
-      final average = values.isEmpty
-          ? 0.0
-          : values.reduce((a, b) => a + b) / values.length;
-      return SubjectGradeSummary(
-        subjectName: entry.key,
-        averageGrade: average,
-        totalGrades: values.length,
-        teacherName: teacherBySubject[entry.key],
-      );
-    }).toList();
-  }
-
   void selectQuarter(int quarter) {
     if (state.value != null) {
       state = AsyncValue.data(state.value!.copyWith(selectedQuarter: quarter));
@@ -341,7 +316,10 @@ class AssignmentsNotifier extends AutoDisposeAsyncNotifier<AssignmentsData> {
     final repository = ref.read(academicRepositoryProvider);
 
     try {
-      final assignments = await repository.getAssignments(childId, status: status);
+      final assignments = await repository.getAssignments(
+        childId,
+        status: status,
+      );
 
       final selectedAssignment = _resolveSelectedAssignment(
         currentSelected,
@@ -553,10 +531,7 @@ class AttendanceNotifier extends AutoDisposeAsyncNotifier<AttendanceData> {
     }
 
     try {
-      final records = await repository.getAttendance(
-        childId,
-        month: month,
-      );
+      final records = await repository.getAttendance(childId, month: month);
       final summary = _buildSummaryFromRecords(records);
 
       final data = AttendanceData(records: records, summary: summary);

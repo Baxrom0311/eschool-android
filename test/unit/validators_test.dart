@@ -12,7 +12,7 @@ void main() {
     });
 
     test('rejects malformed email values', () {
-      expect(Validators.email('parent01'), 'Email noto\'g\'ri');
+      expect(Validators.email('parent01'), 'Noto\'g\'ri email');
     });
   });
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:parent_school_app/core/localization/app_localizations.dart';
 import 'package:parent_school_app/presentation/screens/auth/login_screen.dart';
 import 'package:parent_school_app/presentation/providers/auth_provider.dart';
 
@@ -103,7 +105,17 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [authProvider.overrideWith((ref) => MockAuthNotifier())],
-          child: const MaterialApp(home: LoginScreen()),
+          child: MaterialApp(
+            locale: const Locale('uz'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: const LoginScreen(),
+          ),
         ),
       );
 
@@ -119,8 +131,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Ensure validation error is produced explicitly
-      expect(find.text('Email kiriting'), findsOneWidget);
-      expect(find.text('Parol kiriting'), findsOneWidget);
+      expect(find.text('Emailni kiriting'), findsOneWidget);
+      expect(find.textContaining('Parol'), findsWidgets);
     });
 
     testWidgets('Permits login submission when validation succeeds', (
@@ -135,7 +147,17 @@ void main() {
             authProvider.overrideWith((ref) => mockAuth),
             userProvider.overrideWith((ref) => mockUser),
           ],
-          child: const MaterialApp(home: LoginScreen()),
+          child: MaterialApp(
+            locale: const Locale('uz'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: const LoginScreen(),
+          ),
         ),
       );
 

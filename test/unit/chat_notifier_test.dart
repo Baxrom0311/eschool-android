@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:parent_school_app/l10n/app_localizations.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import 'package:parent_school_app/presentation/providers/chat_provider.dart';
 import 'package:parent_school_app/data/repositories/chat_repository.dart';
@@ -71,10 +71,7 @@ class MockChatRepository extends Mock implements ChatRepository {
   }
 
   @override
-  Future<MessageModel> sendFile(
-    int conversationId,
-    String filePath,
-  ) async {
+  Future<MessageModel> sendFile(int conversationId, String filePath) async {
     if (shouldReturnNetworkError) {
       throw const NetworkException(message: 'No internet connection');
     }
@@ -170,7 +167,10 @@ void main() {
       await conversationsNotifier.loadConversations();
 
       expect(conversationsNotifier.state.isLoading, false);
-      expect(conversationsNotifier.state.error, 'ServerException: Conversations load failed');
+      expect(
+        conversationsNotifier.state.error,
+        'ServerException: Conversations load failed',
+      );
     });
   });
 

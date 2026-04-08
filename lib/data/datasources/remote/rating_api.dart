@@ -2,8 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/error/exceptions.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/rating_model.dart';
 
@@ -16,7 +15,7 @@ class RatingApi {
 
   RatingApi(this._client);
 
-  AppLocalizations get _l10n => AppLocalizations.current;
+  dynamic get _l10n => AppLocalizations.current;
 
   /// Sinf bo'yicha reyting (lokal derivation)
   Future<List<RatingModel>> getClassRating(int classId) async {

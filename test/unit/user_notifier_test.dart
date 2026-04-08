@@ -91,9 +91,14 @@ class MockUserRepository implements UserRepository {
   }
 
   @override
-  Future<T> safeCall<T>(dynamic call, dynamic mapper) async => throw UnimplementedError();
+  Future<T> safeCall<T>(dynamic call, dynamic mapper) async =>
+      throw UnimplementedError();
   @override
-  Future<List<T>> safeCallList<T>(dynamic call, dynamic mapper, {String? listKey}) async => throw UnimplementedError();
+  Future<List<T>> safeCallList<T>(
+    dynamic call,
+    dynamic mapper, {
+    String? listKey,
+  }) async => throw UnimplementedError();
   @override
   Future<T> safeExecute<T>(dynamic call) async => throw UnimplementedError();
 }
@@ -113,15 +118,18 @@ void main() {
       expect(userNotifier.state.user, null);
     });
 
-    test('loadProfile success should update state with user and children', () async {
-      await userNotifier.loadProfile();
+    test(
+      'loadProfile success should update state with user and children',
+      () async {
+        await userNotifier.loadProfile();
 
-      expect(userNotifier.state.isLoading, false);
-      expect(userNotifier.state.user?.fullName, 'Test Parent');
-      expect(userNotifier.state.children.length, 2);
-      expect(userNotifier.state.selectedChild?.id, 101);
-      expect(userNotifier.state.error, null);
-    });
+        expect(userNotifier.state.isLoading, false);
+        expect(userNotifier.state.user?.fullName, 'Test Parent');
+        expect(userNotifier.state.children.length, 2);
+        expect(userNotifier.state.selectedChild?.id, 101);
+        expect(userNotifier.state.error, null);
+      },
+    );
 
     test('loadProfile failure should update state with error', () async {
       mockRepository.shouldReturnError = true;
@@ -133,7 +141,7 @@ void main() {
 
     test('selectChild should update selectedChild in state', () async {
       await userNotifier.loadProfile();
-      
+
       final child2 = userNotifier.state.children[1];
       userNotifier.selectChild(child2);
 
@@ -149,11 +157,14 @@ void main() {
 
     test('uploadAvatar success should update avatar url', () async {
       await userNotifier.loadProfile();
-      
+
       await userNotifier.uploadAvatar('/path/to/image.jpg');
 
       expect(userNotifier.state.isLoading, false);
-      expect(userNotifier.state.user?.avatarUrl, 'https://example.com/avatar.jpg');
+      expect(
+        userNotifier.state.user?.avatarUrl,
+        'https://example.com/avatar.jpg',
+      );
     });
   });
 }
