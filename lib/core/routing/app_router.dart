@@ -32,6 +32,7 @@ import '../../presentation/screens/leaderboard/leaderboard_screen.dart';
 import '../../presentation/screens/conference/conference_screen.dart';
 import '../../presentation/screens/absence/absence_excuse_screen.dart';
 import '../../presentation/screens/library/library_screen.dart';
+import '../services/app_telemetry_service.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../presentation/providers/auth_provider.dart';
@@ -86,6 +87,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: kDebugMode,
     refreshListenable: routerNotifier,
     redirect: routerNotifier.redirect,
+    observers: AppTelemetryService.navigatorObservers,
     routes: AppRouter.routes,
   );
 });
@@ -107,103 +109,124 @@ class AppRouter {
   static final List<RouteBase> routes = [
     // ─── Splash ───
     GoRoute(
+      name: RouteNames.splash,
       path: RouteNames.splash,
       builder: (context, state) => const SplashScreen(),
     ),
 
     // ─── Auth ───
     GoRoute(
+      name: RouteNames.login,
       path: RouteNames.login,
       builder: (context, state) => const LoginScreen(),
     ),
 
     GoRoute(
+      name: RouteNames.forgotPassword,
       path: RouteNames.forgotPassword,
       builder: (context, state) => const ForgotPasswordScreen(),
     ),
 
     GoRoute(
+      name: RouteNames.qrLogin,
       path: RouteNames.qrLogin,
       builder: (context, state) => const QrLoginScreen(),
     ),
 
     // ─── Home (Main Navigation container) ───
     GoRoute(
+      name: RouteNames.home,
       path: RouteNames.home,
       builder: (context, state) => const HomeScreen(),
     ),
 
     // ─── Profile ───
     GoRoute(
+      name: RouteNames.profile,
       path: RouteNames.profile,
       builder: (context, state) => const ProfileScreen(),
     ),
     GoRoute(
+      name: RouteNames.childrenList,
       path: RouteNames.childrenList,
       builder: (context, state) => const ChildrenListScreen(),
     ),
     GoRoute(
+      name: RouteNames.editProfile,
       path: RouteNames.editProfile,
       builder: (context, state) => const EditProfileScreen(),
     ),
     GoRoute(
+      name: RouteNames.changePassword,
       path: RouteNames.changePassword,
       builder: (context, state) => const ChangePasswordScreen(),
     ),
 
     // ─── Academics ───
     GoRoute(
+      name: RouteNames.grades,
       path: RouteNames.grades,
       builder: (context, state) => const GradesScreen(),
     ),
     GoRoute(
+      name: RouteNames.schedule,
       path: RouteNames.schedule,
       builder: (context, state) => const ScheduleScreen(),
     ),
     GoRoute(
+      name: RouteNames.assignments,
       path: RouteNames.assignments,
       builder: (context, state) => const AssignmentsScreen(),
     ),
     GoRoute(
+      name: RouteNames.assignmentDetail,
       path: RouteNames.assignmentDetail,
       builder: (context, state) =>
           AssignmentDetailScreen(assignment: state.extra as AssignmentModel?),
     ),
     GoRoute(
+      name: RouteNames.attendance,
       path: RouteNames.attendance,
       builder: (context, state) => const AttendanceScreen(),
     ),
     GoRoute(
+      name: RouteNames.rating,
       path: RouteNames.rating,
       builder: (context, state) => const RatingScreen(),
     ),
 
     // ─── Payments ───
     GoRoute(
+      name: RouteNames.payments,
       path: RouteNames.payments,
       builder: (context, state) => const PaymentsScreen(),
     ),
     GoRoute(
+      name: RouteNames.paymentMethod,
       path: RouteNames.paymentMethod,
       builder: (context, state) => const PaymentMethodScreen(),
     ),
     GoRoute(
+      name: RouteNames.paymentHistory,
       path: RouteNames.paymentHistory,
       builder: (context, state) => const PaymentHistoryScreen(),
     ),
 
     // ─── Menu ───
     GoRoute(
+      name: RouteNames.menu,
       path: RouteNames.menu,
       builder: (context, state) => const DailyMenuScreen(),
     ),
 
     // ─── Chat ───
     GoRoute(
+      name: RouteNames.chatList,
       path: RouteNames.chatList,
       builder: (context, state) => const ChatListScreen(),
     ),
     GoRoute(
+      name: RouteNames.chatRoom,
       path: RouteNames.chatRoom,
       builder: (context, state) =>
           ChatRoomScreen(chatData: state.extra as Map<String, dynamic>?),
@@ -211,24 +234,29 @@ class AppRouter {
 
     // ─── Notifications ───
     GoRoute(
+      name: RouteNames.notifications,
       path: RouteNames.notifications,
       builder: (context, state) => const NotificationsScreen(),
     ),
 
     // ─── Extra Modules ───
     GoRoute(
+      name: RouteNames.leaderboard,
       path: RouteNames.leaderboard,
       builder: (context, state) => const LeaderboardScreen(),
     ),
     GoRoute(
+      name: RouteNames.conference,
       path: RouteNames.conference,
       builder: (context, state) => const ConferenceScreen(),
     ),
     GoRoute(
+      name: RouteNames.absences,
       path: RouteNames.absences,
       builder: (context, state) => const AbsenceExcuseScreen(),
     ),
     GoRoute(
+      name: RouteNames.library,
       path: RouteNames.library,
       builder: (context, state) => const LibraryScreen(),
     ),

@@ -12,6 +12,7 @@ import 'core/routing/app_router.dart';
 import 'core/storage/shared_prefs_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_colors.dart';
+import 'core/services/app_telemetry_service.dart';
 import 'core/services/firebase_service.dart';
 import 'presentation/providers/app_locale_provider.dart';
 import 'presentation/providers/app_theme_mode_provider.dart';
@@ -20,6 +21,7 @@ import 'core/services/socket_listener.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  AppTelemetryService.installErrorHandlers();
   await _bootstrap();
 
   runApp(const ProviderScope(child: ParentSchoolApp()));
@@ -35,8 +37,7 @@ Future<void> _bootstrap() async {
     }
   }
 
-  // Firebase startupni UI ochilishini bloklamasdan fon rejimida ishga tushiramiz.
-  unawaited(FirebaseService.init());
+  unawaited(AppTelemetryService.init());
 }
 
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
