@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../data/models/badge_model.dart';
 import '../../providers/leaderboard_provider.dart';
 import '../../providers/user_provider.dart';
@@ -57,19 +58,20 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
       appBar: AppBar(
         title: Text(
           l10n.leaderboardTitle,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor:
-            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
-        foregroundColor:
-            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
+        backgroundColor: theme.scaffoldBackgroundColor,
+        surfaceTintColor: Colors.transparent,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: colorScheme.primary,
-          unselectedLabelColor: colorScheme.onSurfaceVariant,
-          indicatorColor: colorScheme.primary,
+          labelColor: AppColors.primaryBlue,
+          unselectedLabelColor: AppColors.textSecondary,
+          indicatorColor: AppColors.primaryBlue,
+          indicatorWeight: 3,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
           tabs: [
             Tab(text: l10n.leaderboardClassTab),
             Tab(text: l10n.leaderboardSchoolTab),
@@ -131,10 +133,10 @@ class _RankingTab extends StatelessWidget {
     final rest = ranking.skip(3).toList();
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
       children: [
         _Podium(top3: top3),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         ...rest.map(
           (item) => _RankTile(data: item, isMe: item['rank'] == myRank),
         ),
@@ -154,10 +156,8 @@ class _Podium extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final colorScheme = Theme.of(context).colorScheme;
-
     return SizedBox(
-      height: 280,
+      height: 260,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -166,22 +166,22 @@ class _Podium extends StatelessWidget {
             _PodiumItem(
               data: top3[1],
               rank: 2,
-              height: 118,
-              color: colorScheme.surfaceContainerHighest,
+              height: 100,
+              color: const Color(0xFF94A3B8), // Silver/Slate
             ),
           _PodiumItem(
             data: top3[0],
             rank: 1,
-            height: 152,
-            color: const Color(0xFFFFD700),
+            height: 140,
+            color: const Color(0xFFF59E0B), // Gold/Amber
             isFirst: true,
           ),
           if (top3.length > 2)
             _PodiumItem(
               data: top3[2],
               rank: 3,
-              height: 102,
-              color: const Color(0xFFCD7F32),
+              height: 80,
+              color: const Color(0xFFB45309), // Bronze/Brown
             ),
         ],
       ),
@@ -214,51 +214,85 @@ class _PodiumItem extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        CircleAvatar(
-          radius: isFirst ? 34 : 26,
-          backgroundColor: theme.cardColor,
-          backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-              ? NetworkImage(avatarUrl)
-              : null,
-          child: avatarUrl == null || avatarUrl.isEmpty
-              ? Icon(Icons.person, color: colorScheme.onSurfaceVariant)
-              : null,
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: color.withValues(alpha: 0.5), width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.2),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: CircleAvatar(
+            radius: isFirst ? 42 : 32,
+            backgroundColor: AppColors.slate100,
+            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                ? NetworkImage(avatarUrl)
+                : null,
+            child: avatarUrl == null || avatarUrl.isEmpty
+                ? Icon(Icons.person, color: color, size: isFirst ? 36 : 28)
+                : null,
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           name.split(' ').first,
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            fontSize: 14,
             color: colorScheme.onSurface,
+            letterSpacing: -0.2,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Container(
-          width: 78,
+          width: 84,
           height: height,
           decoration: BoxDecoration(
-            color: color,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                color,
+                color.withValues(alpha: 0.7),
+              ],
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.32),
+                color: color.withValues(alpha: 0.15),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Center(
-            child: Text(
-              '#$rank',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 24,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '#$rank',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 28,
+                  letterSpacing: -1,
+                ),
               ),
-            ),
+              Text(
+                'RANK',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 8,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -283,54 +317,68 @@ class _RankTile extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: isMe
-            ? colorScheme.primary.withValues(alpha: 0.08)
+            ? AppColors.primaryBlue.withValues(alpha: 0.08)
             : theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isMe
-              ? colorScheme.primary
-              : colorScheme.outline.withValues(alpha: 0.7),
+              ? AppColors.primaryBlue.withValues(alpha: 0.5)
+              : colorScheme.outline.withValues(alpha: 0.5),
+          width: isMe ? 1.5 : 0.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Row(
         children: [
           SizedBox(
-            width: 30,
+            width: 32,
             child: Text(
               '${data['rank'] ?? '-'}',
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurfaceVariant,
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: isMe ? AppColors.primaryBlue : colorScheme.onSurfaceVariant,
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          CircleAvatar(
-            radius: 20,
-            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                ? NetworkImage(avatarUrl)
-                : null,
-            child: avatarUrl == null || avatarUrl.isEmpty
-                ? const Icon(Icons.person)
-                : null,
+          const SizedBox(width: 4),
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isMe ? AppColors.primaryBlue.withValues(alpha: 0.3) : Colors.transparent,
+                width: 1,
+              ),
+            ),
+            child: CircleAvatar(
+              radius: 22,
+              backgroundColor: AppColors.slate100,
+              backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                  ? NetworkImage(avatarUrl)
+                  : null,
+              child: avatarUrl == null || avatarUrl.isEmpty
+                  ? const Icon(Icons.person, size: 20)
+                  : null,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               data['name']?.toString() ?? l10n.userFallbackName,
               style: TextStyle(
-                fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isMe ? FontWeight.w900 : FontWeight.w700,
                 color: colorScheme.onSurface,
+                fontSize: 15,
               ),
             ),
           ),
@@ -339,16 +387,26 @@ class _RankTile extends StatelessWidget {
             children: [
               Text(
                 '$xp XP',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryBlue,
+                  fontSize: 14,
                 ),
               ),
-              Text(
-                l10n.levelBadge(int.tryParse(level) ?? 1),
-                style: TextStyle(
-                  fontSize: 10,
-                  color: colorScheme.onSurfaceVariant,
+              const SizedBox(height: 2),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.slate100,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  l10n.levelBadge(int.tryParse(level) ?? 1).toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w800,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
@@ -375,38 +433,60 @@ class _BadgesTab extends StatelessWidget {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Container(
-            padding: const EdgeInsets.all(24),
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: theme.cardColor,
-              border: Border(
-                bottom: BorderSide(
-                  color: colorScheme.outline.withValues(alpha: 0.7),
-                ),
+              color: AppColors.slate900,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.darkBlue,
+                  AppColors.primaryBlue,
+                ],
               ),
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: Column(
               children: [
-                const Icon(
-                  Icons.monetization_on,
-                  size: 64,
-                  color: Colors.amber,
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                  ),
+                  child: const Icon(Icons.monetization_on, size: 48, color: Color(0xFFF59E0B)),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 Text(
                   l10n.leaderboardCoins(coins),
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -1,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   l10n.unlockableBadgesCount(availableBadges.length),
-                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -414,13 +494,13 @@ class _BadgesTab extends StatelessWidget {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
             child: Text(
               l10n.myBadgesTitle,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
               ),
             ),
           ),
@@ -437,11 +517,13 @@ class _BadgesTab extends StatelessWidget {
           )
         else
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.85,
+                childAspectRatio: 0.82,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
               ),
               delegate: SliverChildBuilderDelegate((context, index) {
                 final badge = myBadges[index];
@@ -461,32 +543,64 @@ class _BadgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      margin: const EdgeInsets.all(8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(badge.icon, style: const TextStyle(fontSize: 44)),
-            const SizedBox(height: 8),
-            Text(
-              badge.name,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.5), width: 0.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.slate100,
+              shape: BoxShape.circle,
+            ),
+            child: Text(badge.icon, style: const TextStyle(fontSize: 48)),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            badge.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 14,
+              letterSpacing: -0.2,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.slate100,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              badge.category.toUpperCase(),
+              style: const TextStyle(
+                color: AppColors.primaryBlue,
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 4),
-            Text(
-              badge.category,
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

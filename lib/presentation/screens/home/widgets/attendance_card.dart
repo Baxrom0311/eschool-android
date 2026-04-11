@@ -18,66 +18,116 @@ class AttendanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
+    
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        color: theme.colorScheme.primary,
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.secondary,
+          ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          width: 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.18),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Expanded(
-            child: _buildStatItem(l10n.attendanceStatLabel, '$attendanceRate%'),
+          // Elegant abstract shape
+          Positioned(
+            right: -30,
+            top: -30,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.04),
+              ),
+            ),
           ),
-          Stack(
-            alignment: Alignment.center,
+          Row(
             children: [
+              Expanded(
+                flex: 4,
+                child: _buildStatItem(
+                  l10n.attendanceStatLabel,
+                  '${attendanceRate.toStringAsFixed(0)}%',
+                  Icons.verified_user_outlined,
+                ),
+              ),
+              // Vertical Divider
               Container(
                 width: 1,
-                height: 60,
-                color: Colors.white.withValues(alpha: 0.3),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                height: 80,
+                margin: const EdgeInsets.symmetric(horizontal: 8),
                 decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: colorScheme.outline.withValues(alpha: 0.35),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withValues(alpha: 0),
+                      Colors.white.withValues(alpha: 0.3),
+                      Colors.white.withValues(alpha: 0),
+                    ],
                   ),
                 ),
-                child: Text(
-                  l10n.levelBadge(level),
-                  style: TextStyle(
-                    color: theme.brightness == Brightness.dark
-                        ? colorScheme.onSurface
-                        : AppColors.primaryBlue,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
+              ),
+              Expanded(
+                flex: 4,
+                child: _buildStatItem(
+                  l10n.coinsStatLabel,
+                  '$score',
+                  Icons.stars_outlined,
+                  alignEnd: true,
                 ),
               ),
             ],
           ),
-          Expanded(
-            child: _buildStatItem(
-              l10n.coinsStatLabel,
-              '$score',
-              alignEnd: true,
+          // Level Badge (Integrated Center)
+          Positioned.fill(
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  l10n.levelBadge(level),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -85,26 +135,40 @@ class AttendanceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String label, String value, {bool alignEnd = false}) {
+  Widget _buildStatItem(String label, String value, IconData icon, {bool alignEnd = false}) {
     return Column(
-      crossAxisAlignment: alignEnd
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
+      crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.white.withValues(alpha: 0.9),
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!alignEnd) Icon(icon, color: Colors.white54, size: 14),
+            if (!alignEnd) const SizedBox(width: 4),
+            Text(
+              label.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.5,
+                color: Colors.white60,
+              ),
+            ),
+            if (alignEnd) const SizedBox(width: 4),
+            if (alignEnd) Icon(icon, color: Colors.white54, size: 14),
+          ],
         ),
         const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 42,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: -1.5,
+              height: 1.0,
+            ),
           ),
         ),
       ],

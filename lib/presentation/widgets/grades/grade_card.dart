@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 
 /// Grade Card - Displays subject information, grade, and progress
@@ -23,9 +24,9 @@ class GradeCard extends StatelessWidget {
   });
 
   Color get gradeColor {
-    if (grade == 5) return const Color(0xFF4CAF50); // Green
-    if (grade == 4) return const Color(0xFFFF9800); // Orange
-    return const Color(0xFFF44336); // Red
+    if (grade >= 5) return AppColors.success;
+    if (grade >= 4) return AppColors.warning;
+    return AppColors.danger;
   }
 
   @override
@@ -34,171 +35,157 @@ class GradeCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
-      elevation: 2,
-      color: theme.cardColor,
-      shadowColor: theme.shadowColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outline),
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.3),
+          width: 0.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                // Icon
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: color, size: 28),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Icon Container with soft gradient background
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: color.withValues(alpha: 0.15), width: 1),
                 ),
-                const SizedBox(width: 16),
+                child: Icon(icon, color: color, size: 26),
+              ),
+              const SizedBox(width: 16),
 
-                // Subject Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        teacher,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Grade
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: gradeColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      grade.toString(),
+              // Subject Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
                       style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: gradeColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: colorScheme.onSurface,
+                        letterSpacing: -0.5,
                       ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      teacher,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Grade Badge - Premium Design
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: gradeColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: gradeColor.withValues(alpha: 0.2),
+                    width: 1.5,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    grade.toString(),
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      color: gradeColor,
+                      letterSpacing: -1,
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
 
-            // Progress Bars
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            l10n.attendanceStatLabel,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          Text(
-                            '$attendance%',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: attendance / 100,
-                          backgroundColor: colorScheme.surface,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            attendance >= 95
-                                ? const Color(0xFF4CAF50)
-                                : const Color(0xFFFF9800),
-                          ),
-                          minHeight: 6,
-                        ),
-                      ),
-                    ],
-                  ),
+          // Progress Row
+          Row(
+            children: [
+              Expanded(
+                child: _buildProgressItem(
+                  l10n.attendanceStatLabel.toUpperCase(),
+                  attendance,
+                  attendance >= 95 ? AppColors.success : AppColors.warning,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            l10n.averageShortLabel,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          Text(
-                            '$average%',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: average / 100,
-                          backgroundColor: colorScheme.surface,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            average >= 90
-                                ? const Color(0xFF4CAF50)
-                                : const Color(0xFFFF9800),
-                          ),
-                          minHeight: 6,
-                        ),
-                      ),
-                    ],
-                  ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: _buildProgressItem(
+                  l10n.averageShortLabel.toUpperCase(),
+                  average,
+                  average >= 90 ? AppColors.success : AppColors.warning,
                 ),
-              ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressItem(String label, int value, Color progressColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+                color: Colors.grey,
+              ),
+            ),
+            Text(
+              '$value%',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: progressColor,
+              ),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(99),
+          child: LinearProgressIndicator(
+            value: value / 100,
+            backgroundColor: AppColors.slate200.withValues(alpha: 0.3),
+            valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+            minHeight: 6,
+          ),
+        ),
+      ],
     );
   }
 }

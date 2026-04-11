@@ -14,43 +14,66 @@ class ScheduleList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final scheduleAsync = ref.watch(scheduleProvider);
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 l10n.todayLessonsSectionTitle,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
                 ),
               ),
               TextButton(
-                onPressed: () {
-                  context.push(RouteNames.schedule);
-                },
-                child: Text(l10n.viewAllAction),
+                onPressed: () => context.push(RouteNames.schedule),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      l10n.viewAllAction,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_ios_rounded, size: 12, color: colorScheme.primary),
+                  ],
+                ),
               ),
             ],
           ),
         ),
+        const SizedBox(height: 12),
         SizedBox(
-          height: 140,
+          height: 160,
           child: scheduleAsync.when(
             data: (data) {
               final todaySchedule = data.todaySchedule;
               if (todaySchedule.isEmpty) {
                 return Center(
-                  child: Text(
-                    l10n.noLessonsTodayShort,
-                    style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.event_busy_rounded, size: 32, color: colorScheme.outline),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.noLessonsTodayShort,
+                        style: TextStyle(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+                      ),
+                    ],
                   ),
                 );
               }
@@ -58,6 +81,7 @@ class ScheduleList extends ConsumerWidget {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: todaySchedule.length,
+                clipBehavior: Clip.none,
                 itemBuilder: (context, index) {
                   return _ScheduleItem(classItem: todaySchedule[index]);
                 },
@@ -88,21 +112,34 @@ class _ScheduleItem extends StatelessWidget {
 
     return Container(
       width: 200,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(right: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
-        color: isActive ? colorScheme.primary : theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(32),
+        gradient: isActive
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  colorScheme.primary,
+                  colorScheme.secondary,
+                ],
+              )
+            : null,
+        color: !isActive ? theme.cardColor : null,
         border: Border.all(
           color: isActive
-              ? colorScheme.primary
-              : colorScheme.outline.withValues(alpha: 0.7),
+              ? Colors.white.withValues(alpha: 0.1)
+              : theme.colorScheme.outline.withValues(alpha: 0.1),
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: isActive
+                ? colorScheme.primary.withValues(alpha: 0.1)
+                : theme.shadowColor.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -111,88 +148,81 @@ class _ScheduleItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.schedule_rounded,
-                size: 16,
-                color: isActive
-                    ? colorScheme.onPrimary
-                    : colorScheme.onSurfaceVariant,
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: isActive ? Colors.white24 : colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  Icons.schedule_rounded,
+                  size: 14,
+                  color: isActive ? Colors.white : colorScheme.primary,
+                ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 8),
               Text(
                 time,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                   color: isActive
-                      ? colorScheme.onPrimary.withValues(alpha: 0.9)
+                      ? Colors.white.withValues(alpha: 0.9)
                       : colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          Text(
+            classItem.subjectName,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+              color: isActive ? Colors.white : colorScheme.onSurface,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const Spacer(),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Text(
-                  classItem.subjectName,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isActive
-                        ? colorScheme.onPrimary
-                        : colorScheme.onSurface,
+              Row(
+                children: [
+                  Icon(
+                    Icons.room_rounded,
+                    size: 14,
+                    color: isActive ? Colors.white70 : colorScheme.onSurfaceVariant,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  const SizedBox(width: 4),
+                  Text(
+                    classItem.roomNumber ?? '-',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isActive ? Colors.white70 : colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
               if (markText != null && markText.isNotEmpty)
                 Container(
-                  margin: const EdgeInsets.only(left: 8),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isActive
-                        ? colorScheme.onPrimary.withValues(alpha: 0.2)
-                        : AppColors.success.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
+                    color: isActive ? Colors.white24 : AppColors.success.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     markText,
                     style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: isActive
-                          ? colorScheme.onPrimary
-                          : AppColors.success,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: isActive ? Colors.white : AppColors.success,
                     ),
                   ),
                 ),
-            ],
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              Icon(
-                Icons.room_rounded,
-                size: 14,
-                color: isActive
-                    ? colorScheme.onPrimary.withValues(alpha: 0.9)
-                    : colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                classItem.roomNumber ?? '-',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isActive
-                      ? colorScheme.onPrimary.withValues(alpha: 0.9)
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ),
             ],
           ),
         ],

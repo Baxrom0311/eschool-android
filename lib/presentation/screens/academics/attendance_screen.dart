@@ -30,7 +30,6 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   void _loadAttendance(DateTime date) {
     final selectedChild = ref.read(selectedChildProvider);
     if (selectedChild != null) {
-      // Format month as "yyyy-MM"
       final monthStr = "${date.year}-${date.month.toString().padLeft(2, '0')}";
       ref
           .read(attendanceProvider.notifier)
@@ -51,17 +50,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     final records = attendanceData?.records ?? [];
     final isLoading = attendanceAsync.isLoading;
 
-    // Convert List<AttendanceModel> to Map<DateTime, AttendanceStatus> for calendar
     final Map<DateTime, AttendanceStatus> attendanceMap = {};
     for (var record in records) {
       try {
         final date = DateTime.parse(record.date);
-        // Normalize to date only (year, month, day) to match TableCalendar
         final normalizedDate = DateTime(date.year, date.month, date.day);
         attendanceMap[normalizedDate] = record.status;
-      } catch (e) {
-        // Handle parse error
-      }
+      } catch (e) {}
     }
 
     ref.listen(selectedChildProvider, (previous, next) {
@@ -70,298 +65,225 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       }
     });
 
-    if (hasError && attendanceData == null) {
-      return Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        appBar: AppBar(
-          title: Text(l10n.attendanceTitle),
-          backgroundColor:
-              theme.appBarTheme.backgroundColor ?? colorScheme.surface,
-          foregroundColor:
-              theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
-        ),
-        body: _AttendanceErrorView(
-          message: errorMessage ?? l10n.errorServer,
-          onRetry: () => _loadAttendance(_focusedDay),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(l10n.attendanceTitle),
-        backgroundColor:
-            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
-        foregroundColor:
-            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            if (hasError && errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: _InlineErrorBanner(message: errorMessage),
-              ),
-            // ─── Stats Row ───
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _StatBox(
-                      label: l10n.attendanceTotalLessonsLabel,
-                      value: summary?.totalDays.toString() ?? '-',
-                      color: AppColors.primaryBlue,
-                    ),
+      body: CustomScrollView(
+        slivers: [
+          // ─── Premium Header ───
+          SliverAppBar(
+            expandedHeight: 120,
+            pinned: true,
+            backgroundColor: theme.colorScheme.primary,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.secondary,
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatBox(
-                      label: l10n.attendancePresentLabel,
-                      value: summary?.presentDays.toString() ?? '-',
-                      color: AppColors.success,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatBox(
-                      label: l10n.attendanceAbsentLabel,
-                      value: summary?.absentDays.toString() ?? '-',
-                      color: AppColors.danger,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ─── Calendar Card ───
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: colorScheme.outline.withValues(alpha: 0.6),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.shadowColor.withValues(alpha: 0.05),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
               ),
-              child: Stack(
-                children: [
-                  TableCalendar(
-                    locale: Localizations.localeOf(context).languageCode,
-                    firstDay: DateTime.now().subtract(
-                      const Duration(days: 365),
-                    ),
-                    lastDay: DateTime.now().add(const Duration(days: 30)),
-                    focusedDay: _focusedDay,
-                    headerStyle: const HeaderStyle(
-                      formatButtonVisible: false,
-                      titleCentered: true,
-                      titleTextStyle: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    calendarStyle: const CalendarStyle(
-                      outsideDaysVisible: false,
-                    ),
-                    onPageChanged: (focusedDay) {
-                      setState(() {
-                        _focusedDay = focusedDay;
-                      });
-                      _loadAttendance(focusedDay);
-                    },
-                    calendarBuilders: CalendarBuilders(
-                      defaultBuilder: (context, day, focusedDay) {
-                        final normalizedDay = DateTime(
-                          day.year,
-                          day.month,
-                          day.day,
-                        );
-                        final status = attendanceMap[normalizedDay];
-                        if (status != null) {
-                          return _buildDayMarker(day, status);
-                        }
-                        return null;
-                      },
-                      todayBuilder: (context, day, focusedDay) {
-                        final normalizedDay = DateTime(
-                          day.year,
-                          day.month,
-                          day.day,
-                        );
-                        final status = attendanceMap[normalizedDay];
-                        if (status != null) {
-                          return _buildDayMarker(day, status);
-                        }
-                        return _buildDayMarker(day, null, isToday: true);
-                      },
-                    ),
-                  ),
-                  if (isLoading)
-                    const Positioned.fill(
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                ],
+              title: Text(
+                l10n.attendanceTitle,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
               ),
+              centerTitle: true,
             ),
+          ),
 
-            // ─── Legend ───
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+          SliverToBoxAdapter(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 32),
+              child: Column(
                 children: [
-                  _LegendItem(
-                    label: l10n.attendancePresentLegend,
-                    color: AppColors.success,
+                  if (hasError && errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: _InlineErrorBanner(message: errorMessage),
+                    ),
+                  
+                  // ─── Stats Row (Premium Design) ───
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _StatBox(
+                            label: l10n.attendanceTotalLessonsLabel.toUpperCase(),
+                            value: summary?.totalDays.toString() ?? '-',
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _StatBox(
+                            label: l10n.attendancePresentLabel.toUpperCase(),
+                            value: summary?.presentDays.toString() ?? '-',
+                            color: AppColors.success,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _StatBox(
+                            label: l10n.attendanceAbsentLabel.toUpperCase(),
+                            value: summary?.absentDays.toString() ?? '-',
+                            color: AppColors.danger,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  _LegendItem(
-                    label: l10n.attendanceAbsentLegend,
-                    color: AppColors.danger,
+
+                  // ─── Calendar Card ───
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(
+                        color: colorScheme.outline.withValues(alpha: 0.3),
+                        width: 0.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 30,
+                          offset: const Offset(0, 15),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        TableCalendar(
+                          locale: Localizations.localeOf(context).languageCode,
+                          firstDay: DateTime.now().subtract(const Duration(days: 365)),
+                          lastDay: DateTime.now().add(const Duration(days: 30)),
+                          focusedDay: _focusedDay,
+                          headerStyle: HeaderStyle(
+                            formatButtonVisible: false,
+                            titleCentered: true,
+                            titleTextStyle: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                            ),
+                            leftChevronIcon: const Icon(Icons.chevron_left_rounded, color: AppColors.primaryBlue),
+                            rightChevronIcon: const Icon(Icons.chevron_right_rounded, color: AppColors.primaryBlue),
+                          ),
+                          daysOfWeekStyle: DaysOfWeekStyle(
+                            weekdayStyle: TextStyle(
+                              color: AppColors.slate500,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                            weekendStyle: TextStyle(
+                              color: AppColors.danger.withValues(alpha: 0.7),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                          ),
+                          calendarStyle: CalendarStyle(
+                            outsideDaysVisible: false,
+                            defaultTextStyle: const TextStyle(fontWeight: FontWeight.w600),
+                            weekendTextStyle: TextStyle(
+                              color: AppColors.danger.withValues(alpha: 0.7),
+                              fontWeight: FontWeight.w600,
+                            ),
+                            todayDecoration: BoxDecoration(
+                              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            todayTextStyle: const TextStyle(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          onPageChanged: (focusedDay) {
+                            setState(() {
+                              _focusedDay = focusedDay;
+                            });
+                            _loadAttendance(focusedDay);
+                          },
+                          calendarBuilders: CalendarBuilders(
+                            defaultBuilder: (context, day, focusedDay) {
+                              final normalizedDay = DateTime(day.year, day.month, day.day);
+                              final status = attendanceMap[normalizedDay];
+                              if (status != null) {
+                                return _buildDayMarker(day, status);
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        if (isLoading)
+                          const Positioned.fill(
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                      ],
+                    ),
                   ),
-                  _LegendItem(
-                    label: l10n.attendanceLateLegend,
-                    color: Colors.amber,
+
+                  // ─── Legend ───
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _LegendItem(label: l10n.attendancePresentLegend, color: AppColors.success),
+                        _LegendItem(label: l10n.attendanceAbsentLegend, color: AppColors.danger),
+                        _LegendItem(label: l10n.attendanceLateLegend, color: Colors.amber),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDayMarker(
-    DateTime day,
-    AttendanceStatus? status, {
-    bool isToday = false,
-  }) {
-    Color color = Colors.transparent;
-    Color textColor = Theme.of(context).colorScheme.onSurface;
-
-    if (status != null) {
-      switch (status) {
-        case AttendanceStatus.present:
-          color = AppColors.success;
-          textColor = AppColors.success;
-          break;
-        case AttendanceStatus.absent:
-          color = AppColors.danger;
-          textColor = AppColors.danger;
-          break;
-        case AttendanceStatus.late_:
-          color = Colors.amber;
-          textColor = Colors.amber[800]!;
-          break;
-        case AttendanceStatus.excused:
-          color = Colors.blueGrey;
-          textColor = Colors.blueGrey;
-          break;
-      }
-    } else if (isToday) {
-      color = AppColors.primaryBlue;
-      textColor = AppColors.primaryBlue;
-    } else {
-      // Default handler for Today builder if we hit here without data
-      return const SizedBox.shrink();
+  Widget _buildDayMarker(DateTime day, AttendanceStatus status) {
+    Color color;
+    switch (status) {
+      case AttendanceStatus.present:
+        color = AppColors.success;
+        break;
+      case AttendanceStatus.absent:
+        color = AppColors.danger;
+        break;
+      case AttendanceStatus.late_:
+        color = Colors.amber;
+        break;
+      case AttendanceStatus.excused:
+        color = Colors.blueGrey;
+        break;
     }
 
     return Container(
-      margin: const EdgeInsets.all(4),
+      margin: const EdgeInsets.all(6),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color, width: 1.5),
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
       ),
       child: Text(
         day.day.toString(),
-        style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
-      ),
-    );
-  }
-}
-
-class _AttendanceErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _AttendanceErrorView({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.attendanceBackendErrorTitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            SelectableText(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: colorScheme.onSurfaceVariant,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: onRetry, child: Text(l10n.retry)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InlineErrorBanner extends StatelessWidget {
-  final String message;
-
-  const _InlineErrorBanner({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.error.withValues(alpha: 0.35)),
-      ),
-      child: SelectableText(
-        message,
         style: TextStyle(
-          fontSize: 12,
-          color: colorScheme.onErrorContainer,
-          height: 1.35,
+          fontWeight: FontWeight.w900,
+          color: color.withValues(alpha: 0.9),
+          fontSize: 14,
         ),
       ),
     );
@@ -373,39 +295,38 @@ class _StatBox extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _StatBox({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
+  const _StatBox({required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 1),
       ),
       child: Column(
         children: [
           Text(
             value,
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
               color: color,
+              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
-              color: color.withValues(alpha: 0.8),
-              fontWeight: FontWeight.w600,
+              fontSize: 8,
+              color: color.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -421,25 +342,56 @@ class _LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Row(
       children: [
         Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
         ),
         const SizedBox(width: 8),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
-            color: colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w500,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textSecondary,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _InlineErrorBanner extends StatelessWidget {
+  final String message;
+  const _InlineErrorBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.error.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        message,
+        style: TextStyle(fontSize: 12, color: colorScheme.onErrorContainer, height: 1.4, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

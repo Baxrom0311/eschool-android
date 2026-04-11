@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../providers/academic_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/schedule/schedule_card.dart';
@@ -63,20 +64,30 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [
-          // ─── Blue Header ───
+          // ─── Premium Header ───
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.only(bottom: 32),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [colorScheme.primary, colorScheme.secondary],
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.secondary,
+                ],
               ),
               borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
+                bottomLeft: Radius.circular(40),
+                bottomRight: Radius.circular(40),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: SafeArea(
               child: Column(
@@ -86,9 +97,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                     child: Text(
                       l10n.scheduleTitle,
                       style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
                         color: Colors.white,
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
@@ -123,10 +135,20 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                               color: isSelected
                                   ? Colors.white
                                   : Colors.white.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(16),
-                              border: isToday && !isSelected
-                                  ? Border.all(color: Colors.white, width: 1)
-                                  : null,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected 
+                                    ? Colors.white 
+                                    : (isToday ? Colors.white.withValues(alpha: 0.4) : Colors.transparent),
+                                width: 1,
+                              ),
+                              boxShadow: isSelected ? [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ] : null,
                             ),
                             child: Column(
                               children: [
@@ -147,10 +169,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                                 Text(
                                   day.day.toString(),
                                   style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w900,
                                     color: isSelected
-                                        ? colorScheme.primary
+                                        ? AppColors.primaryBlue
                                         : Colors.white,
                                   ),
                                 ),

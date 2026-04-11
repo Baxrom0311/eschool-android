@@ -48,7 +48,6 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
     final colorScheme = theme.colorScheme;
     final assignmentsAsync = ref.watch(assignmentsProvider);
 
-    // Extract data safely
     final assignments = assignmentsAsync.valueOrNull?.assignments ?? [];
     final isLoading = assignmentsAsync.isLoading;
     final hasError = assignmentsAsync.hasError;
@@ -63,110 +62,101 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
-          // ═══════════════════════════════════════════════════════
-          // Blue Header with User Info
-          // ═══════════════════════════════════════════════════════
+          // ─── Premium Header ───
           SliverAppBar(
-            expandedHeight: 180,
+            expandedHeight: 200,
             pinned: true,
-            backgroundColor: AppColors.primaryBlue,
+            backgroundColor: theme.colorScheme.primary,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.secondary,
+                    ],
                   ),
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Consumer(
-                          builder: (context, ref, _) {
-                            final user = ref.watch(userProvider).user;
-                            final selectedChild = ref.watch(
-                              selectedChildProvider,
-                            );
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final user = ref.watch(userProvider).user;
+                        final selectedChild = ref.watch(selectedChildProvider);
 
-                            return Row(
-                              children: [
-                                // Avatar
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: Colors.white,
-                                  backgroundImage:
-                                      selectedChild?.avatarUrl != null
-                                      ? NetworkImage(selectedChild!.avatarUrl!)
-                                      : null,
-                                  child: selectedChild?.avatarUrl == null
-                                      ? const CircleAvatar(
-                                          radius: 28,
-                                          backgroundColor: Color(0xFFE8F0FF),
-                                          child: Icon(
-                                            Icons.person_rounded,
-                                            size: 32,
-                                            color: AppColors.primaryBlue,
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 16),
-
-                                // User Info
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        selectedChild != null
-                                            ? selectedChild.fullName
-                                            : (user?.fullName ??
-                                                  l10n.userFallbackName),
-                                        style: const TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        selectedChild?.className ??
-                                            l10n.noClassLabel,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.white.withValues(
-                                            alpha: 0.9,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                        return Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                              ),
+                              child: CircleAvatar(
+                                radius: 34,
+                                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                                backgroundImage: selectedChild?.avatarUrl != null
+                                    ? NetworkImage(selectedChild!.avatarUrl!)
+                                    : null,
+                                child: selectedChild?.avatarUrl == null
+                                    ? Text(
+                                        (selectedChild?.fullName ?? user?.fullName ?? "U")[0].toUpperCase(),
+                                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                                      )
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    selectedChild != null ? selectedChild.fullName : (user?.fullName ?? l10n.userFallbackName),
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      letterSpacing: -0.5,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
+                                  Text(
+                                    selectedChild?.className ?? l10n.noClassLabel,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
               ),
             ),
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(60),
+              preferredSize: const Size.fromHeight(64),
               child: Container(
-                height: 60,
+                height: 64,
                 decoration: BoxDecoration(
                   color: theme.cardColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
@@ -174,18 +164,14 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                       child: _TabButton(
                         label: l10n.gradesTab,
                         isActive: false,
-                        onTap: () {
-                          context.push(RouteNames.grades);
-                        },
+                        onTap: () => context.push(RouteNames.grades),
                       ),
                     ),
                     Expanded(
                       child: _TabButton(
                         label: l10n.ratingTab,
                         isActive: false,
-                        onTap: () {
-                          context.push(RouteNames.rating);
-                        },
+                        onTap: () => context.push(RouteNames.rating),
                       ),
                     ),
                     Expanded(
@@ -201,18 +187,16 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
             ),
           ),
 
-          // ═══════════════════════════════════════════════════════
-          // Sub-Tabs (New / Weekly)
-          // ═══════════════════════════════════════════════════════
+          // ─── Sub-Tabs (New / All) (Premium Segment) ───
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               child: Container(
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.slate100,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                padding: const EdgeInsets.all(4),
                 child: Row(
                   children: [
                     Expanded(
@@ -245,158 +229,120 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
             ),
           ),
 
-          // ═══════════════════════════════════════════════════════
-          // Assignment Cards List
-          // ═══════════════════════════════════════════════════════
+          // ─── Assignments List ───
           if (isLoading && assignments.isEmpty)
-            const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
           else if (hasError && assignments.isEmpty)
-            SliverFillRemaining(
-              child: Center(child: Text('${assignmentsAsync.error}')),
-            )
+            SliverFillRemaining(child: Center(child: Text('${assignmentsAsync.error}')))
           else if (assignments.isEmpty)
-            SliverFillRemaining(
-              child: Center(child: Text(l10n.assignmentsEmpty)),
-            )
+            SliverFillRemaining(child: Center(child: Text(l10n.assignmentsEmpty)))
           else
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final assignment = assignments[index];
-                  // Logic to determine color based on subject or random
-                  // For now, let's use a default or consistent hashing
-                  final color =
-                      Colors.primaries[assignment.subjectName.length %
-                          Colors.primaries.length];
+                  final List<Color> palette = [
+                    AppColors.primaryBlue,
+                    const Color(0xFF8B5CF6), // Purple
+                    const Color(0xFFF59E0B), // Amber
+                    const Color(0xFF10B981), // Emerald
+                    const Color(0xFFEC4899), // Pink
+                  ];
+                  final color = palette[index % palette.length];
 
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: InkWell(
-                      onTap: () {
-                        context.push(
-                          RouteNames.assignmentDetail,
-                          extra: assignment,
-                        );
-                      },
-                      child: _AssignmentCard(
-                        subject: assignment.subjectName,
-                        title: assignment.title,
-                        description: assignment.description ?? '',
-                        deadline: assignment.dueDate.split(
-                          'T',
-                        )[0], // Simple format
-                        isUrgent: assignment.isOverdue, // or logic?
-                        status: assignment.status, // Pass enum directly
-                        color: color,
-                      ),
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _AssignmentCard(
+                      assignment: assignment,
+                      color: color,
+                      onTap: () => context.push(RouteNames.assignmentDetail, extra: assignment),
                     ),
                   );
                 }, childCount: assignments.length),
               ),
             ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════
-// Tab Button Widget
-// ═══════════════════════════════════════════════════════
 
 class _TabButton extends StatelessWidget {
   final String label;
   final bool isActive;
   final VoidCallback? onTap;
 
-  const _TabButton({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
+  const _TabButton({required this.label, required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return InkWell(
       onTap: onTap,
-      child: Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isActive ? colorScheme.primary : Colors.transparent,
-              width: 3,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isActive ? FontWeight.w900 : FontWeight.w600,
+              color: isActive ? AppColors.primaryBlue : AppColors.textSecondary,
+              letterSpacing: -0.2,
             ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-            color: isActive
-                ? colorScheme.primary
-                : colorScheme.onSurfaceVariant,
-          ),
-        ),
+          if (isActive)
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              width: 24,
+              height: 3,
+              decoration: BoxDecoration(
+                color: AppColors.primaryBlue,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+        ],
       ),
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════
-// Segment Button Widget
-// ═══════════════════════════════════════════════════════
 
 class _SegmentButton extends StatelessWidget {
   final String label;
   final bool isActive;
   final VoidCallback onTap;
 
-  const _SegmentButton({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
+  const _SegmentButton({required this.label, required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isActive ? theme.cardColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: isActive ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: theme.shadowColor.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ]
               : null,
         ),
         child: Text(
-          label,
+          label.toUpperCase(),
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 14,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-            color: isActive
-                ? colorScheme.primary
-                : colorScheme.onSurfaceVariant,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.5,
+            color: isActive ? AppColors.slate900 : AppColors.slate500,
           ),
         ),
       ),
@@ -404,181 +350,144 @@ class _SegmentButton extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════
-// Assignment Card Widget
-// ═══════════════════════════════════════════════════════
-
 class _AssignmentCard extends StatelessWidget {
-  final String subject;
-  final String title;
-  final String description;
-  final String deadline;
-  final bool isUrgent;
-  final AssignmentStatus status;
+  final AssignmentModel assignment;
   final Color color;
+  final VoidCallback onTap;
 
-  const _AssignmentCard({
-    required this.subject,
-    required this.title,
-    required this.description,
-    required this.deadline,
-    required this.isUrgent,
-    required this.status,
-    required this.color,
-  });
+  const _AssignmentCard({required this.assignment, required this.color, required this.onTap});
 
-  Color get statusColor {
+  Color _getStatusColor(AssignmentStatus status) {
     switch (status) {
-      case AssignmentStatus.pending:
-        return const Color(0xFFFF9800); // Orange
-      case AssignmentStatus.submitted:
-        return const Color(0xFF2196F3); // Blue
-      case AssignmentStatus.graded:
-        return const Color(0xFF4CAF50); // Green
-      case AssignmentStatus.overdue:
-        return const Color(0xFFF44336); // Red
+      case AssignmentStatus.pending: return const Color(0xFFF59E0B);
+      case AssignmentStatus.submitted: return const Color(0xFF3B82F6);
+      case AssignmentStatus.graded: return const Color(0xFF10B981);
+      case AssignmentStatus.overdue: return const Color(0xFFEF4444);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final statusLabel = l10n.assignmentStatusLabel(status);
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final statusColor = _getStatusColor(assignment.status);
 
     return Container(
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border(
-          left: BorderSide(
-            color: isUrgent ? const Color(0xFFF44336) : color,
-            width: 4,
-          ),
-        ),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3), width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Row
-            Row(
-              children: [
-                // Subject Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    subject,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // Status Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    statusLabel,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Deadline
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.schedule_rounded,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      deadline,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colorScheme.onSurfaceVariant,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: color.withValues(alpha: 0.2)),
+                        ),
+                        child: Text(
+                          assignment.subjectName.toUpperCase(),
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: color, letterSpacing: 0.5),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Title
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: colorScheme.onSurface,
+                      const SizedBox(width: 8),
+                      Container(
+                        height: 4,
+                        width: 4,
+                        decoration: BoxDecoration(color: theme.colorScheme.outline, shape: BoxShape.circle),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.schedule_rounded, size: 14, color: AppColors.slate400),
+                      const SizedBox(width: 4),
+                      Text(
+                        assignment.dueDate.split('T')[0],
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.slate400),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    assignment.title,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    assignment.description ?? '',
+                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.4),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.assignmentStatusLabel(assignment.status).toUpperCase(),
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: statusColor, letterSpacing: 0.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      if (assignment.status == AssignmentStatus.pending || assignment.status == AssignmentStatus.overdue)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryBlue,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            l10n.assignmentSubmitAction,
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-
-            // Description
-            Text(
-              description,
-              style: TextStyle(
-                fontSize: 14,
-                color: colorScheme.onSurfaceVariant,
-                height: 1.4,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 16),
-
-            // Submit Button
-            if (status == AssignmentStatus.pending ||
-                status == AssignmentStatus.overdue)
-              SizedBox(
-                width: double.infinity,
-                child: CustomButton(
-                  text: l10n.assignmentSubmitAction,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.assignmentSubmitSoon)),
-                    );
-                  },
-                  height: 44,
-                  borderRadius: 12,
-                ),
-              ),
-          ],
+          ),
         ),
       ),
     );

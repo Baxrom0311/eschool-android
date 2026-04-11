@@ -17,31 +17,40 @@ class DailyMenuCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            l10n.latestNewsTitle,
+            l10n.todayLunchTitle,
             style: textTheme.titleLarge?.copyWith(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
             ),
           ),
         ),
         const SizedBox(height: 12),
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
           height: 180,
+          width: 350,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
+            borderRadius: BorderRadius.circular(32),
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: gradientColors,
+              colors: [
+                Color(0xFF065F46), // Emerald 800
+                Color(0xFF10B981), // Emerald 500
+              ],
+            ),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.1),
+              width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: theme.shadowColor.withValues(alpha: 0.14),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
+                color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),

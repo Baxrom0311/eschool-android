@@ -1,49 +1,45 @@
 import 'package:flutter/material.dart';
-
 import '../constants/app_colors.dart';
 
-/// MaterialApp uchun asosiy theme
+/// MaterialApp uchun asosiy theme - Deep Professional Navy
 class AppTheme {
   AppTheme._();
 
-  static const Color _darkBackground = Color(0xFF0F172A);
-  static const Color _darkSurface = Color(0xFF162033);
-  static const Color _darkCard = Color(0xFF1B2940);
-  static const Color _darkBorder = Color(0xFF30415F);
-  static const Color _darkHint = Color(0xFF94A3B8);
-
   static ThemeData get lightTheme => _buildTheme(
     brightness: Brightness.light,
-    scaffoldBackgroundColor: AppColors.background,
+    primaryColor: AppColors.skyBlue600,
+    scaffoldBackgroundColor: AppColors.skyBlue50,
     surfaceColor: AppColors.white,
-    cardColor: AppColors.cardBackground,
-    borderColor: AppColors.border,
-    dividerColor: AppColors.divider,
-    hintColor: AppColors.textHint,
-    appBarBackgroundColor: AppColors.primaryBlue,
-    appBarForegroundColor: AppColors.white,
+    cardColor: AppColors.white,
+    borderColor: AppColors.slate200,
+    dividerColor: AppColors.slate100,
+    hintColor: AppColors.slate400,
+    appBarBackgroundColor: AppColors.white,
+    appBarForegroundColor: AppColors.slate900,
     bottomNavigationBackgroundColor: AppColors.white,
-    bottomNavigationUnselectedColor: AppColors.textHint,
-    shadowColor: AppColors.shadow,
+    bottomNavigationUnselectedColor: AppColors.slate400,
+    shadowColor: const Color(0x0A0284C7), // Subtle Sky Blue shadow
   );
 
   static ThemeData get darkTheme => _buildTheme(
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: _darkBackground,
-    surfaceColor: _darkSurface,
-    cardColor: _darkCard,
-    borderColor: _darkBorder,
-    dividerColor: _darkBorder,
-    hintColor: _darkHint,
-    appBarBackgroundColor: _darkSurface,
-    appBarForegroundColor: Colors.white,
-    bottomNavigationBackgroundColor: _darkSurface,
-    bottomNavigationUnselectedColor: _darkHint,
+    primaryColor: AppColors.primaryBlue,
+    scaffoldBackgroundColor: AppColors.slate900,
+    surfaceColor: AppColors.slate800,
+    cardColor: AppColors.slate800,
+    borderColor: AppColors.slate700,
+    dividerColor: AppColors.slate700,
+    hintColor: AppColors.slate500,
+    appBarBackgroundColor: AppColors.slate900,
+    appBarForegroundColor: AppColors.white,
+    bottomNavigationBackgroundColor: AppColors.slate800,
+    bottomNavigationUnselectedColor: AppColors.slate500,
     shadowColor: Colors.black45,
   );
 
   static ThemeData _buildTheme({
     required Brightness brightness,
+    required Color primaryColor,
     required Color scaffoldBackgroundColor,
     required Color surfaceColor,
     required Color cardColor,
@@ -56,132 +52,95 @@ class AppTheme {
     required Color bottomNavigationUnselectedColor,
     required Color shadowColor,
   }) {
-    final colorScheme =
-        ColorScheme.fromSeed(
-          seedColor: AppColors.primaryBlue,
-          brightness: brightness,
-        ).copyWith(
-          primary: AppColors.primaryBlue,
-          secondary: AppColors.secondaryBlue,
-          error: AppColors.danger,
-          surface: surfaceColor,
-          outline: borderColor,
-          outlineVariant: dividerColor,
-        );
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: primaryColor,
+      brightness: brightness,
+    ).copyWith(
+      primary: primaryColor,
+      onPrimary: Colors.white,
+      secondary: brightness == Brightness.light ? AppColors.skyBlue400 : AppColors.lightBlue,
+      onSecondary: Colors.white,
+      error: AppColors.danger,
+      surface: surfaceColor,
+      onSurface: brightness == Brightness.light ? AppColors.slate900 : AppColors.slate50,
+      outline: borderColor,
+      outlineVariant: dividerColor,
+    );
+
+    final textTheme = (brightness == Brightness.light
+        ? Typography.blackMountainView
+        : Typography.whiteMountainView).copyWith(
+      headlineLarge: TextStyle(fontWeight: FontWeight.w900, color: brightness == Brightness.light ? AppColors.slate900 : AppColors.slate50, letterSpacing: -1.0),
+      headlineMedium: TextStyle(fontWeight: FontWeight.w800, color: brightness == Brightness.light ? AppColors.slate900 : AppColors.slate50, letterSpacing: -0.5),
+      titleLarge: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: brightness == Brightness.light ? AppColors.slate900 : AppColors.slate50, letterSpacing: -0.2),
+      bodyLarge: TextStyle(color: brightness == Brightness.light ? AppColors.slate700 : AppColors.slate200, fontSize: 16),
+      bodyMedium: TextStyle(color: brightness == Brightness.light ? AppColors.slate600 : AppColors.slate400, fontSize: 14),
+    );
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       primaryColor: AppColors.primaryBlue,
       scaffoldBackgroundColor: scaffoldBackgroundColor,
-      fontFamily: 'Roboto',
+      fontFamily: 'Inter',
       colorScheme: colorScheme,
       cardColor: cardColor,
       shadowColor: shadowColor,
+      textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: appBarBackgroundColor,
         foregroundColor: appBarForegroundColor,
         elevation: 0,
-        centerTitle: true,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
         titleTextStyle: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+          fontSize: 22,
+          fontWeight: FontWeight.w900,
           color: appBarForegroundColor,
+          letterSpacing: -0.8,
         ),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(32), // Increased to 32px for premium feel
+          side: BorderSide(color: borderColor, width: 0.5), // Thinner, more professional border
+        ),
+        color: cardColor,
+        margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryBlue,
           foregroundColor: AppColors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          minimumSize: const Size.fromHeight(56),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(18),
           ),
-          elevation: 2,
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          elevation: 0,
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.2),
         ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primaryBlue,
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: brightness == Brightness.dark
-              ? AppColors.white
-              : AppColors.primaryBlue,
-          side: BorderSide(
-            color: brightness == Brightness.dark
-                ? colorScheme.outline
-                : AppColors.primaryBlue,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: surfaceColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.danger),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.danger, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
-        hintStyle: TextStyle(color: hintColor),
-        labelStyle: TextStyle(color: hintColor),
-        prefixIconColor: hintColor,
-        suffixIconColor: hintColor,
-      ),
-      cardTheme: CardThemeData(
-        elevation: 2,
-        shadowColor: shadowColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: cardColor,
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: bottomNavigationBackgroundColor,
         selectedItemColor: AppColors.primaryBlue,
         unselectedItemColor: bottomNavigationUnselectedColor,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
+        elevation: 0,
+        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+        unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: brightness == Brightness.light ? AppColors.slate100 : AppColors.slate800,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: AppColors.primaryBlue, width: 1.5),
         ),
-        unselectedLabelStyle: const TextStyle(fontSize: 12),
-      ),
-      dividerTheme: DividerThemeData(
-        color: dividerColor,
-        thickness: 1,
-        space: 1,
-      ),
-      snackBarTheme: SnackBarThemeData(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: brightness == Brightness.dark ? _darkCard : null,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        hintStyle: TextStyle(color: hintColor, fontSize: 14, fontWeight: FontWeight.w500),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),
     );
   }

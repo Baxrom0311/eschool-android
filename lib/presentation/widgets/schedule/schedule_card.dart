@@ -11,7 +11,7 @@ class ScheduleCard extends StatelessWidget {
   final String teacherName;
   final String? markText;
   final bool isNow;
-  final Color color;
+  final Color? color;
 
   const ScheduleCard({
     super.key,
@@ -22,7 +22,7 @@ class ScheduleCard extends StatelessWidget {
     required this.teacherName,
     this.markText,
     this.isNow = false,
-    this.color = AppColors.primaryBlue,
+    this.color,
   });
 
   @override
@@ -36,47 +36,81 @@ class ScheduleCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── Time Section ───
+          // ─── Time Indicator ───
           SizedBox(
-            width: 80,
+            width: 70,
             child: Column(
               children: [
                 Text(
                   startTime,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: isNow ? color : colorScheme.onSurface,
+                    fontWeight: FontWeight.w900,
+                    color: isNow ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Container(width: 2, height: 30, color: colorScheme.outline),
+                const SizedBox(height: 8),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: isNow ? theme.colorScheme.primary : theme.dividerColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isNow ? theme.colorScheme.primary : AppColors.slate400).withValues(alpha: 0.3),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          (isNow ? theme.colorScheme.primary : theme.dividerColor),
+                          theme.dividerColor.withValues(alpha: 0.5),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   endTime,
                   style: TextStyle(
-                    fontSize: 13,
-                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.slate400,
                   ),
                 ),
+                const SizedBox(height: 4),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
           // ─── Content Card Section ───
           Expanded(
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: theme.cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border(left: BorderSide(color: color, width: 4)),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: (isNow ? theme.colorScheme.primary : colorScheme.outline).withValues(alpha: 0.15),
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.shadowColor.withValues(alpha: 0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
@@ -88,10 +122,10 @@ class ScheduleCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           subjectName,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.2,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -100,77 +134,63 @@ class ScheduleCard extends StatelessWidget {
                       if (markText != null && markText!.isNotEmpty)
                         Container(
                           margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withValues(alpha: 0.12),
+                            color: AppColors.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             markText!,
                             style: const TextStyle(
                               color: AppColors.success,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
                         ),
                       if (isNow)
                         Container(
                           margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryBlue,
+                            gradient: const LinearGradient(
+                              colors: [AppColors.primaryBlue, Color(0xFF60A5FA)],
+                            ),
                             borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Text(
-                            l10n.currentLessonBadge,
+                            l10n.currentLessonBadge.toUpperCase(),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 14,
-                        color: colorScheme.onSurfaceVariant,
+                      _InfoItem(
+                        icon: Icons.location_on_rounded,
+                        label: l10n.roomLabelText(room),
+                        color: AppColors.slate500,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        l10n.roomLabelText(room),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Icon(
-                        Icons.person_outline_rounded,
-                        size: 14,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 20),
                       Expanded(
-                        child: Text(
-                          teacherName,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: _InfoItem(
+                          icon: Icons.person_rounded,
+                          label: teacherName,
+                          color: AppColors.slate500,
                         ),
                       ),
                     ],
@@ -181,6 +201,36 @@ class ScheduleCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _InfoItem({required this.icon, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color.withValues(alpha: 0.7)),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }

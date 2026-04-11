@@ -617,3 +617,9 @@ final attendanceProvider =
     AsyncNotifierProvider.autoDispose<AttendanceNotifier, AttendanceData>(
       AttendanceNotifier.new,
     );
+
+// ═══════════════════════════════════════════════════════════════
+// GLOBAL UI STATE PROVIDERS
+// ═══════════════════════════════════════════════════════════════
+
+final selectedDateProvider = StateProvider<DateTime>((ref) => DateTime.now());

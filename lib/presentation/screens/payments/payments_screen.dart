@@ -4,12 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import 'package:parent_school_app/l10n/app_localizations.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/payment_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/payments/balance_header.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/page_background.dart';
 
 /// Payments Screen - Main view for billing and payments
 class PaymentsScreen extends ConsumerStatefulWidget {
@@ -83,26 +85,31 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     final hasDebt = hasFinancialData && (state.balance?.hasDebt ?? false);
     final debtAmount = state.balance?.debtAmount ?? 0;
 
-    ref.listen(selectedChildProvider, (previous, next) {
-      if (next != null && previous?.id != next.id) {
-        _loadPaymentDataForSelectedChild();
-      }
-    });
-
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          l10n.paymentsTitle,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ColorFilter.mode(
+              Colors.white.withValues(alpha: 0.01),
+              BlendMode.srcOver,
+            ),
+            child: AppBar(
+              title: Text(
+                l10n.paymentsTitle,
+                style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
+              ),
+              centerTitle: true,
+              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+            ),
+          ),
         ),
-        backgroundColor:
-            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
-        foregroundColor:
-            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
-        elevation: 0,
       ),
-      body: state.isLoading && state.balance == null
+      body: PageBackground(
+        child: state.isLoading && state.balance == null
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: () => ref
@@ -110,128 +117,108 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   .refresh(studentId: child?.id),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 40),
                 child: Column(
                   children: [
                     // ─── Header Section ───
-                    Container(
-                      color:
-                          theme.appBarTheme.backgroundColor ??
-                          colorScheme.surface,
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                       child: BalanceHeader(
                         balance: hasFinancialData
-                            ? _formatCurrencyAmount(
-                                l10n,
-                                state.balance?.balance ?? 0,
-                              )
+                            ? _formatCurrencyAmount(l10n, state.balance?.balance ?? 0)
                             : l10n.noFinancialData,
-                        lastUpdated: _formatLastUpdated(
-                          l10n,
-                          state.balance?.nextPaymentDate,
-                        ),
+                        lastUpdated: _formatLastUpdated(l10n, state.balance?.nextPaymentDate),
                       ),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           if (state.error != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: colorScheme.errorContainer.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: colorScheme.error.withValues(alpha: 0.2)),
+                              ),
                               child: Text(
                                 state.error!,
-                                style: TextStyle(color: colorScheme.error),
+                                style: TextStyle(color: colorScheme.error, fontSize: 13, fontWeight: FontWeight.w600),
                               ),
                             ),
 
                           // ─── Contract Info Card ───
-                          if (child != null ||
-                              state.balance?.contractNumber != null)
+                          if (child != null || state.balance?.contractNumber != null)
                             _InfoCard(
                               title: l10n.contractInfoTitle,
                               icon: Icons.description_rounded,
                               items: [
                                 if (state.balance?.contractNumber != null)
-                                  {
-                                    'label': l10n.contractLabel,
-                                    'value': state.balance!.contractNumber!,
-                                  },
+                                  {'label': l10n.contractLabel, 'value': state.balance!.contractNumber!},
                                 if (child != null)
-                                  {
-                                    'label': l10n.studentLabel,
-                                    'value': child.fullName,
-                                  },
+                                  {'label': l10n.studentLabel, 'value': child.fullName},
                                 if (child != null)
-                                  {
-                                    'label': l10n.classLabel,
-                                    'value': child.className,
-                                  },
+                                  {'label': l10n.classLabel, 'value': child.className},
                                 if (hasFinancialData && state.balance != null)
-                                  {
-                                    'label': l10n.balanceLabel,
-                                    'value': _formatCurrencyAmount(
-                                      l10n,
-                                      state.balance!.balance,
-                                    ),
-                                  },
-                                if (hasFinancialData &&
-                                    (state.balance?.monthlyFee ?? 0) > 0)
-                                  {
-                                    'label': l10n.monthlyPaymentLabel,
-                                    'value': _formatCurrencyAmount(
-                                      l10n,
-                                      state.balance!.monthlyFee,
-                                    ),
-                                  },
+                                  {'label': l10n.balanceLabel, 'value': _formatCurrencyAmount(l10n, state.balance!.balance)},
+                                if (hasFinancialData && (state.balance?.monthlyFee ?? 0) > 0)
+                                  {'label': l10n.monthlyPaymentLabel, 'value': _formatCurrencyAmount(l10n, state.balance!.monthlyFee)},
                               ],
                             ),
+                          
                           const SizedBox(height: 24),
 
                           // ─── Payment Status ───
                           if (hasDebt)
                             Container(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFF3E0), // Light Orange
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.orange.withValues(alpha: 0.3),
-                                ),
+                                color: AppColors.amber.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(32),
+                                border: Border.all(color: AppColors.amber.withValues(alpha: 0.2), width: 1),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.amber.withValues(alpha: 0.05),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(
-                                    Icons.warning_amber_rounded,
-                                    color: Colors.orange,
-                                    size: 32,
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFF59E0B),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.priority_high_rounded, color: Colors.white, size: 20),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           l10n.debtExistsTitle,
                                           style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFFE65100),
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w900,
+                                            color: AppColors.amber,
+                                            letterSpacing: -0.5,
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
+                                        const SizedBox(height: 4),
                                         Text(
-                                          l10n.debtPaymentPrompt(
-                                            _formatCurrencyAmount(
-                                              l10n,
-                                              debtAmount,
-                                            ),
-                                          ),
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            color: Color(0xFFE65100),
+                                          l10n.debtPaymentPrompt(_formatCurrencyAmount(l10n, debtAmount)),
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.amber.withValues(alpha: 0.8),
                                           ),
                                         ),
                                       ],
@@ -240,35 +227,46 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                 ],
                               ),
                             ),
+                          
                           const SizedBox(height: 32),
 
                           // ─── Action Buttons ───
                           CustomButton(
                             text: l10n.payNowAction,
-                            onPressed: () {
-                              context.push(RouteNames.paymentMethod);
-                            },
-                            height: 56,
-                            borderRadius: 16,
+                            onPressed: () => context.push(RouteNames.paymentMethod),
+                            height: 60,
+                            borderRadius: 20,
                             icon: Icons.payments_rounded,
+                            backgroundColor: theme.colorScheme.primary,
                           ),
                           const SizedBox(height: 12),
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              context.push(RouteNames.paymentHistory);
-                            },
-                            icon: const Icon(Icons.history_rounded),
-                            label: Text(l10n.paymentHistoryTitle),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              side: BorderSide(
-                                color: colorScheme.primary,
-                                width: 1.5,
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => context.push(RouteNames.paymentHistory),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3), width: 1.5),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.history_rounded, color: theme.colorScheme.primary, size: 20),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      l10n.paymentHistoryTitle,
+                                      style: TextStyle(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              foregroundColor: colorScheme.primary,
                             ),
                           ),
                         ],
@@ -278,6 +276,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 ),
               ),
             ),
+      ),
     );
   }
 }
@@ -287,67 +286,70 @@ class _InfoCard extends StatelessWidget {
   final IconData icon;
   final List<Map<String, String>> items;
 
-  const _InfoCard({
-    required this.title,
-    required this.icon,
-    required this.items,
-  });
+  const _InfoCard({required this.title, required this.icon, required this.items});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    return Card(
-      elevation: 2,
-      shadowColor: theme.shadowColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(40),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3), width: 0.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             Row(
               children: [
-                Icon(icon, color: colorScheme.primary, size: 24),
-                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+                ),
+                const SizedBox(width: 16),
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
                   ),
                 ),
               ],
             ),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Divider(),
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Divider(height: 1),
             ),
-            ...items.map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      item['label']!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: colorScheme.onSurfaceVariant,
+            ...items.map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        item['label']!,
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurfaceVariant),
                       ),
-                    ),
-                    Text(
-                      item['value']!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
+                      Text(
+                        item['value']!,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                    ],
+                  ),
+                )),
           ],
         ),
       ),

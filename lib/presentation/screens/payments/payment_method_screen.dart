@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../providers/payment_provider.dart';
 import '../../providers/user_provider.dart';
@@ -103,101 +104,166 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(l10n.paymentMethodTitle),
-        backgroundColor:
-            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
-        foregroundColor:
-            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ─── Amount Input ───
-            Text(
-              l10n.paymentAmountLabel,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurfaceVariant,
+      body: CustomScrollView(
+        slivers: [
+          // ─── Premium Header ───
+          SliverAppBar(
+            expandedHeight: 120,
+            pinned: true,
+            backgroundColor: theme.colorScheme.primary,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.secondary,
+                    ],
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: colorScheme.outline),
-              ),
-              child: TextField(
-                controller: _amountController,
-                keyboardType: TextInputType.number,
+              title: Text(
+                l10n.paymentMethodTitle,
                 style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: '0',
-                  suffixText: l10n.currencyCode,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
                 ),
               ),
+              centerTitle: true,
             ),
-            const SizedBox(height: 32),
+          ),
 
-            // ─── Payment Methods ───
-            Text(
-              l10n.paymentMethodsPrompt,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ─── Amount Input ───
+                  Container(
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(
+                        color: colorScheme.outline.withValues(alpha: 0.3),
+                        width: 0.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          l10n.paymentAmountLabel.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primaryBlue,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _amountController,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                          ),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: '0',
+                            suffixText: ' ${l10n.currencyCode}',
+                            suffixStyle: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.slate400,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // ─── Payment Methods ───
+                  Text(
+                    l10n.paymentMethodsPrompt,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
+          ),
 
-            PaymentMethodCard(
-              name: 'Click',
-              logoUrl:
-                  'https://pay.click.uz/static/img/click_logo.png', // Fallback URL
-              isSelected: _selectedMethod == 'click',
-              onTap: () => setState(() => _selectedMethod = 'click'),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                PaymentMethodCard(
+                  name: 'Click',
+                  logoUrl: 'https://pay.click.uz/static/img/click_logo.png',
+                  isSelected: _selectedMethod == 'click',
+                  onTap: () => setState(() => _selectedMethod = 'click'),
+                ),
+                const SizedBox(height: 12),
+                PaymentMethodCard(
+                  name: 'PayMe',
+                  logoUrl: 'https://cdn.payme.uz/v2/logos/payme_logo.png',
+                  isSelected: _selectedMethod == 'payme',
+                  onTap: () => setState(() => _selectedMethod = 'payme'),
+                ),
+              ]),
             ),
-            const SizedBox(height: 12),
+          ),
 
-            PaymentMethodCard(
-              name: 'PayMe',
-              logoUrl:
-                  'https://cdn.payme.uz/v2/logos/payme_logo.png', // Fallback URL
-              isSelected: _selectedMethod == 'payme',
-              onTap: () => setState(() => _selectedMethod = 'payme'),
-            ),
-            const SizedBox(height: 48),
-
-            // ─── Pay Button ───
-            CustomButton(
-              text: l10n.paymentAction,
-              onPressed: isLoading ? null : _handlePayment,
-              isLoading: isLoading,
-              height: 56,
-              borderRadius: 16,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.paymentAgreementText,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.onSurfaceVariant,
-                height: 1.5,
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  CustomButton(
+                    text: l10n.paymentAction.toUpperCase(),
+                    onPressed: isLoading ? null : _handlePayment,
+                    isLoading: isLoading,
+                    height: 60,
+                    borderRadius: 20,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.paymentAgreementText,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.slate400,
+                      height: 1.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

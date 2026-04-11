@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../data/models/grade_model.dart';
 import '../../providers/academic_provider.dart';
 import '../../providers/user_provider.dart';
@@ -19,7 +20,6 @@ class GradesScreen extends ConsumerStatefulWidget {
 }
 
 class _GradesScreenState extends ConsumerState<GradesScreen> {
-  // Key to preserve scroll position if needed, though simpler just to reload data
   int? _lastLoadedChildId;
 
   void _loadGradesForSelectedChild({bool force = false}) {
@@ -71,9 +71,9 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
   }
 
   Color _gradeColor(int grade) {
-    if (grade >= 5) return Colors.green;
-    if (grade >= 4) return Colors.blue;
-    return Colors.orange;
+    if (grade >= 5) return AppColors.success;
+    if (grade >= 4) return AppColors.warning;
+    return AppColors.danger;
   }
 
   @override
@@ -107,7 +107,6 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
             return Center(child: Text(l10n.noGradesAvailable));
           }
 
-          // Calculate stats
           final double gpaFromSummary = summary.isNotEmpty
               ? summary.fold<double>(
                       0.0,
@@ -132,10 +131,7 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
             if (summary != null && summary.totalDays > 0) {
               return summary.attendancePercentage.round().clamp(0, 100);
             }
-            return (userState.selectedChild?.attendancePercentage ?? 0).clamp(
-              0,
-              100,
-            );
+            return (userState.selectedChild?.attendancePercentage ?? 0).clamp(0, 100);
           })();
 
           final summaryBySubject = <String, SubjectGradeSummary>{
@@ -144,32 +140,30 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
 
           return CustomScrollView(
             slivers: [
-              // ─── Blue Header ───
+              // ─── Premium Header ───
               SliverAppBar(
-                expandedHeight: 120,
+                expandedHeight: 140,
                 pinned: true,
-                backgroundColor:
-                    theme.appBarTheme.backgroundColor ?? colorScheme.surface,
-                foregroundColor:
-                    theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
+                backgroundColor: AppColors.slate900,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [colorScheme.primary, colorScheme.secondary],
+                        colors: [
+                          AppColors.darkBlue,
+                          AppColors.primaryBlue,
+                        ],
                       ),
                     ),
                   ),
                   title: Text(
                     l10n.myPerformanceTitle,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          theme.appBarTheme.foregroundColor ??
-                          colorScheme.onPrimary,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   centerTitle: true,
@@ -179,17 +173,24 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
                     Padding(
                       padding: const EdgeInsets.only(right: 16),
                       child: Center(
-                        child: CircleAvatar(
-                          radius: 16,
-                          backgroundImage:
-                              userState.selectedChild!.avatarUrl != null
-                              ? NetworkImage(
-                                  userState.selectedChild!.avatarUrl!,
-                                )
-                              : null,
-                          child: userState.selectedChild!.avatarUrl == null
-                              ? Text(userState.selectedChild!.fullName[0])
-                              : null,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                          ),
+                          child: CircleAvatar(
+                            radius: 16,
+                            backgroundColor: Colors.white.withValues(alpha: 0.1),
+                            backgroundImage: userState.selectedChild!.avatarUrl != null
+                                ? NetworkImage(userState.selectedChild!.avatarUrl!)
+                                : null,
+                            child: userState.selectedChild!.avatarUrl == null
+                                ? Text(
+                                    userState.selectedChild!.fullName[0].toUpperCase(),
+                                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                  )
+                                : null,
+                          ),
                         ),
                       ),
                     ),
@@ -198,7 +199,7 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
 
               // ─── Overall Stats ───
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                 sliver: SliverToBoxAdapter(
                   child: OverallGradeCard(
                     gpa: gpa,
@@ -211,14 +212,13 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
 
               // ─── Section Title ───
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
                 sliver: SliverToBoxAdapter(
                   child: Text(
                     l10n.gradesBySubjectTitle,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
                     ),
                   ),
                 ),
@@ -229,26 +229,18 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
                 padding: const EdgeInsets.all(16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
-                    // Note: We are only showing individual grades here?
-                    // The original code iterated over state.grades.
-                    // Usually you'd want to show Subjects (Summary) or Grades timeline.
-                    // Sticking to original logic: show list of grades.
                     final grade = grades[index];
-                    final summaryItem =
-                        summaryBySubject[grade.subjectName.toLowerCase()];
+                    final summaryItem = summaryBySubject[grade.subjectName.toLowerCase()];
 
                     final averagePercent = summaryItem != null
                         ? ((summaryItem.averageGrade / 5) * 100).round()
                         : ((grade.grade / 5) * 100).round();
 
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.only(bottom: 16),
                       child: GradeCard(
                         name: grade.subjectName,
-                        teacher:
-                            grade.teacherName ??
-                            summaryItem?.teacherName ??
-                            l10n.teacherLabel,
+                        teacher: grade.teacherName ?? summaryItem?.teacherName ?? l10n.teacherLabel,
                         grade: grade.grade,
                         attendance: attendanceRate,
                         average: averagePercent.clamp(0, 100),

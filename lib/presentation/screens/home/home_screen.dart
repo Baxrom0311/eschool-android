@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,7 @@ import 'widgets/daily_menu_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/schedule_list.dart';
 import 'widgets/services_grid.dart';
+import '../../widgets/common/page_background.dart';
 
 /// Home Screen - Main App Screen with Bottom Navigation
 class HomeScreen extends ConsumerStatefulWidget {
@@ -36,7 +38,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
 
-  // Tabs are lazily instantiated to avoid firing all tab API calls on startup.
   late final List<Widget Function()> _screenBuilders = [
     () => const _HomeTabScreen(),
     () => const _EducationTabScreen(),
@@ -54,6 +55,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _onTabSelected(int index) {
+    if (_currentIndex == index) return;
     setState(() {
       _currentIndex = index;
       _loadedScreens[index] ??= _screenBuilders[index]();
@@ -63,135 +65,142 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final currentLocale = ref.watch(appLocaleProvider);
-    final currentThemeMode = ref.watch(appThemeModeProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final showMainAppBar = _currentIndex <= 1;
+    final showMainAppBar = _currentIndex == 1;
 
     return Scaffold(
-      appBar: showMainAppBar
-          ? AppBar(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: AppBar(
               title: Text(
-                _currentIndex == 0 ? l10n.homeTitle : l10n.academicsTitle,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                _currentIndex == 0 
+                  ? l10n.homeTitle 
+                  : _currentIndex == 1 
+                      ? l10n.academicsTitle 
+                      : _currentIndex == 2
+                          ? l10n.dailyMenuTitle
+                          : _currentIndex == 3
+                              ? l10n.paymentsTitle
+                              : l10n.profile,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.8,
+                ),
               ),
-              backgroundColor:
-                  theme.appBarTheme.backgroundColor ?? colorScheme.surface,
-              foregroundColor:
-                  theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
+              centerTitle: true,
+              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+              surfaceTintColor: Colors.transparent,
               elevation: 0,
-              centerTitle: false,
               actions: [
-                PopupMenuButton<ThemeMode>(
-                  tooltip: l10n.changeTheme,
-                  initialValue: currentThemeMode,
-                  onSelected: (themeMode) {
-                    ref
-                        .read(appThemeModeProvider.notifier)
-                        .setThemeMode(themeMode);
-                  },
-                  itemBuilder: (context) => ThemeMode.values
-                      .map(
-                        (themeMode) => PopupMenuItem<ThemeMode>(
-                          value: themeMode,
-                          child: Row(
-                            children: [
-                              Icon(_themeModeIcon(themeMode), size: 18),
-                              const SizedBox(width: 10),
-                              Text(_themeModeLabel(themeMode, l10n)),
-                            ],
-                          ),
+                if (_currentIndex == 0)
+                  IconButton(
+                    onPressed: () => context.push(RouteNames.notifications),
+                    icon: Badge(
+                      label: const Text('2', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+                      backgroundColor: AppColors.danger,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.05),
+                          shape: BoxShape.circle,
                         ),
-                      )
-                      .toList(),
-                  icon: Icon(
-                    _themeModeIcon(currentThemeMode),
-                    color: colorScheme.onSurface,
+                        child: Icon(Icons.notifications_outlined, color: AppColors.primaryBlue, size: 22),
+                      ),
+                    ),
                   ),
-                ),
-                PopupMenuButton<AppLocale>(
-                  tooltip: l10n.changeLanguage,
-                  initialValue: currentLocale,
-                  onSelected: (locale) {
-                    ref.read(appLocaleProvider.notifier).setLocale(locale);
-                  },
-                  itemBuilder: (context) => AppLocale.values
-                      .map(
-                        (locale) => PopupMenuItem<AppLocale>(
-                          value: locale,
-                          child: Text(locale.nativeLabel),
-                        ),
-                      )
-                      .toList(),
-                  icon: const Icon(Icons.translate_rounded),
-                ),
-                IconButton(
-                  onPressed: () {
-                    context.push(RouteNames.notifications);
-                  },
-                  icon: const Icon(Icons.notifications_none_rounded),
-                ),
                 const SizedBox(width: 8),
               ],
-            )
-          : null,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: List<Widget>.generate(
-          _screenBuilders.length,
-          (index) => _loadedScreens[index] ?? const SizedBox.shrink(),
+            ),
+          ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabSelected,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: colorScheme.primary,
-        unselectedItemColor: colorScheme.onSurfaceVariant,
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
-        elevation: 8,
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.grid_view_rounded),
-            label: l10n.home,
+      body: PageBackground(
+        child: IndexedStack(
+          index: _currentIndex,
+          children: List<Widget>.generate(
+            _screenBuilders.length,
+            (index) => _loadedScreens[index] ?? const SizedBox.shrink(),
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.school_rounded),
-            label: l10n.academics,
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryBlue.withValues(alpha: 0.08),
+              blurRadius: 40,
+              offset: const Offset(0, -4),
+            ),
+          ],
+          border: Border(
+            top: BorderSide(
+              color: theme.dividerColor.withValues(alpha: 0.5),
+              width: 1,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.restaurant_rounded),
-            label: l10n.menu,
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(0, Icons.home_outlined, Icons.home_rounded, l10n.home),
+                _buildNavItem(1, Icons.auto_graph_outlined, Icons.auto_graph_rounded, l10n.academics),
+                _buildNavItem(2, Icons.restaurant_outlined, Icons.restaurant_rounded, l10n.menu),
+                _buildNavItem(3, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, l10n.paymentShort),
+                _buildNavItem(4, Icons.person_outline_rounded, Icons.person_rounded, l10n.profile),
+              ],
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.account_balance_wallet_rounded),
-            label: l10n.paymentShort,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person_rounded),
-            label: l10n.profile,
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  String _themeModeLabel(ThemeMode themeMode, AppLocalizations l10n) {
-    return switch (themeMode) {
-      ThemeMode.system => l10n.themeSystem,
-      ThemeMode.light => l10n.themeLight,
-      ThemeMode.dark => l10n.themeDark,
-    };
-  }
-
-  IconData _themeModeIcon(ThemeMode themeMode) {
-    return switch (themeMode) {
-      ThemeMode.system => Icons.brightness_auto_rounded,
-      ThemeMode.light => Icons.light_mode_rounded,
-      ThemeMode.dark => Icons.dark_mode_rounded,
-    };
+  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
+    final isSelected = _currentIndex == index;
+    final theme = Theme.of(context);
+    
+    return InkWell(
+      onTap: () => _onTabSelected(index),
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              color: isSelected ? AppColors.primaryBlue : AppColors.slate400,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                color: isSelected ? AppColors.primaryBlue : AppColors.slate400,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -210,7 +219,6 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
   @override
   void initState() {
     super.initState();
-    // Trigger initial data load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadHomeData();
     });
@@ -219,22 +227,9 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
   void _loadHomeData() {
     final child = ref.read(selectedChildProvider);
     if (child == null) return;
-
     final now = DateTime.now();
-
-    // We use ref.read(...notifier) to trigger shared async logic.
-    // Ensure providers are kept alive if needed, but autoDispose is fine
-    // as long as the widget watches them (which build() does).
-
-    // Note: With AsyncNotifier, if we call these, they update the state.
-    // If the providers are autoDispose and not watched, they might cancel immediately.
-    // But we watch them in build(), so they stay alive designated by the widget lifecycle.
-
     ref.read(scheduleProvider.notifier).loadSchedule(child.id);
     ref.read(scheduleProvider.notifier).selectDay(now.weekday);
-    // Backenddagi /api/parent/children/{id} endpoint vaqtincha nosoz bo'lgani
-    // uchun Home ochilganda grades/attendance prefetch qilmaymiz.
-    // Tegishli ekran ochilganda ular alohida yuklanadi.
     ref.read(ratingProvider.notifier).loadChildRating(child.id);
     ref.read(leaderboardProvider.notifier).loadData(child.id);
   }
@@ -242,92 +237,56 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
   @override
   Widget build(BuildContext context) {
     final child = ref.watch(selectedChildProvider);
-
-    // Watch AsyncValues
     final attendanceAsync = ref.watch(attendanceProvider);
     final gradesAsync = ref.watch(gradesProvider);
     final ratingState = ref.watch(ratingProvider);
 
-    // Listen for child changes to reload
     ref.listen(selectedChildProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
         _loadHomeData();
       }
     });
 
-    // Calculate Attendance Rate
-    final attendanceRate =
-        attendanceAsync.valueOrNull?.summary?.attendancePercentage ??
-        child?.attendancePercentage ??
-        0.0;
-
-    // Calculate GPA
+    final attendanceRate = attendanceAsync.valueOrNull?.summary?.attendancePercentage ?? child?.attendancePercentage ?? 0.0;
     final gradesData = gradesAsync.valueOrNull;
     double gpa = 0.0;
 
     if (gradesData != null) {
       if (gradesData.summary.isNotEmpty) {
-        gpa =
-            gradesData.summary.fold<double>(
-              0.0,
-              (sum, item) => sum + item.averageGrade,
-            ) /
-            gradesData.summary.length;
+        gpa = gradesData.summary.fold<double>(0.0, (sum, item) => sum + item.averageGrade) / gradesData.summary.length;
       } else if (gradesData.grades.isNotEmpty) {
-        gpa =
-            gradesData.grades.fold<double>(
-              0.0,
-              (sum, item) => sum + item.grade,
-            ) /
-            gradesData.grades.length;
+        gpa = gradesData.grades.fold<double>(0.0, (sum, item) => sum + item.grade) / gradesData.grades.length;
       }
     }
 
     if (gpa == 0.0) gpa = child?.averageGrade ?? 0.0;
     gpa = gpa.clamp(0.0, 5.0);
-
-    // Rating Score/Rank
     final rank = ratingState.childRating?.rank;
 
-    return Container(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async => _loadHomeData(),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const HomeHeader(),
-
-                AttendanceCard(
-                  attendanceRate: attendanceRate
-                      .round()
-                      .clamp(0, 100)
-                      .toDouble(),
-                  score: child?.coins ?? 0,
-                  level: child?.level ?? 1,
-                ),
-
-                const ScheduleList(),
-
-                const SizedBox(height: 24),
-
-                const ServicesGrid(),
-
-                const SizedBox(height: 24),
-
-                AcademicStats(gpa: gpa, rank: rank),
-
-                const SizedBox(height: 24),
-
-                const DailyMenuCard(),
-
-                const SizedBox(height: 24),
-              ],
+    return RefreshIndicator(
+      onRefresh: () async => _loadHomeData(),
+      color: AppColors.primaryBlue,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            const HomeHeader(),
+            const SizedBox(height: 8),
+            AttendanceCard(
+              attendanceRate: attendanceRate.round().clamp(0, 100).toDouble(),
+              score: child?.coins ?? 0,
+              level: child?.level ?? 1,
             ),
-          ),
+            const SizedBox(height: 12),
+            const ScheduleList(),
+            const SizedBox(height: 32),
+            const ServicesGrid(),
+            const SizedBox(height: 32),
+            AcademicStats(gpa: gpa, rank: rank),
+            const SizedBox(height: 32),
+            const DailyMenuCard(),
+            const SizedBox(height: 32),
+          ],
         ),
       ),
     );
@@ -340,27 +299,34 @@ class _EducationTabScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
 
     return DefaultTabController(
       length: 2,
       child: Column(
         children: [
           Container(
-            color: Colors.white,
+            padding: const EdgeInsets.only(top: 8),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              border: Border(bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.05), width: 1)),
+            ),
             child: TabBar(
-              labelColor: AppColors.primaryBlue,
-              unselectedLabelColor: AppColors.textSecondary,
-              indicatorColor: AppColors.primaryBlue,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicatorPadding: const EdgeInsets.symmetric(horizontal: 40),
+              labelColor: theme.colorScheme.primary,
+              unselectedLabelColor: AppColors.slate400,
+              indicatorColor: theme.colorScheme.primary,
+              indicatorWeight: 4,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
+              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               tabs: [
-                Tab(text: l10n.gradesTab),
-                Tab(text: l10n.ratingTab),
+                Tab(text: l10n.gradesTab.toUpperCase()),
+                Tab(text: l10n.ratingTab.toUpperCase()),
               ],
             ),
           ),
-          const Expanded(
-            child: TabBarView(children: [GradesScreen(), LeaderboardScreen()]),
+          Expanded(
+            child: TabBarView(children: [const GradesScreen(), const LeaderboardScreen()]),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_colors.dart';
 
 import '../../../core/localization/app_locale.dart';
 import 'package:parent_school_app/l10n/app_localizations.dart';
@@ -20,7 +21,6 @@ import '../../providers/user_provider.dart';
 /// - forgot password action
 /// - Google sign in action
 /// - QR login action (API-level unavailable fallback)
-/// - register link
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -131,12 +131,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final currentThemeMode = ref.watch(appThemeModeProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final inputFillColor = colorScheme.surfaceContainerHighest.withValues(
-      alpha: theme.brightness == Brightness.dark ? 0.65 : 0.55,
-    );
-    final onHeroColor = colorScheme.onPrimary;
     final size = MediaQuery.of(context).size;
-    final topHeight = size.height * 0.4;
+    final topHeight = size.height * 0.42;
     final isLoading = ref.watch(authProvider).isLoading;
     final isBusy = isLoading || _isSubmitting;
 
@@ -144,385 +140,281 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
+          // Header Background with Premium Navy Gradient
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: Container(
-              height: topHeight,
+              height: topHeight + 60,
               decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [colorScheme.primary, colorScheme.secondary],
+                  colors: [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.secondary,
+                  ],
                 ),
                 borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(38),
-                  bottomRight: Radius.circular(38),
+                  bottomLeft: Radius.circular(48),
+                  bottomRight: Radius.circular(48),
                 ),
               ),
               child: SafeArea(
-                child: LayoutBuilder(
-                  builder: (context, constraints) => SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          children: [
+                            Text(
+                              l10n.loginHeader.toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const Spacer(),
+                            // Theme Toggle
+                            _buildHeaderChip(
+                              onTap: () {
+                                final next = switch (currentThemeMode) {
+                                  ThemeMode.light => ThemeMode.dark,
+                                  _ => ThemeMode.light,
+                                };
+                                ref.read(appThemeModeProvider.notifier).setThemeMode(next);
+                              },
+                              child: Icon(
+                                currentThemeMode == ThemeMode.dark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Language Switch
+                            PopupMenuButton<AppLocale>(
+                              onSelected: (l) => ref.read(appLocaleProvider.notifier).setLocale(l),
+                              itemBuilder: (ctx) => AppLocale.values.map((l) => PopupMenuItem(value: l, child: Text(l.nativeLabel))).toList(),
+                              child: _buildHeaderChip(
+                                child: Text(
+                                  currentLocale.code.toUpperCase(),
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-                            child: Row(
-                              children: [
-                                Text(
-                                  l10n.loginHeader,
-                                  style: TextStyle(
-                                    color: onHeroColor,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const Spacer(),
-                                PopupMenuButton<ThemeMode>(
-                                  tooltip: l10n.changeTheme,
-                                  initialValue: currentThemeMode,
-                                  onSelected: (themeMode) {
-                                    ref
-                                        .read(appThemeModeProvider.notifier)
-                                        .setThemeMode(themeMode);
-                                  },
-                                  color: theme.cardColor,
-                                  itemBuilder: (context) => ThemeMode.values
-                                      .map(
-                                        (mode) => PopupMenuItem<ThemeMode>(
-                                          value: mode,
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                _themeModeIcon(mode),
-                                                size: 18,
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Text(_themeModeLabel(mode, l10n)),
-                                            ],
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                                  child: _buildHeaderChip(
-                                    child: Icon(
-                                      _themeModeIcon(currentThemeMode),
-                                      color: onHeroColor,
-                                      size: 18,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                PopupMenuButton<AppLocale>(
-                                  tooltip: l10n.changeLanguage,
-                                  initialValue: currentLocale,
-                                  onSelected: (locale) {
-                                    ref
-                                        .read(appLocaleProvider.notifier)
-                                        .setLocale(locale);
-                                  },
-                                  color: theme.cardColor,
-                                  itemBuilder: (context) => AppLocale.values
-                                      .map(
-                                        (locale) => PopupMenuItem<AppLocale>(
-                                          value: locale,
-                                          child: Text(locale.nativeLabel),
-                                        ),
-                                      )
-                                      .toList(),
-                                  child: _buildHeaderChip(
-                                    child: Text(
-                                      currentLocale.code.toUpperCase(),
-                                      style: TextStyle(
-                                        color: onHeroColor,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                      const SizedBox(height: 24),
+                      // Premium Abstract Logo
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 30,
+                              offset: const Offset(0, 15),
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                          Container(
-                            width: 88,
-                            height: 88,
-                            decoration: BoxDecoration(
-                              color: onHeroColor.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: Icon(
-                              Icons.school_rounded,
-                              size: 52,
-                              color: onHeroColor,
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          Text(
-                            l10n.welcome,
-                            style: TextStyle(
-                              fontSize: 42,
-                              fontWeight: FontWeight.w700,
-                              color: onHeroColor,
-                              height: 1.05,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            l10n.loginHint,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 17,
-                              color: onHeroColor.withValues(alpha: 0.9),
-                              fontWeight: FontWeight.w500,
-                              height: 1.35,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.shield_rounded, size: 52, color: Colors.white),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 28),
+                      FittedBox(
+                        child: Text(
+                          l10n.welcome,
+                          style: const TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -1.5,
+                            height: 1.0,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        l10n.loginHint,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.6),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
           ),
+
+          // Login Form Card
           Positioned(
-            top: topHeight - 50,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22),
-                child: Card(
-                  elevation: 7,
-                  shadowColor: theme.shadowColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(26),
+            top: topHeight,
+            left: 20,
+            right: 20,
+            bottom: 40,
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(40),
+                border: Border.all(color: colorScheme.outline.withValues(alpha: 0.5), width: 0.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 30,
+                    offset: const Offset(0, 15),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildSectionLabel(l10n.emailSection),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _loginController,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            validator: Validators.email,
-                            decoration: InputDecoration(
-                              hintText: l10n.emailExample,
-                              prefixIcon: Icon(
-                                Icons.alternate_email_rounded,
-                                color: colorScheme.onSurfaceVariant,
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(40),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(32),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildSectionLabel(l10n.emailSection),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _loginController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          validator: Validators.email,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          decoration: _buildInputDecoration(
+                            l10n.emailExample,
+                            Icons.alternate_email_rounded,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildSectionLabel(l10n.passwordSection),
+                            GestureDetector(
+                              onTap: () => context.push(RouteNames.forgotPassword),
+                              child: Text(
+                                l10n.forgotPasswordShort,
+                                style: const TextStyle(
+                                  color: AppColors.primaryBlue,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12,
+                                ),
                               ),
-                              filled: true,
-                              fillColor: inputFillColor,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: BorderSide.none,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: !_isPasswordVisible,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => isBusy ? null : _handleLogin(),
+                          validator: Validators.password,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          decoration: _buildInputDecoration(
+                            '••••••••',
+                            Icons.lock_outline_rounded,
+                            suffixIcon: IconButton(
+                              onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                              icon: Icon(
+                                _isPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                size: 20,
+                                color: AppColors.slate400,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              _buildSectionLabel(l10n.passwordSection),
-                              const Spacer(),
-                              TextButton(
-                                onPressed: () =>
-                                    context.push(RouteNames.forgotPassword),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: Text(
-                                  l10n.forgotPasswordShort,
-                                  style: TextStyle(
-                                    color: colorScheme.primary,
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w600,
+                        ),
+                        const SizedBox(height: 28),
+                        SizedBox(
+                          height: 64,
+                          child: ElevatedButton(
+                            onPressed: isBusy ? null : _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryBlue,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                            ),
+                            child: isBusy
+                                ? const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 3, valueColor: AlwaysStoppedAnimation(Colors.white)))
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(l10n.loginButton, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                                      const SizedBox(width: 12),
+                                      const Icon(Icons.keyboard_arrow_right_rounded, size: 22),
+                                    ],
                                   ),
-                                ),
-                              ),
-                            ],
                           ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: !_isPasswordVisible,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) {
-                              if (!isBusy) {
-                                _handleLogin();
-                              }
-                            },
-                            validator: Validators.password,
-                            decoration: InputDecoration(
-                              hintText: '••••••••',
-                              prefixIcon: Icon(
-                                Icons.lock_outline_rounded,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _isPasswordVisible = !_isPasswordVisible;
-                                  });
-                                },
-                                icon: Icon(
-                                  _isPasswordVisible
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              filled: true,
-                              fillColor: inputFillColor,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: BorderSide.none,
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            const Expanded(child: Divider(height: 1, thickness: 0.5)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                l10n.orLabel.toUpperCase(),
+                                style: const TextStyle(color: AppColors.slate400, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 22),
-                          SizedBox(
-                            height: 56,
-                            child: ElevatedButton(
-                              onPressed: isBusy ? null : _handleLogin,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: colorScheme.primary,
-                                foregroundColor: colorScheme.onPrimary,
-                                elevation: 4,
-                                shadowColor: theme.shadowColor,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
+                            const Expanded(child: Divider(height: 1, thickness: 0.5)),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _AuthOptionCard(
+                                label: l10n.googleLabel,
+                                icon: Icons.g_mobiledata_rounded,
+                                onTap: isBusy ? null : () => _showError(l10n.googleSoon),
+                                iconColor: AppColors.info,
                               ),
-                              child: isBusy
-                                  ? SizedBox(
-                                      width: 22,
-                                      height: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.4,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              colorScheme.onPrimary,
-                                            ),
-                                      ),
-                                    )
-                                  : Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          l10n.loginButton,
-                                          style: const TextStyle(
-                                            fontSize: 19,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        const Icon(Icons.arrow_forward_rounded),
-                                      ],
-                                    ),
                             ),
-                          ),
-                          const SizedBox(height: 18),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Divider(
-                                  thickness: 1,
-                                  color: colorScheme.outline.withValues(
-                                    alpha: 0.7,
-                                  ),
-                                ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _AuthOptionCard(
+                                label: l10n.qrCodeLabel,
+                                icon: Icons.qr_code_scanner_rounded,
+                                onTap: isBusy ? null : _handleQrLogin,
+                                iconColor: AppColors.primaryBlue,
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                child: Text(
-                                  l10n.orLabel,
-                                  style: TextStyle(
-                                    color: colorScheme.onSurfaceVariant
-                                        .withValues(alpha: 0.8),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Divider(
-                                  thickness: 1,
-                                  color: colorScheme.outline.withValues(
-                                    alpha: 0.7,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _AuthOptionCard(
-                                  label: l10n.googleLabel,
-                                  icon: Icons.g_mobiledata_rounded,
-                                  onTap: isBusy
-                                      ? null
-                                      : () => _showError(l10n.googleSoon),
-                                  iconColor: colorScheme.primary,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _AuthOptionCard(
-                                  label: l10n.qrCodeLabel,
-                                  icon: Icons.qr_code_2_rounded,
-                                  onTap: isBusy ? null : _handleQrLogin,
-                                  iconColor: colorScheme.onSurface,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            l10n.accountCreatedByAdmin,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: colorScheme.onSurfaceVariant,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          l10n.accountCreatedByAdmin,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.slate400,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            height: 1.4,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -534,45 +426,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
+  InputDecoration _buildInputDecoration(String hint, IconData prefix, {Widget? suffixIcon}) {
+    final theme = Theme.of(context);
+    
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: Icon(prefix, color: AppColors.primaryBlue.withValues(alpha: 0.5), size: 20),
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: AppColors.slate100.withValues(alpha: theme.brightness == Brightness.dark ? 0.05 : 1.0),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.5)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: const BorderSide(color: AppColors.danger, width: 1.5)),
+    );
+  }
+
   Widget _buildSectionLabel(String text) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Text(
-      text,
-      style: TextStyle(
-        fontSize: 12.5,
-        letterSpacing: 0.6,
-        fontWeight: FontWeight.w700,
-        color: colorScheme.onSurfaceVariant,
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 11,
+        letterSpacing: 1.2,
+        fontWeight: FontWeight.w900,
+        color: AppColors.slate400,
       ),
     );
   }
 
-  String _themeModeLabel(ThemeMode themeMode, AppLocalizations l10n) {
-    return switch (themeMode) {
-      ThemeMode.system => l10n.themeSystem,
-      ThemeMode.light => l10n.themeLight,
-      ThemeMode.dark => l10n.themeDark,
-    };
-  }
-
-  IconData _themeModeIcon(ThemeMode themeMode) {
-    return switch (themeMode) {
-      ThemeMode.system => Icons.brightness_auto_rounded,
-      ThemeMode.light => Icons.light_mode_rounded,
-      ThemeMode.dark => Icons.dark_mode_rounded,
-    };
-  }
-
-  Widget _buildHeaderChip({required Widget child}) {
-    final onHeroColor = Theme.of(context).colorScheme.onPrimary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: onHeroColor.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: onHeroColor.withValues(alpha: 0.2)),
+  Widget _buildHeaderChip({required Widget child, VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        child: child,
       ),
-      child: child,
     );
   }
 }
@@ -593,32 +488,30 @@ class _AuthOptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
           color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: colorScheme.outline.withValues(alpha: 0.7),
+            color: theme.dividerColor.withValues(alpha: 0.5),
             width: 1,
           ),
         ),
         child: Column(
           children: [
-            Icon(icon, size: 34, color: iconColor),
+            Icon(icon, size: 32, color: iconColor),
             const SizedBox(height: 8),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w600,
-                color:
-                    theme.textTheme.titleMedium?.color ?? colorScheme.onSurface,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
               ),
             ),
           ],

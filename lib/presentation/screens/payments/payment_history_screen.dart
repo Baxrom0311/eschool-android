@@ -74,153 +74,188 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(l10n.paymentHistoryTitle),
-        backgroundColor:
-            theme.appBarTheme.backgroundColor ?? colorScheme.surface,
-        foregroundColor:
-            theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
-      ),
-      body: Column(
-        children: [
-          // Filter Chips (Visual only for now, or implement local filter)
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            color: theme.cardColor,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  _FilterChip(label: l10n.allPaymentsFilter, isActive: true),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: l10n.successfulPaymentsFilter,
-                    isActive: false,
+      body: CustomScrollView(
+        slivers: [
+          // ─── Premium Header ───
+          SliverAppBar(
+            expandedHeight: 120,
+            pinned: true,
+            backgroundColor: theme.colorScheme.primary,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.secondary,
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: l10n.rejectedPaymentsFilter,
-                    isActive: false,
-                  ),
-                ],
+                ),
               ),
+              title: Text(
+                l10n.paymentHistoryTitle,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              centerTitle: true,
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                // Filter Chips
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        _FilterChip(label: l10n.allPaymentsFilter, isActive: true),
+                        const SizedBox(width: 8),
+                        _FilterChip(label: l10n.successfulPaymentsFilter, isActive: false),
+                        const SizedBox(width: 8),
+                        _FilterChip(label: l10n.rejectedPaymentsFilter, isActive: false),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
           // Transactions List
           if (transactions.isEmpty && isLoading)
-            const Expanded(child: Center(child: CircularProgressIndicator()))
+            const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
           else if (transactions.isEmpty && !isLoading)
-            Expanded(child: Center(child: Text(l10n.paymentHistoryEmpty)))
+            SliverFillRemaining(child: Center(child: Text(l10n.paymentHistoryEmpty)))
           else
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
-                itemCount:
-                    transactions.length + (showLoadMoreIndicator ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == transactions.length) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    if (index == transactions.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
 
-                  final tx = transactions[index];
-                  final isSuccess = tx.isCompleted;
+                    final tx = transactions[index];
+                    final isSuccess = tx.isCompleted;
 
-                  return Card(
-                    elevation: 1,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    color: theme.cardColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: colorScheme.outline),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      leading: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isSuccess
-                              ? AppColors.success.withValues(alpha: 0.1)
-                              : AppColors.danger.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: theme.cardColor,
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(
+                          color: colorScheme.outline.withValues(alpha: 0.3),
+                          width: 0.5,
                         ),
-                        child: Icon(
-                          isSuccess ? Icons.check_rounded : Icons.close_rounded,
-                          color: isSuccess
-                              ? AppColors.success
-                              : AppColors.danger,
-                          size: 24,
-                        ),
-                      ),
-                      title: Text(
-                        l10n.paymentRecordTitle(tx.id),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 4),
-                          Text(
-                            tx.createdAt,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Text(
-                                l10n.paymentMethodLabelText(tx.method.name),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '• ${l10n.paymentStatusLabel(tx.status.name)}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isSuccess
-                                      ? AppColors.success
-                                      : AppColors.danger,
-                                ),
-                              ),
-                            ],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
-                      trailing: Text(
-                        _formatCurrencyAmount(l10n, tx.amount),
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: isSuccess
-                              ? colorScheme.onSurface
-                              : colorScheme.onSurfaceVariant,
-                          decoration: isSuccess
-                              ? null
-                              : TextDecoration.lineThrough,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        leading: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: (isSuccess ? AppColors.success : AppColors.danger).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            isSuccess ? Icons.receipt_long_rounded : Icons.error_outline_rounded,
+                            color: isSuccess ? AppColors.success : AppColors.danger,
+                            size: 24,
+                          ),
+                        ),
+                        title: Text(
+                          l10n.paymentRecordTitle(tx.id),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text(
+                              tx.createdAt,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.slate400,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.slate100,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    l10n.paymentMethodLabelText(tx.method.name).toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.slate600,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.paymentStatusLabel(tx.status.name),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: isSuccess ? AppColors.success : AppColors.danger,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              _formatCurrencyAmount(l10n, tx.amount),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                                color: isSuccess ? AppColors.slate900 : AppColors.slate400,
+                                decoration: isSuccess ? null : TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                  childCount: transactions.length + (showLoadMoreIndicator ? 1 : 0),
+                ),
               ),
             ),
         ],
@@ -242,20 +277,25 @@ class _FilterChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isActive ? colorScheme.primary : colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        color: isActive ? AppColors.primaryBlue : AppColors.slate50,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isActive ? colorScheme.primary : colorScheme.outline,
+          color: isActive ? AppColors.primaryBlue : AppColors.slate200,
         ),
+        boxShadow: isActive ? [
+          BoxShadow(
+            color: AppColors.primaryBlue.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ] : null,
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: isActive
-              ? colorScheme.onPrimary
-              : colorScheme.onSurfaceVariant,
+          color: isActive ? Colors.white : AppColors.slate600,
           fontSize: 13,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+          fontWeight: isActive ? FontWeight.w900 : FontWeight.w600,
         ),
       ),
     );

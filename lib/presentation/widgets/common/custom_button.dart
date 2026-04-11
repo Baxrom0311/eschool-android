@@ -24,8 +24,8 @@ class CustomButton extends StatelessWidget {
     this.textColor,
     this.icon,
     this.width,
-    this.height = 52,
-    this.borderRadius = 12,
+    this.height = 56,
+    this.borderRadius = 18,
   });
 
   @override
@@ -63,16 +63,34 @@ class CustomButton extends StatelessWidget {
     return SizedBox(
       width: width ?? double.infinity,
       height: height,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: filledColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(borderRadius),
+      child: Container(
+        decoration: !isLoading && onPressed != null ? BoxDecoration(
+          borderRadius: BorderRadius.circular(borderRadius),
+          gradient: LinearGradient(
+            colors: [filledColor, filledColor.withValues(alpha: 0.85)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          elevation: 2,
+          boxShadow: [
+            BoxShadow(
+              color: filledColor.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ) : null,
+        child: ElevatedButton(
+          onPressed: isLoading ? null : onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(borderRadius),
+            ),
+            elevation: 0,
+          ),
+          child: _buildChild(filledTextColor),
         ),
-        child: _buildChild(filledTextColor),
       ),
     );
   }

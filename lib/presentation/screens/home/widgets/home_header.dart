@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/routing/route_names.dart';
+import '../../../providers/academic_provider.dart';
 import '../../../providers/user_provider.dart';
 
 class HomeHeader extends ConsumerWidget {
@@ -11,41 +15,116 @@ class HomeHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
     final child = ref.watch(selectedChildProvider);
     final greetingName = child?.fullName ?? l10n.userFallbackName;
-    final todayLabel = DateFormat(
+    
+    final theme = Theme.of(context);
+    final selectedDate = ref.watch(selectedDateProvider);
+    
+    final dateLabel = DateFormat(
       'EEEE, d-MMMM',
       l10n.appLocale.name,
-    ).format(DateTime.now());
+    ).format(selectedDate);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 8, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(22, 16, 22, 32),
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                l10n.homeGreeting(greetingName),
-                style: textTheme.headlineSmall?.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+              // Premium Date Chip (Interactive)
+              InkWell(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                    builder: (context, child) => Theme(
+                      data: theme.copyWith(
+                        colorScheme: theme.colorScheme.copyWith(
+                          primary: theme.colorScheme.primary,
+                          onPrimary: Colors.white,
+                          surface: theme.cardColor,
+                          onSurface: theme.textTheme.bodyMedium?.color,
+                        ),
+                      ),
+                      child: child!,
+                    ),
+                  );
+                  if (picked != null) {
+                    ref.read(selectedDateProvider.notifier).state = picked;
+                    ref.read(scheduleProvider.notifier).selectDay(picked.weekday);
+                  }
+                },
+                borderRadius: BorderRadius.circular(100),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.shadowColor.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.calendar_today_rounded, size: 14, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        dateLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                todayLabel,
-                style: textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
+              // Notifications removed (moved to global AppBar)
+              const SizedBox(width: 32), // Spacer to maintain alignment if needed
             ],
           ),
-          const SizedBox(width: 8),
+          const SizedBox(height: 16),
+          Text(
+            l10n.homeGreeting('').trim(),
+            style: TextStyle(
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              greetingName,
+              style: TextStyle(
+                color: theme.textTheme.headlineLarge?.color,
+                fontSize: 34,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1.2,
+                height: 1.0,
+              ),
+            ),
+          ),
         ],
       ),
     );
