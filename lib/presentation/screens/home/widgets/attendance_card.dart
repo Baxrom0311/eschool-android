@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 
@@ -20,8 +21,8 @@ class AttendanceCard extends StatelessWidget {
     final theme = Theme.of(context);
     
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      padding: const EdgeInsets.all(28),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary,
         gradient: LinearGradient(
@@ -60,71 +61,83 @@ class AttendanceCard extends StatelessWidget {
               ),
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                flex: 4,
-                child: _buildStatItem(
-                  l10n.attendanceStatLabel,
-                  '${attendanceRate.toStringAsFixed(0)}%',
-                  Icons.verified_user_outlined,
-                ),
-              ),
-              // Vertical Divider
-              Container(
-                width: 1,
-                height: 80,
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white.withValues(alpha: 0),
-                      Colors.white.withValues(alpha: 0.3),
-                      Colors.white.withValues(alpha: 0),
-                    ],
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+              },
+              borderRadius: BorderRadius.circular(32),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: _buildStatItem(
+                      l10n.attendanceStatLabel,
+                      '${attendanceRate.toStringAsFixed(0)}%',
+                      Icons.verified_user_outlined,
+                    ),
                   ),
-                ),
+                  // Vertical Divider
+                  Container(
+                    width: 1,
+                    height: 60,
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0),
+                          Colors.white.withValues(alpha: 0.3),
+                          Colors.white.withValues(alpha: 0),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: _buildStatItem(
+                      l10n.coinsStatLabel,
+                      '$score',
+                      Icons.stars_outlined,
+                      alignEnd: true,
+                    ),
+                  ),
+                ],
               ),
-              Expanded(
-                flex: 4,
-                child: _buildStatItem(
-                  l10n.coinsStatLabel,
-                  '$score',
-                  Icons.stars_outlined,
-                  alignEnd: true,
-                ),
-              ),
-            ],
+            ),
           ),
           // Level Badge (Integrated Center)
           Positioned.fill(
+            pointerInterceptor: true,
             child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+              child: IgnorePointer(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      width: 1,
                     ),
-                  ],
-                ),
-                child: Text(
-                  l10n.levelBadge(level),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 11,
-                    letterSpacing: 0.5,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    l10n.levelBadge(level),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),

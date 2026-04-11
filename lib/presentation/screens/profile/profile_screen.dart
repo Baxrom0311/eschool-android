@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
@@ -208,8 +209,11 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 32),
 
             // ─── Logout ───
-            _LogoutButton(onTap: () => _handleLogout(context, ref)),
-            const SizedBox(height: 40),
+            _LogoutButton(onTap: () {
+              HapticFeedback.warningOccurred();
+              _handleLogout(context, ref);
+            }),
+            const SizedBox(height: 120), // Bottom space for floating nav
           ],
         ),
       ),
@@ -376,12 +380,12 @@ class _SettingsGroup extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.cardColor,
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1), width: 1.0),
+            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1), width: 1.0),
             boxShadow: [
               BoxShadow(
-                color: theme.shadowColor.withValues(alpha: 0.04),
+                color: theme.shadowColor.withValues(alpha: 0.05),
                 blurRadius: 20,
-                offset: const Offset(0, 8),
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -414,7 +418,10 @@ class _SettingsItem extends StatelessWidget {
     final theme = Theme.of(context);
     final color = iconColor ?? theme.colorScheme.primary;
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       borderRadius: BorderRadius.circular(24),
       child: Column(
         children: [
@@ -470,17 +477,20 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1), width: 0.5),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1), width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            color: theme.shadowColor.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
         borderRadius: BorderRadius.circular(32),
         child: Padding(
           padding: const EdgeInsets.all(20),

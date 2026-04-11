@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
@@ -56,6 +57,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _onTabSelected(int index) {
     if (_currentIndex == index) return;
+    HapticFeedback.selectionClick();
     setState(() {
       _currentIndex = index;
       _loadedScreens[index] ??= _screenBuilders[index]();
@@ -120,6 +122,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
+      extendBody: true,
       body: PageBackground(
         child: IndexedStack(
           index: _currentIndex,
@@ -130,34 +133,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryBlue.withValues(alpha: 0.08),
-              blurRadius: 40,
-              offset: const Offset(0, -4),
-            ),
-          ],
-          border: Border(
-            top: BorderSide(
-              color: theme.dividerColor.withValues(alpha: 0.5),
-              width: 1,
-            ),
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(0, Icons.home_outlined, Icons.home_rounded, l10n.home),
-                _buildNavItem(1, Icons.auto_graph_outlined, Icons.auto_graph_rounded, l10n.academics),
-                _buildNavItem(2, Icons.restaurant_outlined, Icons.restaurant_rounded, l10n.menu),
-                _buildNavItem(3, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, l10n.paymentShort),
-                _buildNavItem(4, Icons.person_outline_rounded, Icons.person_rounded, l10n.profile),
-              ],
+        height: 80,
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.cardColor.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: theme.dividerColor.withValues(alpha: 0.1),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavItem(0, Icons.home_outlined, Icons.home_rounded, l10n.home),
+                    _buildNavItem(1, Icons.auto_graph_outlined, Icons.auto_graph_rounded, l10n.academics),
+                    _buildNavItem(2, Icons.restaurant_outlined, Icons.restaurant_rounded, l10n.menu),
+                    _buildNavItem(3, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, l10n.paymentShort),
+                    _buildNavItem(4, Icons.person_outline_rounded, Icons.person_rounded, l10n.profile),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -171,13 +180,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     
     return InkWell(
       onTap: () => _onTabSelected(index),
-      borderRadius: BorderRadius.circular(16),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.08) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -185,18 +196,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Icon(
               isSelected ? activeIcon : icon,
               color: isSelected ? AppColors.primaryBlue : AppColors.slate400,
-              size: 24,
+              size: isSelected ? 26 : 24,
             ),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                color: isSelected ? AppColors.primaryBlue : AppColors.slate400,
-                letterSpacing: 0.2,
+            if (isSelected)
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryBlue,
+                  letterSpacing: 0.1,
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -277,15 +289,15 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
               score: child?.coins ?? 0,
               level: child?.level ?? 1,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             const ScheduleList(),
-            const SizedBox(height: 32),
+            const SizedBox(height: 22),
             const ServicesGrid(),
-            const SizedBox(height: 32),
+            const SizedBox(height: 22),
             AcademicStats(gpa: gpa, rank: rank),
-            const SizedBox(height: 32),
+            const SizedBox(height: 22),
             const DailyMenuCard(),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
           ],
         ),
       ),

@@ -21,7 +21,7 @@ class BalanceHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -31,12 +31,16 @@ class BalanceHeader extends StatelessWidget {
             theme.colorScheme.secondary,
           ],
         ),
-        borderRadius: BorderRadius.circular(40),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withValues(alpha: 0.25),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
+            color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            blurRadius: 25,
+            offset: const Offset(0, 12),
           ),
         ],
       ),

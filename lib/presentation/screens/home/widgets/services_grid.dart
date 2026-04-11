@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -96,7 +97,10 @@ class ServicesGrid extends StatelessWidget {
                   ],
                 ),
                 child: InkWell(
-                  onTap: () => context.push(service.route),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.push(service.route);
+                  },
                   borderRadius: BorderRadius.circular(32),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

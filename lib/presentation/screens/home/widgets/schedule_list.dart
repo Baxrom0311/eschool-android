@@ -56,9 +56,9 @@ class ScheduleList extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         SizedBox(
-          height: 160,
+          height: 145,
           child: scheduleAsync.when(
             data: (data) {
               final todaySchedule = data.todaySchedule;
@@ -113,7 +113,7 @@ class _ScheduleItem extends StatelessWidget {
     return Container(
       width: 200,
       margin: const EdgeInsets.only(right: 14),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
         gradient: isActive
@@ -173,7 +173,7 @@ class _ScheduleItem extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
             classItem.subjectName,
             style: TextStyle(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -28,7 +29,7 @@ class HomeHeader extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(22, 16, 22, 32),
+      padding: const EdgeInsets.fromLTRB(22, 12, 22, 16),
       decoration: const BoxDecoration(
         color: Colors.transparent,
       ),
@@ -59,6 +60,7 @@ class HomeHeader extends ConsumerWidget {
                     ),
                   );
                   if (picked != null) {
+                    HapticFeedback.lightImpact();
                     ref.read(selectedDateProvider.notifier).state = picked;
                     ref.read(scheduleProvider.notifier).selectDay(picked.weekday);
                   }
@@ -100,7 +102,7 @@ class HomeHeader extends ConsumerWidget {
               const SizedBox(width: 32), // Spacer to maintain alignment if needed
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Text(
             l10n.homeGreeting('').trim(),
             style: TextStyle(
@@ -110,7 +112,7 @@ class HomeHeader extends ConsumerWidget {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,

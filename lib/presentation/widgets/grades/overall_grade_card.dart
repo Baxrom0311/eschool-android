@@ -30,14 +30,14 @@ class OverallGradeCard extends StatelessWidget {
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          color: theme.dividerColor.withValues(alpha: 0.1),
           width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.04),
+            color: theme.shadowColor.withValues(alpha: 0.05),
             blurRadius: 20,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 10),
           ),
         ],
       ),

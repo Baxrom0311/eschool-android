@@ -41,12 +41,12 @@ class GradeCard extends StatelessWidget {
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.3),
-          width: 0.5,
+          color: theme.dividerColor.withValues(alpha: 0.1),
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: theme.shadowColor.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

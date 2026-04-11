@@ -9,6 +9,9 @@ import '../../providers/user_provider.dart';
 import '../../widgets/grades/grade_card.dart';
 import '../../widgets/grades/overall_grade_card.dart';
 
+import '../../widgets/common/page_background.dart';
+import 'dart:ui';
+
 /// Grades Screen - Subject Grades List
 ///
 /// Design: Vertical list of subject cards with grades and progress
@@ -138,120 +141,133 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
             for (final item in summary) item.subjectName.toLowerCase(): item,
           };
 
-          return CustomScrollView(
-            slivers: [
-              // ─── Premium Header ───
-              SliverAppBar(
-                expandedHeight: 140,
-                pinned: true,
-                backgroundColor: AppColors.slate900,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.darkBlue,
-                          AppColors.primaryBlue,
-                        ],
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    l10n.myPerformanceTitle,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  centerTitle: true,
-                ),
-                actions: [
-                  if (userState.selectedChild != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: Center(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+          return Scaffold(
+            body: PageBackground(
+              child: CustomScrollView(
+                slivers: [
+                  // ─── Premium Glassmorphic Header ───
+                  SliverAppBar(
+                    expandedHeight: 140,
+                    pinned: true,
+                    stretch: true,
+                    backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+                    surfaceTintColor: Colors.transparent,
+                    elevation: 0,
+                    flexibleSpace: ClipRRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: FlexibleSpaceBar(
+                          stretchModes: const [StretchMode.blurBackground, StretchMode.zoomBackground],
+                          background: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  theme.colorScheme.primary.withValues(alpha: 0.8),
+                                  theme.colorScheme.secondary.withValues(alpha: 0.6),
+                                ],
+                              ),
+                            ),
                           ),
-                          child: CircleAvatar(
-                            radius: 16,
-                            backgroundColor: Colors.white.withValues(alpha: 0.1),
-                            backgroundImage: userState.selectedChild!.avatarUrl != null
-                                ? NetworkImage(userState.selectedChild!.avatarUrl!)
-                                : null,
-                            child: userState.selectedChild!.avatarUrl == null
-                                ? Text(
-                                    userState.selectedChild!.fullName[0].toUpperCase(),
-                                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                  )
-                                : null,
+                          title: Text(
+                            l10n.myPerformanceTitle,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.8,
+                            ),
                           ),
+                          centerTitle: true,
                         ),
                       ),
                     ),
-                ],
-              ),
-
-              // ─── Overall Stats ───
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: OverallGradeCard(
-                    gpa: gpa,
-                    totalLessons: summary.length,
-                    attendanceRate: attendanceRate,
-                    className: userState.selectedChild?.className ?? '-',
+                    actions: [
+                      if (userState.selectedChild != null)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 16),
+                          child: Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                              ),
+                              child: CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                                backgroundImage: userState.selectedChild!.avatarUrl != null
+                                    ? NetworkImage(userState.selectedChild!.avatarUrl!)
+                                    : null,
+                                child: userState.selectedChild!.avatarUrl == null
+                                    ? Text(
+                                        userState.selectedChild!.fullName[0].toUpperCase(),
+                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ),
 
-              // ─── Section Title ───
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-                sliver: SliverToBoxAdapter(
-                  child: Text(
-                    l10n.gradesBySubjectTitle,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
+                  // ─── Overall Stats ───
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                    sliver: SliverToBoxAdapter(
+                      child: OverallGradeCard(
+                        gpa: gpa,
+                        totalLessons: summary.length,
+                        attendanceRate: attendanceRate,
+                        className: userState.selectedChild?.className ?? '-',
+                      ),
                     ),
                   ),
-                ),
-              ),
 
-              // ─── Subject Cards List ───
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final grade = grades[index];
-                    final summaryItem = summaryBySubject[grade.subjectName.toLowerCase()];
-
-                    final averagePercent = summaryItem != null
-                        ? ((summaryItem.averageGrade / 5) * 100).round()
-                        : ((grade.grade / 5) * 100).round();
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: GradeCard(
-                        name: grade.subjectName,
-                        teacher: grade.teacherName ?? summaryItem?.teacherName ?? l10n.teacherLabel,
-                        grade: grade.grade,
-                        attendance: attendanceRate,
-                        average: averagePercent.clamp(0, 100),
-                        icon: _subjectIcon(grade.subjectName),
-                        color: _gradeColor(grade.grade),
+                  // ─── Section Title ───
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                    sliver: SliverToBoxAdapter(
+                      child: Text(
+                        l10n.gradesBySubjectTitle,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                    );
-                  }, childCount: grades.length),
-                ),
+                    ),
+                  ),
+
+                  // ─── Subject Cards List ───
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120), // Bottom space for floating nav
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final grade = grades[index];
+                        final summaryItem = summaryBySubject[grade.subjectName.toLowerCase()];
+
+                        final averagePercent = summaryItem != null
+                            ? ((summaryItem.averageGrade / 5) * 100).round()
+                            : ((grade.grade / 5) * 100).round();
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: GradeCard(
+                            name: grade.subjectName,
+                            teacher: grade.teacherName ?? summaryItem?.teacherName ?? l10n.teacherLabel,
+                            grade: grade.grade,
+                            attendance: attendanceRate,
+                            average: averagePercent.clamp(0, 100),
+                            icon: _subjectIcon(grade.subjectName),
+                            color: _gradeColor(grade.grade),
+                          ),
+                        );
+                      }, childCount: grades.length),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           );
         },
       ),
