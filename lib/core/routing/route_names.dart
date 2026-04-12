@@ -30,6 +30,7 @@ class RouteNames {
   static const String payments = '/payments';
   static const String paymentMethod = '/payments/method';
   static const String paymentHistory = '/payments/history';
+  static const String paymentSuccess = '/payments/success';
 
   // ─── Menu ───
   static const String menu = '/menu';

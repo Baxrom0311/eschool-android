@@ -17,6 +17,7 @@ import '../../presentation/screens/rating/rating_screen.dart';
 import '../../presentation/screens/payments/payments_screen.dart';
 import '../../presentation/screens/payments/payment_history_screen.dart';
 import '../../presentation/screens/payments/payment_method_screen.dart';
+import '../../presentation/screens/payments/payment_success_screen.dart';
 import '../../presentation/screens/menu/daily_menu_screen.dart';
 import '../../presentation/screens/academics/schedule_screen.dart';
 import '../../presentation/screens/academics/attendance_screen.dart';
@@ -210,6 +211,11 @@ class AppRouter {
       name: RouteNames.paymentHistory,
       path: RouteNames.paymentHistory,
       builder: (context, state) => const PaymentHistoryScreen(),
+    ),
+    GoRoute(
+      name: RouteNames.paymentSuccess,
+      path: RouteNames.paymentSuccess,
+      builder: (context, state) => const PaymentSuccessScreen(),
     ),
 
     // ─── Menu ───
