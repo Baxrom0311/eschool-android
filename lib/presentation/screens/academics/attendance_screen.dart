@@ -7,6 +7,8 @@ import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../data/models/attendance_model.dart';
 import '../../providers/academic_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../../core/services/socket_service.dart';
+import '../../providers/auth_provider.dart';
 
 /// Attendance Screen - Monthly Attendance Calendar and Stats
 class AttendanceScreen extends ConsumerStatefulWidget {
@@ -24,7 +26,34 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAttendance(_focusedDay);
+      _setupSocketListener();
     });
+  }
+
+  void _setupSocketListener() {
+    final auth = ref.read(authProvider);
+    final socket = ref.read(socketServiceProvider);
+    
+    if (socket != null && auth.user != null) {
+      socket.listenPrivate(
+        'parent.${auth.user!.id}',
+        'attendance.marked',
+        (data) {
+          // Ma'lumot kelganda barcha davomatni qayta yuklash
+          _loadAttendance(_focusedDay);
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    final auth = ref.read(authProvider);
+    final socket = ref.read(socketServiceProvider);
+    if (socket != null && auth.user != null) {
+      socket.leaveChannel('parent.${auth.user!.id}');
+    }
+    super.dispose();
   }
 
   void _loadAttendance(DateTime date) {

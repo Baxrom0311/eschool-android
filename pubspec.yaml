@@ -76,6 +76,10 @@ dependencies:
   firebase_analytics: ^11.3.0
   firebase_crashlytics: ^4.1.0
 
+dependency_overrides:
+  pusher_client:
+    path: ../packages/pusher_client
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

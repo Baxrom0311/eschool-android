@@ -10,6 +10,7 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/payment_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../../core/services/socket_service.dart';
 import '../../widgets/payments/balance_header.dart';
 import '../../widgets/common/page_background.dart';
 import '../../widgets/common/animated_pressable.dart';
@@ -71,7 +72,41 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(_loadPaymentDataForSelectedChild);
+    Future.microtask(() {
+      _loadPaymentDataForSelectedChild();
+      _initSocketListener();
+    });
+  }
+
+  void _initSocketListener() {
+    final parentId = ref.read(userProvider).user?.id;
+    final socket = ref.read(socketServiceProvider);
+    if (parentId == null || socket == null) return;
+
+    final channelName = 'parent.$parentId';
+    
+    // Payment received eventini tinglash
+    socket.listenPrivate(
+      channelName,
+      'payment.received',
+      (data) {
+        debugPrint('💰 Real-time Payment: $data');
+        if (mounted) {
+          final child = ref.read(selectedChildProvider);
+          ref.read(paymentProvider.notifier).refresh(studentId: child?.id);
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    final parentId = ref.read(userProvider).user?.id;
+    final socket = ref.read(socketServiceProvider);
+    if (parentId != null && socket != null) {
+      socket.leaveChannel('parent.$parentId');
+    }
+    super.dispose();
   }
 
   @override

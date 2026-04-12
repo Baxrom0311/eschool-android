@@ -85,7 +85,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: AppRouter.rootNavigatorKey,
     initialLocation: RouteNames.splash,
-    debugLogDiagnostics: kDebugMode,
+    debugLogDiagnostics: true,
     refreshListenable: routerNotifier,
     redirect: routerNotifier.redirect,
     observers: AppTelemetryService.navigatorObservers,

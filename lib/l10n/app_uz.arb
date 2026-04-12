@@ -328,5 +328,10 @@
   "gradeTypeTest": "Test",
   "langUz": "O'zbekcha",
   "langRu": "Ruscha",
-  "langEn": "Inglizcha"
+  "langEn": "Inglizcha",
+  "paymentSuccessTitle": "To'lov muvaffaqiyatli!",
+  "paymentSuccessMessage": "To'lov muvaffaqiyatli amalga oshirildi. Farzandingiz balansi yaqin daqiqalarda yangilanadi.",
+  "backToHome": "Asosiy ekranga qaytish",
+  "paymentFailedTitle": "To'lovda xatolik",
+  "paymentFailedMessage": "To'lovni amalga oshirishda muammo yuzaga keldi. Iltimos, qayta urinib ko'ring yoki qo'llab-quvvatlash xizmatiga murojaat qiling."
 }

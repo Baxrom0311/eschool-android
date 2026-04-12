@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/routing/route_names.dart';
+import '../../../core/routing/route_names.dart';
+import 'package:parent_school_app/core/localization/l10n_extension.dart';
 
 class PaymentSuccessScreen extends StatelessWidget {
   const PaymentSuccessScreen({super.key});
@@ -39,7 +40,7 @@ class PaymentSuccessScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             Text(
-              "To'lov muvaffaqiyatli!",
+              context.l10n.paymentSuccessTitle,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.onSurface,
@@ -49,7 +50,7 @@ class PaymentSuccessScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 48),
               child: Text(
-                "Sizning to'lovingiz qabul qilindi va tizimda aks etdi. Rahmat!",
+                context.l10n.paymentSuccessMessage,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -71,9 +72,9 @@ class PaymentSuccessScreen extends StatelessWidget {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   ),
-                  child: const Text(
-                    "Bosh sahifaga qaytish",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  child: Text(
+                    context.l10n.backToHome,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

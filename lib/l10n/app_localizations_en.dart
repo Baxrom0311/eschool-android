@@ -1010,4 +1010,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get langEn => 'English';
+
+  @override
+  String get paymentSuccessTitle => 'To\'lov muvaffaqiyatli!';
+
+  @override
+  String get paymentSuccessMessage =>
+      'To\'lov muvaffaqiyatli amalga oshirildi. Farzandingiz balansi yaqin daqiqalarda yangilanadi.';
+
+  @override
+  String get backToHome => 'Asosiy ekranga qaytish';
+
+  @override
+  String get paymentFailedTitle => 'To\'lovda xatolik';
+
+  @override
+  String get paymentFailedMessage =>
+      'To\'lovni amalga oshirishda muammo yuzaga keldi. Iltimos, qayta urinib ko\'ring yoki qo\'llab-quvvatlash xizmatiga murojaat qiling.';
 }

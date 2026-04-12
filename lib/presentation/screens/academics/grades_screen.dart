@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/models/grade_model.dart';
 import '../../providers/academic_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../../core/services/socket_service.dart';
 import '../../widgets/grades/grade_card.dart';
 import '../../widgets/grades/overall_grade_card.dart';
 
@@ -50,7 +51,38 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadGradesForSelectedChild();
+      _initSocketListener();
     });
+  }
+
+  void _initSocketListener() {
+    final parentId = ref.read(userProvider).user?.id;
+    final socket = ref.read(socketServiceProvider);
+    if (parentId == null || socket == null) return;
+
+    final channelName = 'parent.$parentId';
+    
+    // Grade published eventini tinglash
+    socket.listenPrivate(
+      channelName,
+      'grade.published',
+      (data) {
+        debugPrint('🔔 Real-time Grade: $data');
+        if (mounted) {
+          _loadGradesForSelectedChild(force: true);
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    final parentId = ref.read(userProvider).user?.id;
+    final socket = ref.read(socketServiceProvider);
+    if (parentId != null && socket != null) {
+      socket.leaveChannel('parent.$parentId');
+    }
+    super.dispose();
   }
 
   IconData _subjectIcon(String subjectName) {

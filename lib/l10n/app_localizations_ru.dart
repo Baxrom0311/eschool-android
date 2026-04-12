@@ -573,7 +573,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String debtPaymentPrompt(Object amount) {
-    return 'Sizda $amount miqdorida qarzdorlik aniqlandi. Iltimos, to\'lovni o\'z vaqtida amalga oshiring.';
+    return 'Обнаружена задолженность в размере $amount. Пожалуйста, произведите оплату, чтобы избежать перебоев в обслуживании.';
   }
 
   @override
@@ -1012,4 +1012,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get langEn => 'Английский';
+
+  @override
+  String get paymentSuccessTitle => 'Оплата успешна!';
+
+  @override
+  String get paymentSuccessMessage =>
+      'Оплата прошла успешно. Баланс вашего ребенка обновится в ближайшие минуты.';
+
+  @override
+  String get backToHome => 'Вернуться на главную';
+
+  @override
+  String get paymentFailedTitle => 'Ошибка оплаты';
+
+  @override
+  String get paymentFailedMessage =>
+      'Произошла ошибка при совершении платежа. Пожалуйста, попробуйте еще раз или обратитесь в службу поддержки.';
 }

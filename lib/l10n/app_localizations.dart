@@ -2073,6 +2073,36 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Inglizcha'**
   String get langEn;
+
+  /// No description provided for @paymentSuccessTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov muvaffaqiyatli!'**
+  String get paymentSuccessTitle;
+
+  /// No description provided for @paymentSuccessMessage.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov muvaffaqiyatli amalga oshirildi. Farzandingiz balansi yaqin daqiqalarda yangilanadi.'**
+  String get paymentSuccessMessage;
+
+  /// No description provided for @backToHome.
+  ///
+  /// In uz, this message translates to:
+  /// **'Asosiy ekranga qaytish'**
+  String get backToHome;
+
+  /// No description provided for @paymentFailedTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lovda xatolik'**
+  String get paymentFailedTitle;
+
+  /// No description provided for @paymentFailedMessage.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lovni amalga oshirishda muammo yuzaga keldi. Iltimos, qayta urinib ko\'ring yoki qo\'llab-quvvatlash xizmatiga murojaat qiling.'**
+  String get paymentFailedMessage;
 }
 
 class _AppLocalizationsDelegate
