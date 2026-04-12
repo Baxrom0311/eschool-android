@@ -44,6 +44,7 @@ pubspec.lock
 **/android/gradlew.bat
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
+**/android/app/google-services.json
 
 # iOS
 **/ios/**/*.mode1v3
@@ -53,6 +54,7 @@ pubspec.lock
 **/ios/**/*.perspectivev3
 **/ios/**/*.xccheckout
 **/ios/**/DerivedData/
+**/ios/Runner/GoogleService-Info.plist
 
 # Environment
 .env

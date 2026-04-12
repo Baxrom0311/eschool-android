@@ -147,10 +147,10 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
                     padding: const EdgeInsets.all(32),
                     decoration: BoxDecoration(
                       color: theme.cardColor,
-                      borderRadius: BorderRadius.circular(40),
+                      borderRadius: BorderRadius.circular(32),
                       border: Border.all(
-                        color: colorScheme.outline.withValues(alpha: 0.3),
-                        width: 0.5,
+                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                        width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -165,11 +165,11 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
                       children: [
                         Text(
                           l10n.paymentAmountLabel.toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
-                            color: AppColors.primaryBlue,
-                            letterSpacing: 1.2,
+                            color: theme.colorScheme.primary,
+                            letterSpacing: 1.5,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -245,8 +245,8 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
                     text: l10n.paymentAction.toUpperCase(),
                     onPressed: isLoading ? null : _handlePayment,
                     isLoading: isLoading,
-                    height: 60,
-                    borderRadius: 20,
+                    height: 62,
+                    borderRadius: 32,
                   ),
                   const SizedBox(height: 20),
                   Text(

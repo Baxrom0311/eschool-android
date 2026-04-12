@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
 import 'dart:ui';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,6 +13,7 @@ import '../../providers/user_provider.dart';
 import '../../widgets/payments/balance_header.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/page_background.dart';
+import '../../widgets/common/animated_pressable.dart';
 
 /// Payments Screen - Main view for billing and payments
 class PaymentsScreen extends ConsumerStatefulWidget {
@@ -79,7 +79,6 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final state = ref.watch(paymentProvider);
     final userState = ref.watch(userProvider);
     final child = userState.selectedChild;
@@ -88,24 +87,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     final debtAmount = state.balance?.debtAmount ?? 0;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      extendBody: true,
+      extendBodyBehindAppBar: true,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
+        preferredSize: const Size.fromHeight(kToolbarHeight + 8),
         child: ClipRRect(
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            filter: ImageFilter.blur(sigmaX: LiquidGlass.blur, sigmaY: LiquidGlass.blur),
             child: AppBar(
-              title: Text(
-                l10n.paymentsTitle,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.8,
-                ),
-              ),
+              title: Text(l10n.paymentsTitle, style: theme.appBarTheme.titleTextStyle),
               centerTitle: true,
-              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: LiquidGlass.opacity(context)),
               surfaceTintColor: Colors.transparent,
               elevation: 0,
             ),
@@ -116,173 +107,186 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         child: state.isLoading && state.balance == null
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
-                onRefresh: () async => _loadPaymentDataForSelectedChild(force: true),
-                color: AppColors.primaryBlue,
-                child: SingleChildScrollView(
+                onRefresh: () => ref.read(paymentProvider.notifier).refresh(studentId: child?.id),
+                color: theme.colorScheme.primary,
+                backgroundColor: theme.cardColor,
+                child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 120), // More space for floating nav
-                  child: Column(
-                    children: [
-                      // ─── Header Section ───
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
-                        child: BalanceHeader(
-                          balance: hasFinancialData
-                              ? _formatCurrencyAmount(l10n, state.balance?.balance ?? 0)
-                              : l10n.noFinancialData,
-                          lastUpdated: _formatLastUpdated(l10n, state.balance?.nextPaymentDate),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+                  children: [
+                    SizedBox(height: MediaQuery.of(context).padding.top + 56 + 12),
+
+                    // ─── Header Section ───
+                    BalanceHeader(
+                      balance: hasFinancialData ? _formatCurrencyAmount(l10n, state.balance?.balance ?? 0) : l10n.noFinancialData,
+                      lastUpdated: _formatLastUpdated(l10n, state.balance?.nextPaymentDate),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    if (state.error != null)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 24),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.2)),
+                        ),
+                        child: Text(
+                          state.error!,
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error, fontWeight: FontWeight.w700),
                         ),
                       ),
 
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (state.error != null)
-                              Container(
-                                margin: const EdgeInsets.only(bottom: 16),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.errorContainer.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: colorScheme.error.withValues(alpha: 0.2)),
-                                ),
-                                child: Text(
-                                  state.error!,
-                                  style: TextStyle(color: colorScheme.error, fontSize: 13, fontWeight: FontWeight.w600),
-                                ),
-                              ),
+                    // ─── Contract Info Card ───
+                    if (child != null || state.balance?.contractNumber != null)
+                      _InfoCard(
+                        title: l10n.contractInfoTitle,
+                        icon: Icons.description_rounded,
+                        items: [
+                          if (state.balance?.contractNumber != null) {'label': l10n.contractLabel, 'value': state.balance!.contractNumber!},
+                          if (child != null) {'label': l10n.studentLabel, 'value': child.fullName},
+                          if (child != null) {'label': l10n.classLabel, 'value': child.className},
+                          if (hasFinancialData && (state.balance?.monthlyFee ?? 0) > 0)
+                            {'label': l10n.monthlyPaymentLabel, 'value': _formatCurrencyAmount(l10n, state.balance!.monthlyFee)},
+                        ],
+                      ),
 
-                            // ─── Contract Info Card ───
-                            if (child != null || state.balance?.contractNumber != null)
-                              _InfoCard(
-                                title: l10n.contractInfoTitle,
-                                icon: Icons.description_rounded,
-                                items: [
-                                  if (state.balance?.contractNumber != null)
-                                    {'label': l10n.contractLabel, 'value': state.balance!.contractNumber!},
-                                  if (child != null)
-                                    {'label': l10n.studentLabel, 'value': child.fullName},
-                                  if (child != null)
-                                    {'label': l10n.classLabel, 'value': child.className},
-                                  if (hasFinancialData && state.balance != null)
-                                    {'label': l10n.balanceLabel, 'value': _formatCurrencyAmount(l10n, state.balance!.balance)},
-                                  if (hasFinancialData && (state.balance?.monthlyFee ?? 0) > 0)
-                                    {'label': l10n.monthlyPaymentLabel, 'value': _formatCurrencyAmount(l10n, state.balance!.monthlyFee)},
+                    if (hasDebt) ...[
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppColors.liquidAmber.first.withValues(alpha: 0.15),
+                              AppColors.liquidAmber.last.withValues(alpha: 0.05),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: AppColors.liquidAmber.first.withValues(alpha: 0.1)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(colors: AppColors.liquidAmber),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.liquidAmber.first.withValues(alpha: 0.4),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
                                 ],
                               ),
-                            
-                            const SizedBox(height: 22),
-
-                            // ─── Payment Status (Debt Alert) ───
-                            if (hasDebt)
-                              Container(
-                                padding: const EdgeInsets.all(24),
-                                decoration: BoxDecoration(
-                                  color: AppColors.amber.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(32),
-                                  border: Border.all(color: AppColors.amber.withValues(alpha: 0.2), width: 1),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.amber.withValues(alpha: 0.05),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 10),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.amber,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.priority_high_rounded, color: Colors.white, size: 20),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            l10n.debtExistsTitle,
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w900,
-                                              color: AppColors.amber,
-                                              letterSpacing: -0.5,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            l10n.debtPaymentPrompt(_formatCurrencyAmount(l10n, debtAmount)),
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.amber.withValues(alpha: 0.8),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            
-                            const SizedBox(height: 22),
-
-                            // ─── Action Buttons ───
-                            CustomButton(
-                              text: l10n.payNowAction,
-                              onPressed: () {
-                                HapticFeedback.mediumImpact();
-                                context.push(RouteNames.paymentMethod);
-                              },
-                              height: 60,
-                              borderRadius: 20,
-                              icon: Icons.payments_rounded,
-                              backgroundColor: theme.colorScheme.primary,
+                              child: const Icon(Icons.priority_high_rounded, color: Colors.white, size: 20),
                             ),
-                            const SizedBox(height: 12),
-                            Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  context.push(RouteNames.paymentHistory);
-                                },
-                                borderRadius: BorderRadius.circular(20),
-                                child: Container(
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.15), width: 1.5),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.debtExistsTitle.toUpperCase(),
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color: const Color(0xFFF59E0B),
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.0,
+                                    ),
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.history_rounded, color: theme.colorScheme.primary, size: 20),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        l10n.paymentHistoryTitle,
-                                        style: TextStyle(
-                                          color: theme.colorScheme.primary,
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                    ],
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    l10n.debtPaymentPrompt(_formatCurrencyAmount(l10n, debtAmount)),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
                     ],
-                  ),
+
+                    const SizedBox(height: 32),
+
+                    // ─── Action Buttons ───
+                    AnimatedPressable(
+                      onTap: () => context.push(RouteNames.paymentMethod),
+                      child: Container(
+                        height: 72,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: AppColors.liquidIndigo,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.liquidIndigo.first.withValues(alpha: 0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.payments_rounded, color: Colors.white, size: 22),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.payNowAction,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 18,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    AnimatedPressable(
+                      onTap: () => context.push(RouteNames.paymentHistory),
+                      child: Container(
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.history_rounded, color: theme.colorScheme.primary, size: 22),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.paymentHistoryTitle,
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 18,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
       ),
@@ -304,12 +308,12 @@ class _InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1), width: 1.0),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.03),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -320,44 +324,36 @@ class _InfoCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: theme.colorScheme.primary, size: 18),
+                  child: Icon(icon, color: theme.colorScheme.primary, size: 20),
                 ),
                 const SizedBox(width: 16),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
-                  ),
+                  style: theme.textTheme.titleMedium,
                 ),
               ],
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Divider(height: 1),
-            ),
+            const SizedBox(height: 24),
             ...items.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         item['label']!,
-                        style: TextStyle(
-                          fontSize: 12, 
-                          fontWeight: FontWeight.w600, 
-                          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
                         item['value']!,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+                        style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
                       ),
                     ],
                   ),

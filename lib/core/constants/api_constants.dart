@@ -1,24 +1,30 @@
+enum AppEnvironment { local, staging, production }
+
 /// API endpoints va konfiguratsiyalar
 class ApiConstants {
   ApiConstants._();
 
+  // Environment mode
+  static const String _rawEnv = String.fromEnvironment('ENV', defaultValue: 'production');
+  static AppEnvironment get environment => AppEnvironment.values.firstWhere(
+    (e) => e.name == _rawEnv,
+    orElse: () => AppEnvironment.production,
+  );
+
   // Base URL (dart-define: --dart-define=API_BASE_URL=https://...)
-  // Production default teacher ilovasi bilan bir xil saqlanadi.
-  // Local development: --dart-define=API_BASE_URL=http://10.0.2.2:8000
-  static const String _defaultBaseUrl = 'https://ranchschool.izlash.uz';
-  static const String _envBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: _defaultBaseUrl,
-  );
-  static const String _envHostHeader = String.fromEnvironment(
-    'API_HOST_HEADER',
-    defaultValue: '',
-  );
-  static String get baseUrl =>
-      _envBaseUrl.isEmpty ? _defaultBaseUrl : _envBaseUrl;
-  static String? get hostHeader {
-    final trimmed = _envHostHeader.trim();
-    return trimmed.isEmpty ? null : trimmed;
+  static const String _defaultProdUrl = 'https://ranchschool.izlash.uz';
+  static const String _defaultStagingUrl = 'https://staging.ranchschool.uz';
+  static const String _defaultLocalUrl = 'http://10.0.2.2:8000';
+
+  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
+
+  static String get baseUrl {
+    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
+    return switch (environment) {
+      AppEnvironment.production => _defaultProdUrl,
+      AppEnvironment.staging => _defaultStagingUrl,
+      AppEnvironment.local => _defaultLocalUrl,
+    };
   }
 
   static Map<String, String> get defaultHeaders {

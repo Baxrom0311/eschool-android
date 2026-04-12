@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import 'package:parent_school_app/core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../data/models/menu_model.dart';
 import '../../providers/menu_provider.dart';
@@ -9,8 +11,6 @@ import '../../providers/user_provider.dart';
 import '../../widgets/menu/meal_card.dart';
 import '../../widgets/common/app_state_view.dart';
 import '../../widgets/common/page_background.dart';
-import 'dart:ui';
-import 'package:flutter/services.dart';
 
 /// Daily Menu Screen - Weekly food schedule
 class DailyMenuScreen extends ConsumerStatefulWidget {
@@ -69,7 +69,6 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final state = ref.watch(menuProvider);
 
     ref.listen(selectedChildProvider, (previous, next) {
@@ -78,57 +77,49 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
       }
     });
 
-    // Tanlangan sana uchun barcha meal lar
-    final dailyMenus =
-        state.weeklyMenu.where((menu) {
-          if (menu.date.isEmpty) return false;
-          try {
-            final menuDate = DateTime.parse(menu.date);
-            return isSameDay(menuDate, _selectedDay ?? _focusedDay);
-          } catch (_) {
-            return false;
-          }
-        }).toList()..sort(
-          (a, b) => _mealOrder(a.mealType).compareTo(_mealOrder(b.mealType)),
-        );
+    final dailyMenus = state.weeklyMenu.where((menu) {
+      if (menu.date.isEmpty) return false;
+      try {
+        final menuDate = DateTime.parse(menu.date);
+        return isSameDay(menuDate, _selectedDay ?? _focusedDay);
+      } catch (_) {
+        return false;
+      }
+    }).toList()
+      ..sort((a, b) => _mealOrder(a.mealType).compareTo(_mealOrder(b.mealType)));
 
-    final meals = dailyMenus
-        .expand(
-          (menu) => menu.dishes.map(
-            (dish) => {
-              'title': dish.name,
-              'time': menu.mealTypeText,
-              'calories': '${dish.calories}',
-              'imageUrl': dish.imageUrl ?? '',
-              'ingredients': (dish.description ?? '')
-                  .split(',')
-                  .map((e) => e.trim())
-                  .where((e) => e.isNotEmpty)
-                  .toList(),
-            },
-          ),
-        )
-        .toList();
+    final groupedMeals = <MealType, Map<String, dynamic>>{};
+    for (final menu in dailyMenus) {
+      if (!groupedMeals.containsKey(menu.mealType)) {
+        groupedMeals[menu.mealType] = {
+          'time': menu.mealTypeText,
+          'dishes': <Map<String, dynamic>>[],
+        };
+      }
+      for (final dish in menu.dishes) {
+        (groupedMeals[menu.mealType]!['dishes'] as List).add({
+          'title': dish.name,
+          'calories': '${dish.calories}',
+          'imageUrl': dish.imageUrl ?? '',
+          'ingredients': (dish.description ?? '').split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+        });
+      }
+    }
+
+    final sortedMealTypes = groupedMeals.keys.toList()
+      ..sort((a, b) => _mealOrder(a).compareTo(_mealOrder(b)));
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      extendBody: true,
+      extendBodyBehindAppBar: true,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
+        preferredSize: const Size.fromHeight(kToolbarHeight + 8),
         child: ClipRRect(
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            filter: ImageFilter.blur(sigmaX: LiquidGlass.blur, sigmaY: LiquidGlass.blur),
             child: AppBar(
-              title: Text(
-                l10n.dailyMenuTitle,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.8,
-                ),
-              ),
+              title: Text(l10n.dailyMenuTitle, style: theme.appBarTheme.titleTextStyle),
               centerTitle: true,
-              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: LiquidGlass.opacity(context)),
               surfaceTintColor: Colors.transparent,
               elevation: 0,
             ),
@@ -138,104 +129,112 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
       body: PageBackground(
         child: Column(
           children: [
-            // ─── Top Calendar Section (Modern Bento Card) ───
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1), width: 1),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.shadowColor.withValues(alpha: 0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+            SizedBox(height: MediaQuery.of(context).padding.top + 56),
+
+            // ─── Modern Liquid Glass Calendar ───
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: TableCalendar(
-                    firstDay: DateTime.now().subtract(const Duration(days: 30)),
-                    lastDay: DateTime.now().add(const Duration(days: 30)),
-                    focusedDay: _focusedDay,
-                    calendarFormat: _calendarFormat,
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                    onDaySelected: (selectedDay, focusedDay) {
-                      HapticFeedback.selectionClick();
-                      setState(() {
-                        _selectedDay = selectedDay;
-                        _focusedDay = focusedDay;
-                      });
-                    },
-                    onFormatChanged: (format) {
-                      setState(() {
-                        _calendarFormat = format;
-                      });
-                    },
-                    headerStyle: HeaderStyle(
-                      formatButtonVisible: false,
-                      titleCentered: true,
-                      titleTextStyle: TextStyle(
-                        color: theme.textTheme.titleMedium?.color,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5,
+                    child: TableCalendar(
+                      firstDay: DateTime.now().subtract(const Duration(days: 90)),
+                      lastDay: DateTime.now().add(const Duration(days: 90)),
+                      focusedDay: _focusedDay,
+                      calendarFormat: _calendarFormat,
+                      availableCalendarFormats: const {CalendarFormat.week: 'Week'},
+                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      onDaySelected: (selectedDay, focusedDay) {
+                        setState(() {
+                          _selectedDay = selectedDay;
+                          _focusedDay = focusedDay;
+                        });
+                      },
+                      headerStyle: HeaderStyle(
+                        formatButtonVisible: false,
+                        titleCentered: true,
+                        titleTextStyle: theme.textTheme.titleMedium!.copyWith(
+                          fontWeight: FontWeight.w900, 
+                          fontSize: 16,
+                          letterSpacing: -0.5,
+                        ),
+                        leftChevronIcon: Icon(Icons.chevron_left_rounded, color: theme.colorScheme.primary),
+                        rightChevronIcon: Icon(Icons.chevron_right_rounded, color: theme.colorScheme.primary),
                       ),
-                      leftChevronIcon: Icon(Icons.chevron_left_rounded, color: colorScheme.primary),
-                      rightChevronIcon: Icon(Icons.chevron_right_rounded, color: colorScheme.primary),
-                    ),
-                    calendarStyle: CalendarStyle(
-                      defaultTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color, fontWeight: FontWeight.w600),
-                      weekendTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5)),
-                      selectedDecoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.primary.withValues(alpha: 0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                      calendarStyle: CalendarStyle(
+                        defaultTextStyle: theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w700),
+                        weekendTextStyle: theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                        selectedDecoration: BoxDecoration(
+                          gradient: LinearGradient(colors: AppColors.liquidIndigo),
+                          shape: BoxShape.circle,
+                        ),
+                        todayDecoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        todayTextStyle: theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w900, color: theme.colorScheme.primary),
                       ),
-                      todayDecoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
+                      daysOfWeekStyle: DaysOfWeekStyle(
+                        weekdayStyle: theme.textTheme.labelSmall!.copyWith(
+                          fontWeight: FontWeight.w900, 
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                          letterSpacing: 1.0,
+                        ),
+                        weekendStyle: theme.textTheme.labelSmall!.copyWith(
+                          fontWeight: FontWeight.w900, 
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                          letterSpacing: 1.0,
+                        ),
                       ),
-                      todayTextStyle: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
-                    ),
-                    daysOfWeekStyle: DaysOfWeekStyle(
-                      weekdayStyle: TextStyle(color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5), fontSize: 12, fontWeight: FontWeight.w700),
-                      weekendStyle: TextStyle(color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5), fontSize: 12, fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
               ),
             ),
 
-            // ─── Meals List Section ───
+            // ─── Meals List Section (Grouped) ───
             Expanded(
               child: AppStateView(
                 isLoading: state.isLoading,
                 errorMessage: state.error,
-                isEmpty: meals.isEmpty && !state.isLoading,
+                isEmpty: sortedMealTypes.isEmpty && !state.isLoading,
                 emptyMessage: l10n.noMenuOnSelectedDay,
                 onRetry: () => _loadWeeklyMenuForSelectedChild(force: true),
                 child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 120), // Bottom space for nav
-                  itemCount: meals.length,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                  itemCount: sortedMealTypes.length,
                   itemBuilder: (context, index) {
-                    final meal = meals[index];
+                    final mealType = sortedMealTypes[index];
+                    final mealData = groupedMeals[mealType]!;
+                    final dishes = mealData['dishes'] as List;
+
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 20),
                       child: MealCard(
-                        title: meal['title'] as String,
-                        time: meal['time'] as String,
-                        calories: meal['calories'] as String,
-                        imageUrl: meal['imageUrl'] as String,
-                        ingredients: meal['ingredients'] as List<String>,
+                        title: mealData['time'] as String,
+                        time: mealData['time'] as String,
+                        calories: dishes.first['calories'] as String,
+                        imageUrl: dishes.first['imageUrl'] as String,
+                        dishes: dishes.map((d) => d['title'] as String).toList(),
+                        ingredients: dishes.expand((d) => d['ingredients'] as List).map((e) => e as String).toSet().toList(),
                       ),
                     );
                   },

@@ -9,9 +9,6 @@ import '../../providers/user_provider.dart';
 import '../../widgets/grades/grade_card.dart';
 import '../../widgets/grades/overall_grade_card.dart';
 
-import '../../widgets/common/page_background.dart';
-import 'dart:ui';
-
 /// Grades Screen - Subject Grades List
 ///
 /// Design: Vertical list of subject cards with grades and progress
@@ -83,7 +80,6 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final gradesAsync = ref.watch(gradesProvider);
     final userState = ref.watch(userProvider);
     final attendanceAsync = ref.watch(attendanceProvider);
@@ -94,183 +90,110 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
       }
     });
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: gradesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => _GradesErrorView(
-          message: err.toString(),
-          onRetry: _loadGradesForSelectedChild,
-        ),
-        data: (gradesData) {
-          final grades = gradesData.grades;
-          final summary = gradesData.summary;
+    return gradesAsync.when(
+      loading: () => Center(child: CircularProgressIndicator(color: theme.colorScheme.primary)),
+      error: (err, stack) => _GradesErrorView(
+        message: err.toString(),
+        onRetry: _loadGradesForSelectedChild,
+      ),
+      data: (gradesData) {
+        final grades = gradesData.grades;
+        final summary = gradesData.summary;
 
-          if (grades.isEmpty && summary.isEmpty) {
-            return Center(child: Text(l10n.noGradesAvailable));
-          }
-
-          final double gpaFromSummary = summary.isNotEmpty
-              ? summary.fold<double>(
-                      0.0,
-                      (sum, item) => sum + item.averageGrade,
-                    ) /
-                    summary.length
-              : 0.0;
-          final double gpaFromGrades = grades.isNotEmpty
-              ? grades.fold<double>(0.0, (sum, item) => sum + item.grade) /
-                    grades.length
-              : 0.0;
-          final fallbackGpa = userState.selectedChild?.averageGrade ?? 0.0;
-          final double gpa =
-              (gpaFromSummary > 0
-                      ? gpaFromSummary
-                      : (gpaFromGrades > 0 ? gpaFromGrades : fallbackGpa))
-                  .clamp(0.0, 5.0);
-
-          final attendanceRate = (() {
-            final attData = attendanceAsync.valueOrNull;
-            final summary = attData?.summary;
-            if (summary != null && summary.totalDays > 0) {
-              return summary.attendancePercentage.round().clamp(0, 100);
-            }
-            return (userState.selectedChild?.attendancePercentage ?? 0).clamp(0, 100);
-          })();
-
-          final summaryBySubject = <String, SubjectGradeSummary>{
-            for (final item in summary) item.subjectName.toLowerCase(): item,
-          };
-
-          return Scaffold(
-            body: PageBackground(
-              child: CustomScrollView(
-                slivers: [
-                  // ─── Premium Glassmorphic Header ───
-                  SliverAppBar(
-                    expandedHeight: 140,
-                    pinned: true,
-                    stretch: true,
-                    backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
-                    surfaceTintColor: Colors.transparent,
-                    elevation: 0,
-                    flexibleSpace: ClipRRect(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: FlexibleSpaceBar(
-                          stretchModes: const [StretchMode.blurBackground, StretchMode.zoomBackground],
-                          background: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  theme.colorScheme.primary.withValues(alpha: 0.8),
-                                  theme.colorScheme.secondary.withValues(alpha: 0.6),
-                                ],
-                              ),
-                            ),
-                          ),
-                          title: Text(
-                            l10n.myPerformanceTitle,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.8,
-                            ),
-                          ),
-                          centerTitle: true,
-                        ),
-                      ),
-                    ),
-                    actions: [
-                      if (userState.selectedChild != null)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 16),
-                          child: Center(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
-                              ),
-                              child: CircleAvatar(
-                                radius: 16,
-                                backgroundColor: Colors.white.withValues(alpha: 0.1),
-                                backgroundImage: userState.selectedChild!.avatarUrl != null
-                                    ? NetworkImage(userState.selectedChild!.avatarUrl!)
-                                    : null,
-                                child: userState.selectedChild!.avatarUrl == null
-                                    ? Text(
-                                        userState.selectedChild!.fullName[0].toUpperCase(),
-                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                      )
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-
-                  // ─── Overall Stats ───
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                    sliver: SliverToBoxAdapter(
-                      child: OverallGradeCard(
-                        gpa: gpa,
-                        totalLessons: summary.length,
-                        attendanceRate: attendanceRate,
-                        className: userState.selectedChild?.className ?? '-',
-                      ),
-                    ),
-                  ),
-
-                  // ─── Section Title ───
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-                    sliver: SliverToBoxAdapter(
-                      child: Text(
-                        l10n.gradesBySubjectTitle,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // ─── Subject Cards List ───
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120), // Bottom space for floating nav
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final grade = grades[index];
-                        final summaryItem = summaryBySubject[grade.subjectName.toLowerCase()];
-
-                        final averagePercent = summaryItem != null
-                            ? ((summaryItem.averageGrade / 5) * 100).round()
-                            : ((grade.grade / 5) * 100).round();
-
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: GradeCard(
-                            name: grade.subjectName,
-                            teacher: grade.teacherName ?? summaryItem?.teacherName ?? l10n.teacherLabel,
-                            grade: grade.grade,
-                            attendance: attendanceRate,
-                            average: averagePercent.clamp(0, 100),
-                            icon: _subjectIcon(grade.subjectName),
-                            color: _gradeColor(grade.grade),
-                          ),
-                        );
-                      }, childCount: grades.length),
-                    ),
-                  ),
-                ],
+        if (grades.isEmpty && summary.isEmpty) {
+          return Center(
+            child: Text(
+              l10n.noGradesAvailable,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           );
-        },
-      ),
+        }
+
+        final double gpaFromSummary = summary.isNotEmpty
+            ? summary.fold<double>(0.0, (sum, item) => sum + item.averageGrade) / summary.length
+            : 0.0;
+        final double gpaFromGrades = grades.isNotEmpty
+            ? grades.fold<double>(0.0, (sum, item) => sum + item.grade) / grades.length
+            : 0.0;
+        
+        final double gpa = (gpaFromSummary > 0 ? gpaFromSummary : (gpaFromGrades > 0 ? gpaFromGrades : (userState.selectedChild?.averageGrade ?? 0.0)))
+            .clamp(0.0, 5.0).toDouble();
+
+        final attendanceRate = (() {
+          final attData = attendanceAsync.valueOrNull;
+          if (attData?.summary != null && attData!.summary!.totalDays > 0) {
+            return attData.summary!.attendancePercentage.round().clamp(0, 100);
+          }
+          return (userState.selectedChild?.attendancePercentage ?? 0).toInt().clamp(0, 100);
+        })();
+
+        final summaryBySubject = <String, SubjectGradeSummary>{
+          for (final item in summary) item.subjectName.toLowerCase(): item,
+        };
+
+        return CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            
+            // Overall Results Section
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverToBoxAdapter(
+                child: OverallGradeCard(
+                  gpa: gpa,
+                  totalLessons: summary.length,
+                  attendanceRate: attendanceRate,
+                  className: userState.selectedChild?.className ?? '-',
+                ),
+              ),
+            ),
+
+            // Section Header
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+              sliver: SliverToBoxAdapter(
+                child: Text(
+                  l10n.gradesBySubjectTitle,
+                  style: theme.textTheme.titleLarge,
+                ),
+              ),
+            ),
+
+            // Grades List
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final grade = grades[index];
+                    final summaryItem = summaryBySubject[grade.subjectName.toLowerCase()];
+                    final averagePercent = summaryItem != null
+                        ? ((summaryItem.averageGrade / 5) * 100).round()
+                        : ((grade.grade / 5) * 100).round();
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GradeCard(
+                        name: grade.subjectName,
+                        teacher: grade.teacherName ?? summaryItem?.teacherName ?? l10n.teacherLabel,
+                        grade: grade.grade,
+                        attendance: attendanceRate,
+                        average: averagePercent.clamp(0, 100),
+                        icon: _subjectIcon(grade.subjectName),
+                        color: _gradeColor(grade.grade),
+                      ),
+                    );
+                  },
+                  childCount: grades.length,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -284,36 +207,40 @@ class _GradesErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.error_outline_rounded, color: theme.colorScheme.error, size: 48),
+            ),
+            const SizedBox(height: 24),
             Text(
               l10n.backendErrorTitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: colorScheme.onSurface,
-              ),
+              style: theme.textTheme.titleMedium,
             ),
-            const SizedBox(height: 12),
-            SelectableText(
+            const SizedBox(height: 8),
+            Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: colorScheme.onSurfaceVariant,
-                height: 1.4,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: onRetry, child: Text(l10n.retry)),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: onRetry,
+              child: Text(l10n.retry),
+            ),
           ],
         ),
       ),

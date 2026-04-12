@@ -72,8 +72,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   colors: [colorScheme.primary, colorScheme.secondary],
                 ),
                 borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(40),
-                  bottomRight: Radius.circular(40),
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
                 ),
               ),
               child: SafeArea(
@@ -136,9 +136,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   elevation: 8,
                   shadowColor: theme.shadowColor,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(32),
                     side: BorderSide(
-                      color: colorScheme.outline.withValues(alpha: 0.3),
+                      color: colorScheme.outline.withValues(alpha: 0.1),
                     ),
                   ),
                   child: Padding(
@@ -232,8 +232,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             text: l10n.createAccountAction,
                             onPressed: _isLoading ? null : _handleRegister,
                             isLoading: _isLoading,
-                            height: 56,
-                            borderRadius: 16,
+                            height: 62,
+                            borderRadius: 32,
                           ),
                           const SizedBox(height: 32),
 

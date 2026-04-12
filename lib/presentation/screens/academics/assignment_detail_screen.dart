@@ -172,8 +172,8 @@ class _AssignmentDetailScreenState
                           color: theme.cardColor,
                           borderRadius: BorderRadius.circular(32),
                           border: Border.all(
-                            color: colorScheme.outline.withValues(alpha: 0.3),
-                            width: 0.5,
+                            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                            width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -343,6 +343,9 @@ class _AssignmentDetailScreenState
                 decoration: BoxDecoration(
                   color: theme.cardColor,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border(
+                    top: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -354,20 +357,15 @@ class _AssignmentDetailScreenState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    OutlinedButton.icon(
+                    CustomButton(
+                      text: _selectedFileName == null
+                          ? l10n.chooseFileAction.toUpperCase()
+                          : l10n.chooseAnotherFileAction.toUpperCase(),
                       onPressed: _isSubmitting ? null : _pickFile,
-                      icon: const Icon(Icons.upload_file_rounded),
-                      label: Text(
-                        _selectedFileName == null
-                            ? l10n.chooseFileAction.toUpperCase()
-                            : l10n.chooseAnotherFileAction.toUpperCase(),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(56),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                        side: BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.3), width: 1.5),
-                        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-                      ),
+                      isOutlined: true,
+                      height: 62,
+                      borderRadius: 32,
+                      icon: Icons.upload_file_rounded,
                     ),
                     const SizedBox(height: 12),
                     CustomButton(
@@ -376,8 +374,8 @@ class _AssignmentDetailScreenState
                           ? null
                           : _submitAssignment,
                       isLoading: _isSubmitting || assignmentsAsync.isLoading,
-                      height: 56,
-                      borderRadius: 18,
+                      height: 62,
+                      borderRadius: 32,
                     ),
                   ],
                 ),
@@ -412,7 +410,7 @@ class _DetailCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3), width: 0.5),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),

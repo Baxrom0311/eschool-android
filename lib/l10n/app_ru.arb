@@ -185,6 +185,7 @@
   "classLabel": "Класс",
   "monthlyPaymentLabel": "Ежемесячный платеж",
   "debtExistsTitle": "Есть задолженность",
+  "debtPaymentPrompt": "Обнаружена задолженность в размере {amount}. Пожалуйста, произведите оплату, чтобы избежать перебоев в обслуживании.",
   "payNowAction": "Оплатить сейчас",
   "paymentHistoryTitle": "История платежей",
   "paymentHistoryEmpty": "История платежей пуста",

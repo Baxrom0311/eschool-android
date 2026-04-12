@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../../core/constants/app_colors.dart';
 
@@ -13,133 +12,155 @@ class AcademicStats extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: _buildCard(
-                context: context,
-                title: l10n.averageGradeTitle,
-                content: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 76,
-                      height: 76,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // GPA Card - Larger Bento piece
+          Expanded(
+            flex: 3,
+            child: _BentoStatCard(
+              title: l10n.averageGradeTitle,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                   ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: AppColors.liquidEmerald,
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ).createShader(bounds),
+                    child: SizedBox(
+                      width: 88,
+                      height: 88,
                       child: CircularProgressIndicator(
-                        value: (gpa / 5.0).clamp(0.0, 1.0),
-                        strokeWidth: 9,
+                        value: (gpa / 5.0).clamp(0.1, 1.0), // Min 0.1 for visual sweep
+                        strokeWidth: 12,
                         strokeCap: StrokeCap.round,
-                        backgroundColor: colorScheme.outline.withValues(alpha: 0.1),
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
+                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.05),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     ),
-                    Text(
-                      gpa.toStringAsFixed(1),
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.success,
-                        letterSpacing: -1,
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        gpa.toStringAsFixed(1),
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          color: theme.colorScheme.onSurface,
+                          letterSpacing: -1.5,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildCard(
-                context: context,
-                title: l10n.classRankingTitle,
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.emoji_events_outlined,
-                      size: 44,
-                      color: Color(0xFFF59E0B), // Consistent Amber
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      rank != null ? '#$rank' : '-',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFFF59E0B),
-                        letterSpacing: -0.5,
+          ),
+          const SizedBox(width: 12),
+          // Rank Card - Asymmetrical smaller piece
+          Expanded(
+            flex: 2,
+            child: _BentoStatCard(
+              title: l10n.classRankingTitle,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.liquidAmber.first.withValues(alpha: 0.15),
+                          AppColors.liquidAmber.last.withValues(alpha: 0.05),
+                        ],
                       ),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.liquidAmber.first.withValues(alpha: 0.1)),
                     ),
-                    Text(
-                      l10n.placeSuffix,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface.withValues(alpha: 0.5),
-                      ),
+                    child: const Icon(
+                      Icons.military_tech_rounded,
+                      size: 36,
+                      color: Color(0xFFF59E0B),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    rank != null ? '#$rank' : '-',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      color: theme.colorScheme.onSurface,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  Text(
+                    l10n.placeSuffix.toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                      fontSize: 9,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildCard({
-    required BuildContext context,
-    required String title,
-    required Widget content,
-  }) {
+class _BentoStatCard extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _BentoStatCard({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-        },
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.1),
-              width: 1.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: theme.shadowColor.withValues(alpha: 0.05),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.05),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.03),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
+        ],
+      ),
       child: Column(
         children: [
           Text(
             title.toUpperCase(),
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 0.5,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+              fontSize: 10,
+              letterSpacing: 1.5,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ),
-          const SizedBox(height: 10),
-          content,
+          const SizedBox(height: 20),
+          child,
         ],
       ),
-    ),);
+    );
   }
 }

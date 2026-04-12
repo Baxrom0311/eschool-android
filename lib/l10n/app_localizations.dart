@@ -1207,8 +1207,14 @@ abstract class AppLocalizations {
   /// No description provided for @debtExistsTitle.
   ///
   /// In uz, this message translates to:
-  /// **'Qarzdorlik mavjud'**
+  /// **'DIQQAT'**
   String get debtExistsTitle;
+
+  /// No description provided for @debtPaymentPrompt.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sizda {amount} miqdorida qarzdorlik aniqlandi. Iltimos, to\'lovni o\'z vaqtida amalga oshiring.'**
+  String debtPaymentPrompt(Object amount);
 
   /// No description provided for @payNowAction.
   ///

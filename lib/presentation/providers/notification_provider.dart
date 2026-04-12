@@ -65,10 +65,14 @@ class NotificationState {
 
 class NotificationNotifier extends StateNotifier<NotificationState> {
   final NotificationApi _api;
+  final SecureStorageService _secureStorage;
 
-  NotificationNotifier({required NotificationApi api})
-    : _api = api,
-      super(const NotificationState.initial());
+  NotificationNotifier({
+    required NotificationApi api,
+    required SecureStorageService secureStorage,
+  }) : _api = api,
+       _secureStorage = secureStorage,
+       super(const NotificationState.initial());
 
   /// Bildirishnomalarni yuklash
   Future<void> loadNotifications() async {
@@ -187,6 +191,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   Future<void> saveFcmToken(String token) async {
     try {
       await _api.saveFcmToken(token);
+      await _secureStorage.saveFcmToken(token);
     } catch (_) {
       // Silent fail
     }
@@ -247,5 +252,6 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 final notificationProvider =
     StateNotifierProvider<NotificationNotifier, NotificationState>((ref) {
       final api = ref.watch(notificationApiProvider);
-      return NotificationNotifier(api: api);
+      final secureStorage = ref.watch(secureStorageProvider);
+      return NotificationNotifier(api: api, secureStorage: secureStorage);
     });

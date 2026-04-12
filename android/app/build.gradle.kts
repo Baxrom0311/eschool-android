@@ -72,6 +72,13 @@ android {
             if (hasValidReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
             }
+            // Add these for production optimization
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

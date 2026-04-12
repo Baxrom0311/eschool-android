@@ -5,10 +5,10 @@ class AppColors {
   AppColors._();
 
   // ─── Primary (Midnight Navy & Slate) ───
-  static const Color primaryBlue = Color(0xFF0F172A); // Midnight Navy (Slate 900)
-  static const Color darkBlue = Color(0xFF020617);    // Deepest Navy (Slate 950)
-  static const Color lightBlue = Color(0xFF334155);   // Slate Navy (Slate 700)
-  static const Color secondaryBlue = Color(0xFF475569); // Graphite (Slate 600)
+  static const Color slate950 = Color(0xFF020617);    // Deepest Navy
+  static const Color slate900 = Color(0xFF0F172A);    // Midnight Navy
+  static const Color slate800 = Color(0xFF1E293B);    // Slate Navy
+  static const Color primaryBlue = slate900;          // Legacy mapping
 
   // ─── Sky Blue Palette (For Light Theme) ───
   static const Color skyBlue50 = Color(0xFFF0F9FF);
@@ -26,8 +26,6 @@ class AppColors {
   static const Color slate500 = Color(0xFF64748B);
   static const Color slate600 = Color(0xFF475569);
   static const Color slate700 = Color(0xFF334155);
-  static const Color slate800 = Color(0xFF1E293B);
-  static const Color slate900 = Color(0xFF0F172A);
 
   // ─── Premium Accent (Silver & Steel) ───
   static const Color silver = Color(0xFF94A3B8);
@@ -55,11 +53,11 @@ class AppColors {
   static const Color transparent = Colors.transparent;
 
   // ─── Semantic Mappings ───
-  static const Color background = slate50;
-  static const Color cardBackground = white;
-  static const Color textPrimary = slate900;
-  static const Color textSecondary = slate600;
-  static const Color textHint = slate400;
-  static const Color border = slate200;
-  static const Color divider = slate100;
+  static const Color textSecondary = slate500;
+
+  // ─── Liquid Gradients (2025 Premium Tokens) ───
+  static const List<Color> liquidIndigo = [Color(0xFF6366F1), Color(0xFF8B5CF6)];
+  static const List<Color> liquidEmerald = [Color(0xFF10B981), Color(0xFF14B8A6)];
+  static const List<Color> liquidRose = [Color(0xFFF43F5E), Color(0xFFEC4899)];
+  static const List<Color> liquidAmber = [Color(0xFFF59E0B), Color(0xFFD97706)];
 }

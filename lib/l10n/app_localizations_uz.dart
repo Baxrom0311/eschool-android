@@ -571,7 +571,12 @@ class AppLocalizationsUz extends AppLocalizations {
   String get monthlyPaymentLabel => 'Oylik to\'lov';
 
   @override
-  String get debtExistsTitle => 'Qarzdorlik mavjud';
+  String get debtExistsTitle => 'DIQQAT';
+
+  @override
+  String debtPaymentPrompt(Object amount) {
+    return 'Sizda $amount miqdorida qarzdorlik aniqlandi. Iltimos, to\'lovni o\'z vaqtida amalga oshiring.';
+  }
 
   @override
   String get payNowAction => 'Hozir to\'lash';

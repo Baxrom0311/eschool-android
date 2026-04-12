@@ -49,6 +49,19 @@ class SecureStorageService {
     await _delete(StorageKeys.refreshToken);
   }
 
+  // ─── FCM Token ───
+  Future<void> saveFcmToken(String token) async {
+    await _write(StorageKeys.fcmToken, token);
+  }
+
+  Future<String?> getFcmToken() async {
+    return await _read(StorageKeys.fcmToken);
+  }
+
+  Future<void> deleteFcmToken() async {
+    await _delete(StorageKeys.fcmToken);
+  }
+
   // ─── Save Both ───
   Future<void> saveTokens({
     required String accessToken,

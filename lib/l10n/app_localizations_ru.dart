@@ -572,6 +572,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get debtExistsTitle => 'Есть задолженность';
 
   @override
+  String debtPaymentPrompt(Object amount) {
+    return 'Sizda $amount miqdorida qarzdorlik aniqlandi. Iltimos, to\'lovni o\'z vaqtida amalga oshiring.';
+  }
+
+  @override
   String get payNowAction => 'Оплатить сейчас';
 
   @override

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_text_styles.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 
-/// Grade Card - Displays subject information, grade, and progress
+/// Grade Card - Displays subject information, grade, and progress with Bento 2.0 design
 class GradeCard extends StatelessWidget {
   final String name;
   final String teacher;
@@ -33,22 +34,21 @@ class GradeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
+    
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.1),
+          color: theme.colorScheme.outline.withValues(alpha: 0.05),
           width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.02),
             blurRadius: 20,
-            offset: const Offset(0, 10),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -56,16 +56,15 @@ class GradeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Icon Container with soft gradient background
+              // Subject Icon Container
               Container(
-                width: 56,
-                height: 56,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: color.withValues(alpha: 0.15), width: 1),
                 ),
-                child: Icon(icon, color: color, size: 26),
+                child: Icon(icon, color: color, size: 24),
               ),
               const SizedBox(width: 16),
 
@@ -76,59 +75,49 @@ class GradeCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: TextStyle(
-                        fontSize: 18,
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w900,
-                        color: colorScheme.onSurface,
                         letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       teacher,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // Grade Badge - Premium Design
+              // Grade Badge
               Container(
-                width: 52,
-                height: 52,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: gradeColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: gradeColor.withValues(alpha: 0.2),
-                    width: 1.5,
-                  ),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Center(
-                  child: Text(
-                    grade.toString(),
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      color: gradeColor,
-                      letterSpacing: -1,
-                    ),
+                child: Text(
+                  grade.toString(),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: gradeColor,
+                    fontSize: 22,
+                    height: 1.0,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          // Progress Row
+          // Double Progress Row
           Row(
             children: [
               Expanded(
-                child: _buildProgressItem(
+                child: _buildAdaptiveProgress(
+                  context,
                   l10n.attendanceStatLabel.toUpperCase(),
                   attendance,
                   attendance >= 95 ? AppColors.success : AppColors.warning,
@@ -136,7 +125,8 @@ class GradeCard extends StatelessWidget {
               ),
               const SizedBox(width: 20),
               Expanded(
-                child: _buildProgressItem(
+                child: _buildAdaptiveProgress(
+                  context,
                   l10n.averageShortLabel.toUpperCase(),
                   average,
                   average >= 90 ? AppColors.success : AppColors.warning,
@@ -149,41 +139,33 @@ class GradeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressItem(String label, int value, Color progressColor) {
+  Widget _buildAdaptiveProgress(BuildContext context, String label, int value, Color progressColor) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            fontSize: 9,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.0,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Stack(
           children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.8,
-                color: Colors.grey,
-              ),
-            ),
-            Text(
-              '$value%',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: progressColor,
+             ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: value / 100,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                minHeight: 6,
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(99),
-          child: LinearProgressIndicator(
-            value: value / 100,
-            backgroundColor: AppColors.slate200.withValues(alpha: 0.3),
-            valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-            minHeight: 6,
-          ),
         ),
       ],
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
-/// MaterialApp uchun asosiy theme - Deep Professional Navy
+/// MaterialApp uchun premium Material 3 theme - "Deep Professional Navy"
 class AppTheme {
   AppTheme._();
 
@@ -14,26 +14,18 @@ class AppTheme {
     borderColor: AppColors.slate200,
     dividerColor: AppColors.slate100,
     hintColor: AppColors.slate400,
-    appBarBackgroundColor: AppColors.white,
-    appBarForegroundColor: AppColors.slate900,
-    bottomNavigationBackgroundColor: AppColors.white,
-    bottomNavigationUnselectedColor: AppColors.slate400,
-    shadowColor: const Color(0x0A0284C7), // Subtle Sky Blue shadow
+    shadowColor: const Color(0x0A0284C7),
   );
 
   static ThemeData get darkTheme => _buildTheme(
     brightness: Brightness.dark,
-    primaryColor: AppColors.primaryBlue,
+    primaryColor: AppColors.skyBlue400, // Slightly brighter for dark mode pop
     scaffoldBackgroundColor: AppColors.slate900,
     surfaceColor: AppColors.slate800,
     cardColor: AppColors.slate800,
     borderColor: AppColors.slate700,
     dividerColor: AppColors.slate700,
     hintColor: AppColors.slate500,
-    appBarBackgroundColor: AppColors.slate900,
-    appBarForegroundColor: AppColors.white,
-    bottomNavigationBackgroundColor: AppColors.slate800,
-    bottomNavigationUnselectedColor: AppColors.slate500,
     shadowColor: Colors.black45,
   );
 
@@ -46,101 +38,95 @@ class AppTheme {
     required Color borderColor,
     required Color dividerColor,
     required Color hintColor,
-    required Color appBarBackgroundColor,
-    required Color appBarForegroundColor,
-    required Color bottomNavigationBackgroundColor,
-    required Color bottomNavigationUnselectedColor,
     required Color shadowColor,
   }) {
+    final isDark = brightness == Brightness.dark;
+
     final colorScheme = ColorScheme.fromSeed(
       seedColor: primaryColor,
       brightness: brightness,
     ).copyWith(
       primary: primaryColor,
       onPrimary: Colors.white,
-      secondary: brightness == Brightness.light ? AppColors.skyBlue400 : AppColors.lightBlue,
-      onSecondary: Colors.white,
-      error: AppColors.danger,
+      secondary: isDark ? AppColors.skyBlue400 : AppColors.skyBlue600,
       surface: surfaceColor,
-      onSurface: brightness == Brightness.light ? AppColors.slate900 : AppColors.slate50,
+      onSurface: isDark ? AppColors.slate50 : AppColors.slate900,
+      surfaceContainerHighest: isDark ? AppColors.slate800 : AppColors.slate100,
       outline: borderColor,
-      outlineVariant: dividerColor,
+      error: AppColors.danger,
     );
 
-    final textTheme = (brightness == Brightness.light
-        ? Typography.blackMountainView
-        : Typography.whiteMountainView).copyWith(
-      headlineLarge: TextStyle(fontWeight: FontWeight.w900, color: brightness == Brightness.light ? AppColors.slate900 : AppColors.slate50, letterSpacing: -1.0),
-      headlineMedium: TextStyle(fontWeight: FontWeight.w800, color: brightness == Brightness.light ? AppColors.slate900 : AppColors.slate50, letterSpacing: -0.5),
-      titleLarge: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: brightness == Brightness.light ? AppColors.slate900 : AppColors.slate50, letterSpacing: -0.2),
-      bodyLarge: TextStyle(color: brightness == Brightness.light ? AppColors.slate700 : AppColors.slate200, fontSize: 16),
-      bodyMedium: TextStyle(color: brightness == Brightness.light ? AppColors.slate600 : AppColors.slate400, fontSize: 14),
+    final baseTextTheme = isDark ? Typography.whiteMountainView : Typography.blackMountainView;
+    
+    final textTheme = baseTextTheme.copyWith(
+      headlineLarge: TextStyle(fontWeight: FontWeight.w900, color: colorScheme.onSurface, letterSpacing: -1.0, fontFamily: 'Inter'),
+      headlineMedium: TextStyle(fontWeight: FontWeight.w800, color: colorScheme.onSurface, letterSpacing: -0.8, fontFamily: 'Inter'),
+      titleLarge: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: colorScheme.onSurface, letterSpacing: -0.5, fontFamily: 'Inter'),
+      bodyLarge: TextStyle(color: isDark ? AppColors.slate200 : AppColors.slate700, fontSize: 16, height: 1.5, fontFamily: 'Inter'),
+      bodyMedium: TextStyle(color: isDark ? AppColors.slate400 : AppColors.slate600, fontSize: 14, height: 1.5, fontFamily: 'Inter'),
     );
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      primaryColor: AppColors.primaryBlue,
+      colorScheme: colorScheme,
       scaffoldBackgroundColor: scaffoldBackgroundColor,
       fontFamily: 'Inter',
-      colorScheme: colorScheme,
       cardColor: cardColor,
       shadowColor: shadowColor,
       textTheme: textTheme,
+      
       appBarTheme: AppBarTheme(
-        backgroundColor: appBarBackgroundColor,
-        foregroundColor: appBarForegroundColor,
+        backgroundColor: Colors.transparent,
+        foregroundColor: colorScheme.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        centerTitle: false,
-        titleTextStyle: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w900,
-          color: appBarForegroundColor,
-          letterSpacing: -0.8,
-        ),
+        centerTitle: true,
+        titleTextStyle: textTheme.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w900),
       ),
+      
       cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(32), // Increased to 32px for premium feel
-          side: BorderSide(color: borderColor, width: 0.5), // Thinner, more professional border
+          borderRadius: BorderRadius.circular(32),
+          side: BorderSide(color: borderColor.withValues(alpha: 0.5), width: 1.0),
         ),
         color: cardColor,
         margin: EdgeInsets.zero,
       ),
+      
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryBlue,
-          foregroundColor: AppColors.white,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 0,
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.2),
         ),
       ),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: bottomNavigationBackgroundColor,
-        selectedItemColor: AppColors.primaryBlue,
-        unselectedItemColor: bottomNavigationUnselectedColor,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-        unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-      ),
+
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: brightness == Brightness.light ? AppColors.slate100 : AppColors.slate800,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
+        fillColor: isDark ? AppColors.slate800 : AppColors.slate100,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: AppColors.primaryBlue, width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
         ),
         hintStyle: TextStyle(color: hintColor, fontSize: 14, fontWeight: FontWeight.w500),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      ),
+
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: isDark ? AppColors.slate900 : AppColors.white,
+        selectedItemColor: colorScheme.primary,
+        unselectedItemColor: hintColor,
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+        unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
   }

@@ -42,8 +42,14 @@ class AuthRepository extends BaseRepository {
     }
   }
 
-  /// FCM tokenni serverga yuborish
-  Future<void> updateFCMToken(String token) => _authApi.updateFcmToken(token);
+  /// FCM tokenni serverga yuborish va lokal saqlash
+  Future<void> updateFCMToken(String token) async {
+    await _authApi.updateFcmToken(token);
+    await _secureStorage.saveFcmToken(token);
+  }
+
+  /// Lokal FCM tokenni olish
+  Future<String?> getFCMToken() => _secureStorage.getFcmToken();
 
   /// Parol tiklash
   Future<void> forgotPassword({required String phone}) =>

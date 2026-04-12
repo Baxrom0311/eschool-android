@@ -1,7 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../widgets/common/animated_pressable.dart';
 
 class AttendanceCard extends StatelessWidget {
   final double attendanceRate;
@@ -19,124 +20,120 @@ class AttendanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.secondary,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          // Elegant abstract shape
-          Positioned(
-            right: -30,
-            top: -30,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.04),
+          // Main Card with Mash Gradient / Abstract Pattern
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [const Color(0xFF1E1B4B), const Color(0xFF312E81)]
+                    : AppColors.liquidIndigo,
               ),
-            ),
-          ),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                HapticFeedback.lightImpact();
-              },
               borderRadius: BorderRadius.circular(32),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 4,
-                    child: _buildStatItem(
-                      l10n.attendanceStatLabel,
-                      '${attendanceRate.toStringAsFixed(0)}%',
-                      Icons.verified_user_outlined,
-                    ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isDark ? Colors.black : AppColors.liquidIndigo.first).withValues(alpha: isDark ? 0.4 : 0.2),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                // Background icon abstraction for depth
+                Positioned(
+                  right: -20,
+                  bottom: -20,
+                  child: Icon(
+                    Icons.trending_up_rounded,
+                    size: 140,
+                    color: Colors.white.withValues(alpha: 0.05),
                   ),
-                  // Vertical Divider
-                  Container(
-                    width: 1,
-                    height: 60,
-                    margin: const EdgeInsets.symmetric(horizontal: 8),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withValues(alpha: 0),
-                          Colors.white.withValues(alpha: 0.3),
-                          Colors.white.withValues(alpha: 0),
-                        ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCompactStat(
+                        l10n.attendanceStatLabel,
+                        '${attendanceRate.toStringAsFixed(0)}%',
+                        Icons.calendar_today_rounded,
                       ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 4,
-                    child: _buildStatItem(
-                      l10n.coinsStatLabel,
-                      '$score',
-                      Icons.stars_outlined,
-                      alignEnd: true,
+                    Container(
+                      width: 1,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.0),
+                            Colors.white.withValues(alpha: 0.2),
+                            Colors.white.withValues(alpha: 0.0),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                    Expanded(
+                      child: _buildCompactStat(
+                        l10n.coinsStatLabel,
+                        '$score',
+                        Icons.stars_rounded,
+                        isEnd: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          // Level Badge (Integrated Center)
-          Positioned.fill(
-            pointerInterceptor: true,
+          // Level Badge (Integrated Floating Liquid Glass Style with actual blur)
+          Positioned(
+            top: -12,
+            left: 0,
+            right: 0,
             child: Center(
-              child: IgnorePointer(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      width: 1,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    l10n.levelBadge(level),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 11,
-                      letterSpacing: 0.5,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.military_tech_rounded, color: theme.colorScheme.primary, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.levelBadge(level).toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -148,40 +145,37 @@ class AttendanceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, {bool alignEnd = false}) {
+  Widget _buildCompactStat(String label, String value, IconData icon, {bool isEnd = false}) {
     return Column(
-      crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: isEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (!alignEnd) Icon(icon, color: Colors.white54, size: 14),
-            if (!alignEnd) const SizedBox(width: 4),
+            if (!isEnd) Icon(icon, color: Colors.white70, size: 14),
+            if (!isEnd) const SizedBox(width: 8),
             Text(
               label.toUpperCase(),
               style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.5,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
                 color: Colors.white60,
+                letterSpacing: 1.5,
               ),
             ),
-            if (alignEnd) const SizedBox(width: 4),
-            if (alignEnd) Icon(icon, color: Colors.white54, size: 14),
+            if (isEnd) const SizedBox(width: 8),
+            if (isEnd) Icon(icon, color: Colors.white70, size: 14),
           ],
         ),
         const SizedBox(height: 8),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontSize: 42,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: -1.5,
-              height: 1.0,
-            ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 34,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            letterSpacing: -1.5,
+            height: 1.0,
           ),
         ),
       ],

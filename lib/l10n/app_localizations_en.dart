@@ -568,7 +568,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthlyPaymentLabel => 'Monthly payment';
 
   @override
-  String get debtExistsTitle => 'Outstanding debt';
+  String get debtExistsTitle => 'ATTENTION';
+
+  @override
+  String debtPaymentPrompt(Object amount) {
+    return 'An outstanding debt of $amount has been detected. Please make a payment to avoid service interruption.';
+  }
 
   @override
   String get payNowAction => 'Pay now';
