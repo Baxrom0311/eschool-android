@@ -27,6 +27,16 @@ class ApiConstants {
     };
   }
 
+  // Host header (dart-define: --dart-define=API_HOST_HEADER=ranchschool.izlash.uz)
+  static const String _envHostHeader = String.fromEnvironment(
+    'API_HOST_HEADER',
+    defaultValue: '',
+  );
+  static String? get hostHeader {
+    final trimmed = _envHostHeader.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
   static Map<String, String> get defaultHeaders {
     final headers = <String, String>{
       'Content-Type': 'application/json',
