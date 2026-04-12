@@ -42,7 +42,7 @@ class SocketListener {
     log('WebSocket: Subscribing to $channelName');
 
     // 1. Davomat (Attendance)
-    socket.listenPrivate(channelName, 'AttendanceMarked', (data) {
+    socket.listenPrivate(channelName, 'attendance.marked', (data) {
       log('WebSocket: Attendance event received');
       final selectedChildId = _ref.read(userProvider).selectedChild?.id;
       if (selectedChildId != null) {
@@ -51,7 +51,7 @@ class SocketListener {
     });
 
     // 2. Baholar (Grades)
-    socket.listenPrivate(channelName, 'GradePublished', (data) {
+    socket.listenPrivate(channelName, 'grade.published', (data) {
       log('WebSocket: Grade event received');
       final selectedChildId = _ref.read(userProvider).selectedChild?.id;
       if (selectedChildId != null) {
@@ -60,7 +60,7 @@ class SocketListener {
     });
 
     // 3. To'lovlar (Payments)
-    socket.listenPrivate(channelName, 'PaymentReceived', (data) {
+    socket.listenPrivate(channelName, 'payment.received', (data) {
       log('WebSocket: Payment event received');
       _ref
           .read(paymentProvider.notifier)
@@ -70,7 +70,7 @@ class SocketListener {
     });
 
     // 4. Uy vazifalari (Homework)
-    socket.listenPrivate(channelName, 'HomeworkAssigned', (data) {
+    socket.listenPrivate(channelName, 'homework.assigned', (data) {
       log('WebSocket: Homework event received');
       final selectedChildId = _ref.read(userProvider).selectedChild?.id;
       if (selectedChildId != null) {
