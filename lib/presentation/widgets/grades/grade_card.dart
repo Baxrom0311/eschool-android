@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_text_styles.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 
 /// Grade Card - Displays subject information, grade, and progress with Bento 2.0 design

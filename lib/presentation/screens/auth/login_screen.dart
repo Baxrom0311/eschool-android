@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 
 import '../../../core/localization/app_locale.dart';
-import 'package:parent_school_app/l10n/app_localizations.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../core/network/api_error_handler.dart';
 import '../../../core/routing/route_names.dart';

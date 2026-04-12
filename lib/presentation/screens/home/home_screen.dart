@@ -4,14 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../l10n/app_localizations.dart';
-import '../../../core/localization/app_locale.dart';
-import 'package:parent_school_app/l10n/app_localizations.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/academic_provider.dart';
-import '../../providers/app_locale_provider.dart';
-import '../../providers/app_theme_mode_provider.dart';
 import '../../providers/rating_provider.dart';
 import '../../providers/user_provider.dart';
 import '../profile/profile_screen.dart';
@@ -282,13 +277,13 @@ class _HomeTabScreenState extends ConsumerState<_HomeTabScreen> {
             score: child?.coins ?? 0,
             level: child?.level ?? 1,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           const ScheduleList(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           const ServicesGrid(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           AcademicStats(gpa: gpa, rank: rank),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           const DailyMenuCard(),
         ],
       ),

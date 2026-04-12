@@ -10,6 +10,7 @@ import '../../data/models/notification_model.dart';
 import '../../core/error/exceptions.dart';
 import '../../core/network/api_error_handler.dart';
 import '../../core/storage/shared_prefs_service.dart';
+import '../../core/storage/secure_storage.dart';
 import 'auth_provider.dart';
 
 // ─── Dependency Providers ───

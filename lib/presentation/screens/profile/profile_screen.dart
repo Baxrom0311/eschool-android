@@ -99,7 +99,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   Text(
                     user?.fullName ?? l10n.userFallbackName,
                     textAlign: TextAlign.center,
@@ -120,7 +120,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
 
             // ─── Quick Stats BENTO Row ───
             Row(
@@ -149,7 +149,7 @@ class ProfileScreen extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
 
             // ─── Settings Sections ───
             _SettingsGroup(
@@ -180,7 +180,7 @@ class ProfileScreen extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             _SettingsGroup(
               title: l10n.personalInfoTitle,
@@ -213,11 +213,11 @@ class ProfileScreen extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 48),
+            const SizedBox(height: 32),
 
             // ─── Danger Zone: Logout ───
             _LogoutButton(onTap: () => _handleLogout(context, ref)),
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -537,7 +537,7 @@ class _StatCard extends StatelessWidget {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -552,7 +552,7 @@ class _StatCard extends StatelessWidget {
                 ),
                 child: Icon(icon, color: colors.first, size: 20),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               Text(
                 label.toUpperCase(), 
                 style: theme.textTheme.labelSmall?.copyWith(

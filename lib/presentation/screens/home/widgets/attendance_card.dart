@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
-import '../../../widgets/common/animated_pressable.dart';
 
 class AttendanceCard extends StatelessWidget {
   final double attendanceRate;
@@ -23,13 +22,13 @@ class AttendanceCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           // Main Card with Mash Gradient / Abstract Pattern
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,

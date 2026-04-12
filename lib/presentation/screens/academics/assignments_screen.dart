@@ -8,7 +8,6 @@ import '../../../core/routing/route_names.dart';
 import '../../../data/models/assignment_model.dart';
 import '../../providers/academic_provider.dart';
 import '../../providers/user_provider.dart';
-import '../../widgets/common/custom_button.dart';
 
 /// Assignments Screen - Homework Assignments List
 ///
@@ -45,7 +44,6 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final assignmentsAsync = ref.watch(assignmentsProvider);
 
     final assignments = assignmentsAsync.valueOrNull?.assignments ?? [];

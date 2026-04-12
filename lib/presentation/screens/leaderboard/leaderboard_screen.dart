@@ -47,7 +47,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
     final l10n = context.l10n;
     final state = ref.watch(leaderboardProvider);
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     ref.listen(selectedChildProvider, (previous, next) {
       if (next != null && previous?.id != next.id) {
@@ -228,10 +227,7 @@ class _PodiumItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final avatarUrl = data['avatar_url']?.toString();
-    final name = data['name']?.toString() ?? context.l10n.userFallbackName;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -554,8 +550,7 @@ class _BadgeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: theme.cardColor,

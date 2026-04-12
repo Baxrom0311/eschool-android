@@ -91,7 +91,7 @@ class AcademicStats extends StatelessWidget {
                       color: Color(0xFFF59E0B),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   Text(
                     rank != null ? '#$rank' : '-',
                     style: theme.textTheme.headlineMedium?.copyWith(
@@ -130,7 +130,7 @@ class _BentoStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
@@ -157,7 +157,7 @@ class _BentoStatCard extends StatelessWidget {
               color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
           child,
         ],
       ),

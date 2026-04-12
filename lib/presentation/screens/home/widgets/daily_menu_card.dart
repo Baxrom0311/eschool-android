@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../widgets/common/animated_pressable.dart';
 
 class DailyMenuCard extends StatelessWidget {
@@ -10,16 +9,14 @@ class DailyMenuCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-    
     final isDark = theme.brightness == Brightness.dark;
 
     return AnimatedPressable(
       onTap: () {}, // Future: Push to DailyMenuScreen if needed
       child: Container(
         width: double.infinity,
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        height: 140, 
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        height: 130,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
           gradient: LinearGradient(
@@ -50,7 +47,7 @@ class DailyMenuCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,

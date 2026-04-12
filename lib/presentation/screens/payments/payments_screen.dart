@@ -3,15 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:parent_school_app/l10n/app_localizations.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import 'package:parent_school_app/l10n/app_localizations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/payment_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/payments/balance_header.dart';
-import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/page_background.dart';
 import '../../widgets/common/animated_pressable.dart';
 
@@ -122,7 +121,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       lastUpdated: _formatLastUpdated(l10n, state.balance?.nextPaymentDate),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
 
                     if (state.error != null)
                       Container(
@@ -154,9 +153,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       ),
 
                     if (hasDebt) ...[
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,

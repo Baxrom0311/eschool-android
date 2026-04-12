@@ -100,7 +100,6 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
     final paymentState = ref.watch(paymentProvider);
     final isLoading = paymentState.isLoading;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,

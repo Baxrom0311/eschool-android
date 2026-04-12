@@ -56,7 +56,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         final date = DateTime.parse(record.date);
         final normalizedDate = DateTime(date.year, date.month, date.day);
         attendanceMap[normalizedDate] = record.status;
-      } catch (e) {}
+      } catch (_) {
+        // Skip records with unparseable dates
+      }
     }
 
     ref.listen(selectedChildProvider, (previous, next) {
@@ -112,7 +114,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                   
                   // ─── Stats Row (Premium Design) ───
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                     child: Row(
                       children: [
                         Expanded(
@@ -234,7 +236,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
                   // ─── Legend ───
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -300,7 +302,7 @@ class _StatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(32),

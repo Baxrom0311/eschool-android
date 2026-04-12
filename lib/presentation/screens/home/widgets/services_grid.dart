@@ -78,7 +78,7 @@ class ServicesGrid extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
           GridView.builder(
             shrinkWrap: true,
             padding: EdgeInsets.zero,

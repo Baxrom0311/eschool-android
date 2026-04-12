@@ -90,4 +90,21 @@ class AppTextStyles {
     letterSpacing: 0.1,
     fontFamily: fontFamily,
   );
+
+  // ─── Input Fields ───
+  static const TextStyle input = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    height: 1.5,
+    letterSpacing: 0.1,
+    fontFamily: fontFamily,
+  );
+
+  static const TextStyle inputHint = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    height: 1.5,
+    letterSpacing: 0.1,
+    fontFamily: fontFamily,
+  );
 }

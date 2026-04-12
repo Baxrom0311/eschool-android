@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../providers/academic_provider.dart';
 import '../../../providers/user_provider.dart';
@@ -20,14 +17,9 @@ class HomeHeader extends ConsumerWidget {
     final theme = Theme.of(context);
     final selectedDate = ref.watch(selectedDateProvider);
     
-    final dateLabel = DateFormat(
-      'EEEE, d MMMM',
-      l10n.appLocale.name,
-    ).format(selectedDate);
-
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -111,7 +103,7 @@ class HomeHeader extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           // Liquid Glass Child Selector
           AnimatedPressable(
             onTap: () => context.push(RouteNames.childrenList),

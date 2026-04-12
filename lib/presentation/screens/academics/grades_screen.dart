@@ -136,7 +136,7 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
         return CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
             
             // Overall Results Section
             SliverPadding(
@@ -153,7 +153,7 @@ class _GradesScreenState extends ConsumerState<GradesScreen> {
 
             // Section Header
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               sliver: SliverToBoxAdapter(
                 child: Text(
                   l10n.gradesBySubjectTitle,

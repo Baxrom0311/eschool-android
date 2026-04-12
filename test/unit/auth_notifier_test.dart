@@ -50,6 +50,9 @@ class MockAuthRepository implements AuthRepository {
       const UserModel(id: 4, phone: '+998900000000', fullName: 'QR User');
 
   @override
+  Future<String?> getFCMToken() async => null;
+
+  @override
   Future<T> safeCall<T>(dynamic call, dynamic mapper) async =>
       throw UnimplementedError();
   @override
