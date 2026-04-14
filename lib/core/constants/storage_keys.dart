@@ -7,6 +7,7 @@ class StorageKeys {
   static const String refreshToken = 'refresh_token';
   static const String userId = 'user_id';
   static const String isLoggedIn = 'is_logged_in';
+  static const String tenantHost = 'tenant_host';
 
   // ─── User ───
   static const String userProfile = 'user_profile';

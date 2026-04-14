@@ -1,11 +1,11 @@
+import '../../core/constants/storage_keys.dart';
 import '../../core/storage/secure_storage.dart';
 import '../datasources/remote/auth_api.dart';
+import '../models/parent_login_response.dart';
 import '../models/user_model.dart';
 import 'base_repository.dart';
 
 /// Auth Repository — Autentifikatsiya biznes logikasi
-///
-/// [AuthApi] va [SecureStorageService] ni birlashtiradi.
 class AuthRepository extends BaseRepository {
   final AuthApi _authApi;
   final SecureStorageService _secureStorage;
@@ -16,8 +16,8 @@ class AuthRepository extends BaseRepository {
   }) : _authApi = authApi,
        _secureStorage = secureStorage;
 
-  /// Login — tizimga kirish
-  Future<UserModel> login({
+  /// Login — tizimga kirish (Central)
+  Future<ParentLoginResponse> login({
     required String username,
     required String password,
   }) async {
@@ -26,9 +26,51 @@ class AuthRepository extends BaseRepository {
         username: username,
         password: password,
       );
-      await _secureStorage.saveAccessToken(response.accessToken);
-      return response.user;
+      
+      // Save central token
+      await _secureStorage.write('central_token', response.centralToken);
+
+      // If auto-tenant is provided, save it
+      if (response.autoTenant != null) {
+        await saveTenantSession(
+          host: response.autoTenant!.host,
+          token: response.autoTenant!.token,
+          studentId: response.autoTenant!.studentId,
+        );
+      }
+
+      return response;
     });
+  }
+
+  Future<void> issueTenantToken({
+    required int studentId,
+    required String tenantId,
+    required String host,
+  }) async {
+    return safeExecute(() async {
+      final response = await _authApi.issueTenantToken(
+        studentId: studentId,
+        tenantId: tenantId,
+      );
+      
+      await saveTenantSession(
+        host: host,
+        token: response.accessToken,
+        studentId: studentId,
+      );
+    });
+  }
+
+  Future<void> saveTenantSession({
+    required String host,
+    required String token,
+    required int studentId,
+  }) async {
+    await _secureStorage.write(StorageKeys.tenantHost, host);
+    await _secureStorage.saveAccessToken(token);
+    await _secureStorage.write(StorageKeys.selectedChildId, studentId.toString());
+    await _secureStorage.write(StorageKeys.isLoggedIn, 'true');
   }
 
   /// Logout — tizimdan chiqish

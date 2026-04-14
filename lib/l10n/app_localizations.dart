@@ -187,7 +187,7 @@ abstract class AppLocalizations {
   /// No description provided for @emailExample.
   ///
   /// In uz, this message translates to:
-  /// **'Masalan: parent11@ranch.local'**
+  /// **'Masalan: 90 123 45 67'**
   String get emailExample;
 
   /// No description provided for @forgotPasswordShort.
@@ -421,7 +421,7 @@ abstract class AppLocalizations {
   /// No description provided for @fieldRequired.
   ///
   /// In uz, this message translates to:
-  /// **'Ushbu maydon majburiy'**
+  /// **'Majburiy maydon'**
   String get fieldRequired;
 
   /// No description provided for @phoneRequired.
@@ -439,13 +439,13 @@ abstract class AppLocalizations {
   /// No description provided for @emailRequired.
   ///
   /// In uz, this message translates to:
-  /// **'Emailni kiriting'**
+  /// **'Telefon raqamini kiriting'**
   String get emailRequired;
 
   /// No description provided for @invalidEmail.
   ///
   /// In uz, this message translates to:
-  /// **'Noto\'g\'ri email'**
+  /// **'Noto\'g\'ri telefon raqami'**
   String get invalidEmail;
 
   /// No description provided for @passwordRequired.

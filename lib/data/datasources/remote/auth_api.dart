@@ -5,51 +5,54 @@ import '../../../core/error/exceptions.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/network/dio_client.dart';
 import '../../models/auth_response.dart';
+import '../../models/parent_login_response.dart';
 import 'api_helpers.dart';
 
-/// Auth API — Autentifikatsiya bilan bog'liq barcha API so'rovlari
-///
-/// Bu klass faqat HTTP so'rov yuboradi va javobni parse qiladi.
-/// Biznes logika (token saqlash, xatolik qayta ishlash)
-/// [AuthRepository] da amalga oshiriladi.
 class AuthApi with ApiHelpers {
   final DioClient _client;
 
   AuthApi(this._client);
 
   dynamic get _l10n => AppLocalizations.current;
-
-  /// Login — foydalanuvchi nomi va parol bilan kirish
-  ///
-  /// [username] — telefon raqam yoki login
-  /// [password] — parol
-  ///
-  /// Muvaffaqiyatli bo'lsa [AuthResponse] qaytaradi.
-  /// Xatolik bo'lsa [ServerException] yoki [NetworkException] otadi.
-  Future<AuthResponse> login({
-    required String username, // Kept for compatibility with existing UI.
+  Future<ParentLoginResponse> login({
+    required String username,
     required String password,
   }) async {
     try {
       final response = await _client.post(
-        ApiConstants.login,
+        ApiConstants.centralParentLogin,
         data: {
-          'email': username,
+          'login': username,
           'password': password,
           'device_name': 'android_app',
         },
         options: Options(
-          contentType: Headers.formUrlEncodedContentType,
           extra: {'skipAuth': true},
         ),
       );
 
-      final root = asMap(response.data);
-      final normalized = _normalizeAuthResponse(root);
-      if ((normalized['token'] as String).isEmpty) {
-        throw ServerException(message: _l10n.errorServer, statusCode: 500);
-      }
-      return AuthResponse.fromJson(normalized);
+      return ParentLoginResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
+  }
+
+  Future<AuthResponse> issueTenantToken({
+    required int studentId,
+    required String tenantId,
+    String deviceName = 'android_app',
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.parentIssueTenantToken,
+        data: {
+          'student_id': studentId,
+          'tenant_id': tenantId,
+          'device_name': deviceName,
+        },
+      );
+      
+      return AuthResponse.fromJson(response.data);
     } on DioException catch (e) {
       throw handleDioError(e);
     }
@@ -83,11 +86,6 @@ class AuthApi with ApiHelpers {
       throw handleDioError(e);
     }
   }
-
-  /// Parolni tiklash — telefon raqamga SMS kod yuborish
-  ///
-  /// POST /api/forgot-password
-  /// Body: { "phone": "+998901234567" }
   Future<void> forgotPassword({required String phone}) async {
     try {
       await _client.post(
@@ -102,11 +100,6 @@ class AuthApi with ApiHelpers {
       throw handleDioError(e);
     }
   }
-
-  /// Parolni tiklash — SMS kod bilan parolni yangilash
-  ///
-  /// POST /api/reset-password
-  /// Body: { "phone": "...", "code": "123456", "password": "...", "password_confirmation": "..." }
   Future<void> resetPassword({
     required String phone,
     required String code,
@@ -131,11 +124,6 @@ class AuthApi with ApiHelpers {
       throw handleDioError(e);
     }
   }
-
-  /// QR Kod orqali login
-  ///
-  /// POST /api/qr-login
-  /// Body: { "qr_token": "..." }
   Future<AuthResponse> qrLogin({required String qrToken}) async {
     try {
       final response = await _client.post(

@@ -14,7 +14,7 @@ class ApiConstants {
   // Base URL (dart-define: --dart-define=API_BASE_URL=https://...)
   static const String _defaultProdUrl = 'https://ranchschool.izlash.uz';
   static const String _defaultStagingUrl = 'https://staging.ranchschool.uz';
-  static const String _defaultLocalUrl = 'http://10.0.2.2:8000';
+  static const String _defaultLocalUrl = 'http://192.168.0.162:8000';
 
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
 
@@ -53,6 +53,11 @@ class ApiConstants {
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;
   static const int sendTimeout = 30000;
+
+  // ─── Auth (Central) ───
+  static const String centralParentLogin = '/api/parent/login';
+  static const String parentChildrenCentral = '/api/parent/children';
+  static const String parentIssueTenantToken = '/api/parent/children/token';
 
   // ─── Auth (Tenant OAS) ───
   static const String login = '/api/login';
@@ -158,7 +163,7 @@ class ApiConstants {
 
   static const String reverbHost = String.fromEnvironment(
     'REVERB_HOST',
-    defaultValue: 'ranchschool.izlash.uz',
+    defaultValue: '192.168.0.162',
   );
 
   static const int reverbPort = int.fromEnvironment(

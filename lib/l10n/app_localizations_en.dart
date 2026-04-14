@@ -45,13 +45,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginHint => 'Enter your credentials\nto sign in';
 
   @override
-  String get emailSection => 'EMAIL';
+  String get emailSection => 'PHONE NUMBER';
 
   @override
   String get passwordSection => 'PASSWORD';
 
   @override
-  String get emailExample => 'Example: parent11@ranch.local';
+  String get emailExample => 'Example: 90 123 45 67';
 
   @override
   String get forgotPasswordShort => 'Forgot password?';
@@ -180,10 +180,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidPhone => 'Invalid phone number';
 
   @override
-  String get emailRequired => 'Enter your email';
+  String get emailRequired => 'Enter a phone number';
 
   @override
-  String get invalidEmail => 'Invalid email address';
+  String get invalidEmail => 'Invalid phone number';
 
   @override
   String get passwordRequired => 'Enter your password';

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import '../constants/api_constants.dart';
+import '../constants/storage_keys.dart';
 import '../storage/secure_storage.dart';
 
 /// Dio HTTP Client — barcha API so'rovlar shu orqali boradi
@@ -36,6 +37,25 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          // Dynamic Base URL and Host Resolution
+          final tenantHost = await _secureStorage.read(StorageKeys.tenantHost);
+          if (tenantHost != null && tenantHost.isNotEmpty) {
+            // Local dev environment check (using IP or localhost)
+            final isLocalDev = ApiConstants.baseUrl.contains('192.168.') || 
+                               ApiConstants.baseUrl.contains('10.0.2.2') || 
+                               ApiConstants.baseUrl.contains('127.') || 
+                               ApiConstants.baseUrl.contains('localhost');
+                               
+            if (isLocalDev) {
+              options.baseUrl = ApiConstants.baseUrl;
+              options.headers['Host'] = tenantHost;
+            } else {
+              options.baseUrl = tenantHost.startsWith('http') 
+                  ? tenantHost 
+                  : 'https://$tenantHost';
+            }
+          }
+
           final skipAuth = options.extra['skipAuth'] == true;
           if (skipAuth) {
             options.headers.remove('Authorization');

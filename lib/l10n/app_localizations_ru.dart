@@ -45,13 +45,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get loginHint => 'Введите данные,\nчтобы войти в систему';
 
   @override
-  String get emailSection => 'EMAIL';
+  String get emailSection => 'НОМЕР ТЕЛЕФОНА';
 
   @override
   String get passwordSection => 'ПАРОЛЬ';
 
   @override
-  String get emailExample => 'Например: parent11@ranch.local';
+  String get emailExample => 'Например: 90 123 45 67';
 
   @override
   String get forgotPasswordShort => 'Забыли пароль?';
@@ -170,7 +170,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get errorAuth => 'Неверный логин или пароль';
 
   @override
-  String get fieldRequired => 'Это поле обязательно';
+  String get fieldRequired => 'Обязательное поле';
 
   @override
   String get phoneRequired => 'Введите номер телефона';
@@ -179,10 +179,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get invalidPhone => 'Неверный номер телефона';
 
   @override
-  String get emailRequired => 'Введите email';
+  String get emailRequired => 'Введите номер телефона';
 
   @override
-  String get invalidEmail => 'Неверный email';
+  String get invalidEmail => 'Неверный номер телефона';
 
   @override
   String get passwordRequired => 'Введите пароль';

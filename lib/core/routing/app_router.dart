@@ -9,6 +9,7 @@ import '../../presentation/screens/auth/login_screen.dart';
 
 import '../../presentation/screens/auth/forgot_password_screen.dart';
 import '../../presentation/screens/auth/qr_login_screen.dart';
+import '../../presentation/screens/auth/child_selection_screen.dart';
 import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/academics/grades_screen.dart';
@@ -65,13 +66,19 @@ class RouterNotifier extends ChangeNotifier {
     final isAuthenticated = authState.isAuthenticated;
 
     if (!isAuthenticated && !isPublicRoute) {
-      return RouteNames.login;
+      if (authState.needsChildSelection && location != RouteNames.selectChild) {
+        return RouteNames.selectChild;
+      }
+      if (!authState.needsChildSelection) {
+        return RouteNames.login;
+      }
     }
 
     if (isAuthenticated &&
         (location == RouteNames.login ||
             location == RouteNames.forgotPassword ||
-            location == RouteNames.splash)) {
+            location == RouteNames.splash ||
+            location == RouteNames.selectChild)) {
       return RouteNames.home;
     }
 
@@ -105,6 +112,7 @@ class AppRouter {
     RouteNames.login,
     RouteNames.forgotPassword,
     RouteNames.qrLogin,
+    RouteNames.selectChild,
   };
 
   static final List<RouteBase> routes = [
@@ -132,6 +140,11 @@ class AppRouter {
       name: RouteNames.qrLogin,
       path: RouteNames.qrLogin,
       builder: (context, state) => const QrLoginScreen(),
+    ),
+    GoRoute(
+      name: RouteNames.selectChild,
+      path: RouteNames.selectChild,
+      builder: (context, state) => const ChildSelectionScreen(),
     ),
 
     // ─── Home (Main Navigation container) ───

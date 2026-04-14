@@ -10,6 +10,7 @@ import '../../core/storage/secure_storage.dart';
 import '../../core/error/exceptions.dart';
 import '../../data/datasources/remote/auth_api.dart';
 import '../../data/models/user_model.dart';
+import '../../data/models/parent_login_response.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/notification_repository.dart';
 import 'notification_provider.dart';
@@ -73,6 +74,8 @@ class AuthState extends Equatable {
   final bool isLoading;
   final String? error;
   final bool isAuthenticated;
+  final List<ChildMappingModel> children;
+  final bool needsChildSelection;
 
   const AuthState({
     this.user,
@@ -80,6 +83,8 @@ class AuthState extends Equatable {
     this.isLoading = false,
     this.error,
     this.isAuthenticated = false,
+    this.children = const [],
+    this.needsChildSelection = false,
   });
 
   /// Boshlang'ich holat — hech narsa yuklanmagan
@@ -88,7 +93,9 @@ class AuthState extends Equatable {
       token = null,
       isLoading = false,
       error = null,
-      isAuthenticated = false;
+      isAuthenticated = false,
+      children = const [],
+      needsChildSelection = false;
 
   /// Loading holati
   AuthState copyWithLoading() {
@@ -133,6 +140,8 @@ class AuthState extends Equatable {
     bool? isLoading,
     Object? error = _undefined,
     bool? isAuthenticated,
+    List<ChildMappingModel>? children,
+    bool? needsChildSelection,
   }) {
     return AuthState(
       user: user ?? this.user,
@@ -140,11 +149,21 @@ class AuthState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       error: error == _undefined ? this.error : error as String?,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      children: children ?? this.children,
+      needsChildSelection: needsChildSelection ?? this.needsChildSelection,
     );
   }
 
   @override
-  List<Object?> get props => [user, token, isLoading, error, isAuthenticated];
+  List<Object?> get props => [
+    user, 
+    token, 
+    isLoading, 
+    error, 
+    isAuthenticated,
+    children,
+    needsChildSelection,
+  ];
 
   @override
   String toString() =>
@@ -203,18 +222,58 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String username,
     required String password,
   }) async {
-    state = state.copyWithLoading();
+    state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final user = await _repository.login(
+      final response = await _repository.login(
         username: username,
         password: password,
       );
+      
+      if (response.autoTenant != null) {
+        // Only 1 child, session already saved in repository
+        final token = await _repository.getAccessToken();
+        state = state.copyWith(
+          user: response.user,
+          token: token,
+          isAuthenticated: true,
+          isLoading: false,
+        );
+        updateFCMToken();
+      } else {
+        // Multiple children or needs selection
+        state = state.copyWith(
+          user: response.user,
+          children: response.children,
+          needsChildSelection: true,
+          isLoading: false,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: _readErrorMessage(e));
+    }
+  }
+
+  /// Select specific child/tenant
+  Future<void> selectChild(ChildMappingModel mapping) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.issueTenantToken(
+        studentId: mapping.studentId,
+        tenantId: mapping.tenantId,
+        host: mapping.host,
+      );
+      
       final token = await _repository.getAccessToken();
-      state = state.copyWithSuccess(user, token);
+      state = state.copyWith(
+        token: token,
+        isAuthenticated: true,
+        needsChildSelection: false,
+        isLoading: false,
+      );
       updateFCMToken();
     } catch (e) {
-      state = state.copyWithError(_readErrorMessage(e));
+      state = state.copyWith(isLoading: false, error: _readErrorMessage(e));
     }
   }
 

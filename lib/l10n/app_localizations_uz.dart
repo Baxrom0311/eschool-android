@@ -51,7 +51,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get passwordSection => 'PAROL';
 
   @override
-  String get emailExample => 'Masalan: parent11@ranch.local';
+  String get emailExample => 'Masalan: 90 123 45 67';
 
   @override
   String get forgotPasswordShort => 'Parolni unutdingizmi?';
@@ -172,7 +172,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get errorAuth => 'Login yoki parol noto\'g\'ri';
 
   @override
-  String get fieldRequired => 'Ushbu maydon majburiy';
+  String get fieldRequired => 'Majburiy maydon';
 
   @override
   String get phoneRequired => 'Telefon raqamini kiriting';
@@ -181,10 +181,10 @@ class AppLocalizationsUz extends AppLocalizations {
   String get invalidPhone => 'Noto\'g\'ri telefon raqami';
 
   @override
-  String get emailRequired => 'Emailni kiriting';
+  String get emailRequired => 'Telefon raqamini kiriting';
 
   @override
-  String get invalidEmail => 'Noto\'g\'ri email';
+  String get invalidEmail => 'Noto\'g\'ri telefon raqami';
 
   @override
   String get passwordRequired => 'Parolni kiriting';

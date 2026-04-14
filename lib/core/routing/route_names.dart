@@ -8,6 +8,7 @@ class RouteNames {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String qrLogin = '/qr-login';
+  static const String selectChild = '/select-child';
 
   // ─── Main ───
   static const String home = '/home';

@@ -84,6 +84,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
+    if (authState.needsChildSelection) {
+      if (authState.user != null) {
+        ref.read(userProvider.notifier).setUser(authState.user!);
+      }
+      context.go(RouteNames.selectChild);
+      return;
+    }
+
     if (!authState.isAuthenticated) {
       _showError(defaultError);
       return;
@@ -147,16 +155,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Container(
               height: topHeight + 60,
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.secondary,
+                    Color(0xFF4F46E5), // Indigo 600
+                    Color(0xFF7C3AED), // Violet 600
                   ],
                 ),
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(48),
                   bottomRight: Radius.circular(48),
                 ),
@@ -228,7 +235,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ],
                         ),
                         child: const Center(
-                          child: Icon(Icons.shield_rounded, size: 52, color: Colors.white),
+                          child: Icon(Icons.school_rounded, size: 52, color: Colors.white),
                         ),
                       ),
                       const SizedBox(height: 28),
@@ -291,17 +298,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildSectionLabel(l10n.emailSection),
+                        _buildSectionLabel(l10n.phoneNumberSection),
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _loginController,
-                          keyboardType: TextInputType.emailAddress,
+                          keyboardType: TextInputType.phone,
                           textInputAction: TextInputAction.next,
-                          validator: Validators.email,
+                          validator: Validators.phone,
                           style: const TextStyle(fontWeight: FontWeight.w600),
                           decoration: _buildInputDecoration(
-                            l10n.emailExample,
-                            Icons.alternate_email_rounded,
+                            l10n.phoneNumberLabel,
+                            Icons.phone_android_rounded,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -349,7 +356,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: ElevatedButton(
                             onPressed: isBusy ? null : _handleLogin,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryBlue,
+                              backgroundColor: theme.colorScheme.primary,
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
