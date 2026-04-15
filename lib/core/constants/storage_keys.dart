@@ -31,6 +31,7 @@ class StorageKeys {
   static const String childRatingCachePrefix = 'cache_child_rating_';
   static const String conversationsCache = 'cache_conversations';
   static const String chatMessagesCachePrefix = 'cache_chat_messages_';
+  static const String diaryWeeklyCachePrefix = 'cache_diary_weekly_';
 
   // ─── Settings ───
   static const String language = 'language';

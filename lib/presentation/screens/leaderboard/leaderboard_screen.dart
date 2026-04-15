@@ -474,7 +474,7 @@ class _BadgesTab extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   ),
-                  child: const Icon(Icons.monetization_on, size: 48, color: Color(0xFFF59E0B)),
+                  child: const Icon(Icons.monetization_on, size: 48, color: AppColors.coinAmber),
                 ),
                 const SizedBox(height: 16),
                 Text(

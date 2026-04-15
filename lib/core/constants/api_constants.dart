@@ -139,6 +139,28 @@ class ApiConstants {
       parentChatMessages(conversationId);
   static String sendMessage(int conversationId) => parentSendChatMessage;
 
+  // ─── Transport ───
+  static const String transportLocation = '/api/transport/location';
+
+  // ─── Class Story ───
+  static const String stories = '/api/stories';
+  static String storyLike(int id) => '/api/stories/$id/like';
+  static String storyComments(int id) => '/api/stories/$id/comments';
+
+  // ─── Forms ───
+  static const String forms = '/api/forms';
+  static String formDetail(int id) => '/api/forms/$id';
+  static String formSubmit(int id) => '/api/forms/$id/submit';
+
+  // ─── Gallery ───
+  static const String galleryAlbums = '/api/gallery/albums';
+  static String galleryPhotos(int albumId) => '/api/gallery/albums/$albumId/photos';
+
+  // ─── Diary (Kundalik) ───
+  static const String diaryWeekly = '/api/diary/weekly';
+  static const String diaryDaily = '/api/diary/daily';
+  static const String diarySummary = '/api/diary/summary';
+
   // ─── Notifications (tenant OAS'da yo'q, optional integration) ───
   static const String notifications = '/api/notifications';
   static String markAsRead(String id) => '/api/notifications/$id/read';
@@ -163,7 +185,7 @@ class ApiConstants {
 
   static const String reverbHost = String.fromEnvironment(
     'REVERB_HOST',
-    defaultValue: '192.168.0.162',
+    defaultValue: 'ranchschool.izlash.uz',
   );
 
   static const int reverbPort = int.fromEnvironment(

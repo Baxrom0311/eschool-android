@@ -43,6 +43,33 @@ class RouteNames {
   // ─── Notifications ───
   static const String notifications = '/notifications';
 
+  // ─── Diary ───
+  static const String diary = '/diary';
+
+  // ─── Class Story ───
+  static const String classStory = '/class-story';
+
+  // ─── Quiz ───
+  static const String quizList = '/quiz';
+  static const String quizSession = '/quiz/session';
+
+  // ─── Transport ───
+  static const String transport = '/transport';
+
+  // ─── Events ───
+  static const String events = '/events';
+
+  // ─── Behavior ───
+  static const String behavior = '/behavior';
+
+  // ─── Forms ───
+  static const String formsList = '/forms';
+  static const String formDetail = '/forms/detail';
+
+  // ─── Gallery ───
+  static const String gallery = '/gallery';
+  static const String galleryAlbum = '/gallery/album';
+
   // ─── Extra Modules ───
   static const String leaderboard = '/leaderboard';
   static const String conference = '/conference';

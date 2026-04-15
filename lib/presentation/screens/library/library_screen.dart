@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/network/api_error_handler.dart';
 import '../../../data/models/library_model.dart';
 import '../../providers/library_provider.dart';
@@ -244,7 +245,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                           )
                         : Text(
                             l10n.libraryReturnedStatus,
-                            style: const TextStyle(color: Colors.green),
+                            style: const TextStyle(color: AppColors.success),
                           ),
                   ),
                 );

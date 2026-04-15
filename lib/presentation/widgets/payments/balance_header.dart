@@ -28,13 +28,13 @@ class BalanceHeader extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isDark
-              ? [const Color(0xFF1E1B4B), AppColors.slate900]
-              : AppColors.liquidIndigo,
+              ? AppColors.liquidIndigo
+              : AppColors.skyGradientLight,
         ),
         borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            color: (isDark ? Colors.black : AppColors.liquidIndigo.first).withValues(alpha: isDark ? 0.4 : 0.3),
+            color: (isDark ? AppColors.liquidIndigo.first : AppColors.skyBlue400).withValues(alpha: isDark ? 0.3 : 0.1),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -69,23 +69,23 @@ class BalanceHeader extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
+                      color: (isDark ? Colors.white : AppColors.slate900).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(100),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      border: Border.all(color: (isDark ? Colors.white : AppColors.slate900).withValues(alpha: 0.1)),
                     ),
                     child: Text(
                       l10n.accountBalanceTitle.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : AppColors.slate900,
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2.0,
                       ),
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.contactless_rounded,
-                    color: Colors.white54,
+                    color: isDark ? Colors.white54 : AppColors.slate500,
                     size: 28,
                   ),
                 ],
@@ -94,8 +94,8 @@ class BalanceHeader extends StatelessWidget {
               FittedBox(
                 child: Text(
                   balance,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppColors.slate900,
                     fontSize: 44,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -2.0,
@@ -111,23 +111,23 @@ class BalanceHeader extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.15),
+                      color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      border: Border.all(color: (isDark ? Colors.white : AppColors.slate900).withValues(alpha: 0.05)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.history_rounded,
-                          color: Colors.white70,
+                          color: isDark ? Colors.white70 : AppColors.slate600,
                           size: 14,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           lastUpdated.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : AppColors.slate600,
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 0.5,

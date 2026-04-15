@@ -241,11 +241,11 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> {
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final assignment = assignments[index];
                   final List<Color> palette = [
-                    AppColors.primaryBlue,
-                    const Color(0xFF8B5CF6), // Purple
-                    const Color(0xFFF59E0B), // Amber
-                    const Color(0xFF10B981), // Emerald
-                    const Color(0xFFEC4899), // Pink
+                    AppColors.primary,
+                    AppColors.purple500,
+                    AppColors.amber,
+                    AppColors.emerald500,
+                    AppColors.pink500,
                   ];
                   final color = palette[index % palette.length];
 
@@ -357,10 +357,10 @@ class _AssignmentCard extends StatelessWidget {
 
   Color _getStatusColor(AssignmentStatus status) {
     switch (status) {
-      case AssignmentStatus.pending: return const Color(0xFFF59E0B);
-      case AssignmentStatus.submitted: return const Color(0xFF3B82F6);
-      case AssignmentStatus.graded: return const Color(0xFF10B981);
-      case AssignmentStatus.overdue: return const Color(0xFFEF4444);
+      case AssignmentStatus.pending: return AppColors.assignmentPending;
+      case AssignmentStatus.submitted: return AppColors.assignmentSubmitted;
+      case AssignmentStatus.graded: return AppColors.assignmentGraded;
+      case AssignmentStatus.overdue: return AppColors.assignmentOverdue;
     }
   }
 

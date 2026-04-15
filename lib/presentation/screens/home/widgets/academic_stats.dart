@@ -88,7 +88,7 @@ class AcademicStats extends StatelessWidget {
                     child: const Icon(
                       Icons.military_tech_rounded,
                       size: 36,
-                      color: Color(0xFFF59E0B),
+                      color: AppColors.amber,
                     ),
                   ),
                   const SizedBox(height: 10),

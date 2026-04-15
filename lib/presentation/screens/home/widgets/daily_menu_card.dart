@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../widgets/common/animated_pressable.dart';
 
 class DailyMenuCard extends StatelessWidget {
@@ -23,12 +24,12 @@ class DailyMenuCard extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isDark
-                ? [const Color(0xFF065F46), const Color(0xFF064E3B)]
-                : [const Color(0xFF10B981), const Color(0xFF059669)],
+                ? AppColors.emeraldGradientDark
+                : AppColors.emeraldGradientLight,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.2 : 0.1),
+              color: AppColors.successLight.withValues(alpha: isDark ? 0.2 : 0.1),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),

@@ -7,7 +7,7 @@ class AppTheme {
 
   static ThemeData get lightTheme => _buildTheme(
     brightness: Brightness.light,
-    primaryColor: AppColors.skyBlue600,
+    primaryColor: AppColors.skyBlue400, // Lighter, airy accent for Light mode
     scaffoldBackgroundColor: AppColors.skyBlue50,
     surfaceColor: AppColors.white,
     cardColor: AppColors.white,
@@ -19,7 +19,7 @@ class AppTheme {
 
   static ThemeData get darkTheme => _buildTheme(
     brightness: Brightness.dark,
-    primaryColor: AppColors.skyBlue400, // Slightly brighter for dark mode pop
+    primaryColor: AppColors.skyBlue600, // Deep saturated neon pop for Dark mode
     scaffoldBackgroundColor: AppColors.slate900,
     surfaceColor: AppColors.slate800,
     cardColor: AppColors.slate800,

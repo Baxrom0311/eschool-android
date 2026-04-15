@@ -27,7 +27,8 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -35,8 +36,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _isSubmitting = false;
 
+  late AnimationController _animController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _scaleAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
+    _animController.forward();
+  }
+
   @override
   void dispose() {
+    _animController.dispose();
     _loginController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -144,6 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isBusy = isLoading || _isSubmitting;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
@@ -158,10 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF4F46E5), // Indigo 600
-                    Color(0xFF7C3AED), // Violet 600
-                  ],
+                  colors: AppColors.loginGradient,
                 ),
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(48),
@@ -169,101 +192,107 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Row(
-                          children: [
-                            Text(
-                              l10n.loginHeader.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white54,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                            const Spacer(),
-                            // Theme Toggle
-                            _buildHeaderChip(
-                              onTap: () {
-                                final next = switch (currentThemeMode) {
-                                  ThemeMode.light => ThemeMode.dark,
-                                  _ => ThemeMode.light,
-                                };
-                                ref.read(appThemeModeProvider.notifier).setThemeMode(next);
-                              },
-                              child: Icon(
-                                currentThemeMode == ThemeMode.dark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Language Switch
-                            PopupMenuButton<AppLocale>(
-                              onSelected: (l) => ref.read(appLocaleProvider.notifier).setLocale(l),
-                              itemBuilder: (ctx) => AppLocale.values.map((l) => PopupMenuItem(value: l, child: Text(l.nativeLabel))).toList(),
-                              child: _buildHeaderChip(
-                                child: Text(
-                                  currentLocale.code.toUpperCase(),
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: [
+                              Text(
+                                l10n.loginHeader.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.5,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Premium Abstract Logo
-                      Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 30,
-                              offset: const Offset(0, 15),
-                            ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.school_rounded, size: 52, color: Colors.white),
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      FittedBox(
-                        child: Text(
-                          l10n.welcome,
-                          style: const TextStyle(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: -1.5,
-                            height: 1.0,
+                              const Spacer(),
+                              // Theme Toggle
+                              _buildHeaderChip(
+                                onTap: () {
+                                  final next = switch (currentThemeMode) {
+                                    ThemeMode.light => ThemeMode.dark,
+                                    _ => ThemeMode.light,
+                                  };
+                                  ref.read(appThemeModeProvider.notifier).setThemeMode(next);
+                                },
+                                child: Icon(
+                                  currentThemeMode == ThemeMode.dark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Language Switch
+                              PopupMenuButton<AppLocale>(
+                                onSelected: (l) => ref.read(appLocaleProvider.notifier).setLocale(l),
+                                itemBuilder: (ctx) => AppLocale.values.map((l) => PopupMenuItem(value: l, child: Text(l.nativeLabel))).toList(),
+                                child: _buildHeaderChip(
+                                  child: Text(
+                                    currentLocale.code.toUpperCase(),
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Premium Abstract Logo with Scale Animation
+                        ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: Container(
+                            width: 96,
+                            height: 96,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 15),
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.school_rounded, size: 52, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        FittedBox(
+                          child: Text(
+                            l10n.welcome,
+                            style: const TextStyle(
+                              fontSize: 40,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: -1.5,
+                              height: 1.0,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          l10n.loginHint,
                           textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.6),
+                            height: 1.3,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        l10n.loginHint,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.6),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -275,24 +304,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             top: topHeight,
             left: 20,
             right: 20,
-            bottom: 40,
+            bottom: 0,
             child: Container(
               decoration: BoxDecoration(
                 color: theme.cardColor,
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(40),
+                  topRight: Radius.circular(40),
+                ),
                 border: Border.all(color: colorScheme.outline.withValues(alpha: 0.5), width: 0.5),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 30,
-                    offset: const Offset(0, 15),
+                    offset: const Offset(0, -8),
                   ),
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(40),
+                  topRight: Radius.circular(40),
+                ),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(32),
+                  padding: EdgeInsets.only(
+                    left: 32,
+                    right: 32,
+                    top: 32,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 40,
+                  ),
                   child: Form(
                     key: _formKey,
                     child: Column(

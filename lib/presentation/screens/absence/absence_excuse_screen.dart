@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../data/models/absence_model.dart';
 import '../../providers/absence_provider.dart';
@@ -117,7 +118,7 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
       padding: const EdgeInsets.all(24),
       children: [
         const SizedBox(height: 64),
-        Icon(Icons.fact_check_outlined, size: 72, color: Colors.grey.shade400),
+        Icon(Icons.fact_check_outlined, size: 72, color: AppColors.slate400),
         const SizedBox(height: 16),
         Text(
           message,
@@ -228,16 +229,16 @@ class _AbsenceExcuseScreenState extends ConsumerState<AbsenceExcuseScreen> {
   }
 
   Widget _buildStatusBadge(String status) {
-    Color color = Colors.grey;
+    Color color = AppColors.slate400;
     String label = status;
     if (status == 'approved') {
-      color = Colors.green;
+      color = AppColors.success;
       label = AppLocalizations.current.absenceStatusLabel(status);
     } else if (status == 'rejected') {
-      color = Colors.red;
+      color = AppColors.danger;
       label = AppLocalizations.current.absenceStatusLabel(status);
     } else if (status == 'pending') {
-      color = Colors.orange;
+      color = AppColors.warning;
       label = AppLocalizations.current.absenceStatusLabel(status);
     }
 

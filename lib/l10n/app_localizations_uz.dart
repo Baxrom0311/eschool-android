@@ -1030,4 +1030,252 @@ class AppLocalizationsUz extends AppLocalizations {
   @override
   String get paymentFailedMessage =>
       'To\'lovni amalga oshirishda muammo yuzaga keldi. Iltimos, qayta urinib ko\'ring yoki qo\'llab-quvvatlash xizmatiga murojaat qiling.';
+
+  @override
+  String get aiInsightsTitle => 'AI Tavsiyalar';
+
+  @override
+  String aiInsightsError(String message) {
+    return 'Xatolik: $message';
+  }
+
+  @override
+  String get aiInsightsEmpty => 'Ma\'lumot topilmadi';
+
+  @override
+  String aiRiskLevelLabel(String level) {
+    return 'Xavf darajasi: $level';
+  }
+
+  @override
+  String aiAttendanceAndGrade(String attendance, String grade) {
+    return 'Davomat: $attendance% | O\'rtacha baho: $grade';
+  }
+
+  @override
+  String get aiWeakAreasTitle =>
+      'Qaysi fanlardan ko\'proq shug\'ullanish kerak?';
+
+  @override
+  String get diaryServiceTitle => 'Kundalik';
+
+  @override
+  String get diaryTitle => 'Kundalik';
+
+  @override
+  String get diaryWeeklyView => 'Haftalik';
+
+  @override
+  String get diaryDailyView => 'Kunlik';
+
+  @override
+  String get diaryNoLessons => 'Bu kunda darslar yo\'q';
+
+  @override
+  String get diaryNoData => 'Kundalik ma\'lumotlari topilmadi';
+
+  @override
+  String get diaryLoadFailed => 'Kundalikni yuklashda xatolik';
+
+  @override
+  String get diarySubject => 'Fan';
+
+  @override
+  String get diaryTeacher => 'O\'qituvchi';
+
+  @override
+  String get diaryTopic => 'Mavzu';
+
+  @override
+  String get diaryGrade => 'Baho';
+
+  @override
+  String get diaryHomework => 'Uy vazifasi';
+
+  @override
+  String get diaryComment => 'Izoh';
+
+  @override
+  String get diaryPresent => 'Keldi';
+
+  @override
+  String get diaryAbsent => 'Kelmadi';
+
+  @override
+  String get diaryLate => 'Kech qoldi';
+
+  @override
+  String get diaryExcused => 'Sababli';
+
+  @override
+  String diaryLessonsCount(int count) => '$count ta dars';
+
+  @override
+  String diaryAvgGrade(String grade) => 'O\'rtacha: $grade';
+
+  @override
+  String diaryAttendanceRate(int present, int total) =>
+      'Davomat: $present/$total';
+
+  @override
+  String get classStoryServiceTitle => 'Sinf yangiliklari';
+
+  @override
+  String get classStoryTitle => 'Sinf yangiliklari';
+
+  @override
+  String get classStoryEmpty => 'Hozircha yangiliklar yo\'q';
+
+  @override
+  String get classStoryLoadFailed => 'Yangiliklarni yuklashda xatolik';
+
+  @override
+  String get classStoryCommentHint => 'Izoh yozing...';
+
+  @override
+  String classStoryLikes(int count) => '$count ta yoqtirish';
+
+  @override
+  String classStoryComments(int count) => '$count ta izoh';
+
+  @override
+  String get transportServiceTitle => 'Transport';
+
+  @override
+  String get transportTitle => 'Maktab avtobusi';
+
+  @override
+  String get transportNoBus => 'Avtobus topilmadi';
+
+  @override
+  String get transportNoBusDesc =>
+      'Farzandingiz hech qanday faol marshrutga biriktirilmagan';
+
+  @override
+  String get transportDriver => 'Haydovchi';
+
+  @override
+  String get transportLiveLocation => 'Jonli joylashuv';
+
+  @override
+  String get transportJustNow => 'Hozir';
+
+  @override
+  String get transportStops => 'Bekatlar';
+
+  @override
+  String get transportPickup => 'Chiqish';
+
+  @override
+  String get transportDropoff => 'Tushish';
+
+  @override
+  String get quizServiceTitle => 'Testlar';
+  @override
+  String get quizTitle => 'Testlar';
+  @override
+  String get quizEmpty => 'Hozircha testlar yo\'q';
+  @override
+  String get quizLoadFailed => 'Testlarni yuklashda xatolik';
+  @override
+  String get quizMinutes => 'daqiqa';
+  @override
+  String get quizMaxScore => 'Maks ball';
+  @override
+  String get quizAlreadyAttempted => 'Yakunlangan';
+  @override
+  String get quizQuestion => 'Savol';
+  @override
+  String get quizAnswered => 'javob berildi';
+  @override
+  String get quizPrevious => 'Oldingi';
+  @override
+  String get quizNext => 'Keyingi';
+  @override
+  String get quizSubmit => 'Yakunlash';
+  @override
+  String get quizStartFailed => 'Testni boshlashda xatolik';
+  @override
+  String get quizScore => 'Ball';
+  @override
+  String get quizResultGreat => 'Ajoyib natija!';
+  @override
+  String get quizResultTryAgain => 'Keyingi safar yaxshiroq bo\'ladi!';
+  @override
+  String get quizBackToList => 'Testlar ro\'yxatiga qaytish';
+
+  @override
+  String get eventsServiceTitle => 'Tadbirlar';
+  @override
+  String get eventsTitle => 'Tadbirlar';
+  @override
+  String get eventsEmpty => 'Tadbirlar topilmadi';
+  @override
+  String get eventsLoadFailed => 'Tadbirlarni yuklashda xatolik';
+  @override
+  String get eventsAll => 'Hammasi';
+  @override
+  String get eventsHoliday => 'Bayram';
+  @override
+  String get eventsExam => 'Imtihon';
+  @override
+  String get eventsMeeting => 'Yig\'ilish';
+  @override
+  String get eventsSport => 'Sport';
+  @override
+  String get eventsOther => 'Boshqa';
+  @override
+  String get galleryServiceTitle => 'Galereya';
+  @override
+  String get galleryTitle => 'Foto galereya';
+  @override
+  String get galleryEmpty => 'Albomlar hozircha yo\'q';
+  @override
+  String get galleryLoadFailed => 'Galereyani yuklashda xatolik';
+  @override
+  String get galleryPhotos => 'ta rasm';
+  @override
+  String get galleryNoPhotos => 'Bu albomda rasmlar yo\'q';
+  @override
+  String get formsServiceTitle => 'So\'rovnomalar';
+  @override
+  String get formsTitle => 'So\'rovnomalar';
+  @override
+  String get formsEmpty => 'So\'rovnomalar hozircha yo\'q';
+  @override
+  String get formsLoadFailed => 'So\'rovnomalarni yuklashda xatolik';
+  @override
+  String get formsSubmitted => 'Yuborilgan';
+  @override
+  String get formsExpired => 'Muddati o\'tgan';
+  @override
+  String get formsPending => 'Kutilmoqda';
+  @override
+  String get formsSubmitAction => 'Yuborish';
+  @override
+  String get formsSubmitFailed => 'Yuborishda xatolik';
+  @override
+  String get formsAlreadySubmitted => 'Siz allaqachon javob bergansiz';
+  @override
+  String get formsSubmittedSuccess => 'Javobingiz muvaffaqiyatli yuborildi!';
+  @override
+  String get formsBackToList => 'So\'rovnomalar ro\'yxatiga qaytish';
+  @override
+  String get behaviorServiceTitle => 'Xulq-atvor';
+  @override
+  String get behaviorTitle => 'Xulq-atvor';
+  @override
+  String get behaviorLoadFailed => 'Ma\'lumotlarni yuklashda xatolik';
+  @override
+  String get behaviorEmpty => 'Xulq-atvor yozuvlari yo\'q';
+  @override
+  String get behaviorNetScore => 'Umumiy ball';
+  @override
+  String get behaviorPositive => 'Ijobiy';
+  @override
+  String get behaviorNegative => 'Salbiy';
+  @override
+  String get behaviorTotal => 'Jami';
+  @override
+  String get behaviorHistory => 'Tarix';
 }

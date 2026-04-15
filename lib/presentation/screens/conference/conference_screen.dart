@@ -116,12 +116,12 @@ class _ConferenceScreenState extends ConsumerState<ConferenceScreen> {
     switch (status) {
       case 'booked':
       case 'approved':
-        return Colors.green;
+        return AppColors.success;
       case 'cancelled':
       case 'rejected':
-        return Colors.red;
+        return AppColors.danger;
       default:
-        return Colors.orange;
+        return AppColors.warning;
     }
   }
 

@@ -10,10 +10,8 @@
 -keep class com.google.firebase.** { *; }
 -dontwarn com.google.firebase.**
 
-# Logic Specific to clean architecture (if any items are being stripped)
+# App models (serialization/deserialization uchun)
 -keep class uz.ranchschool.parent_school_app.data.models.** { *; }
 
-# standard obfuscation/shrinking rules
--dontobfuscate
--dontoptimize
+# Obfuscation va optimization yoqilgan (xavfsizlik uchun)
 -keepattributes Signature,Exceptions,*Annotation*

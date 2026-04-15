@@ -81,9 +81,10 @@ class PageBackground extends StatelessWidget {
   }
 }
 
-/// A standard configuration for frosted glass effects (Sigma value consistent with 2026 trends)
 class LiquidGlass {
-  static const double blur = 15.0;
+  static const double blur = 24.0; // Increased blur for premium frosted glass effect
   static double opacity(BuildContext context) => 
-      Theme.of(context).brightness == Brightness.dark ? 0.75 : 0.85;
+      Theme.of(context).brightness == Brightness.dark 
+          ? 0.25  // Let deep colors pop through in dark mode
+          : 0.45; // Keep light and airy in light mode
 }

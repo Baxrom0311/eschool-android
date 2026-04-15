@@ -228,7 +228,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                   Text(
                                     l10n.debtExistsTitle.toUpperCase(),
                                     style: theme.textTheme.titleSmall?.copyWith(
-                                      color: const Color(0xFFF59E0B),
+                                      color: AppColors.amber,
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: 1.0,
                                     ),

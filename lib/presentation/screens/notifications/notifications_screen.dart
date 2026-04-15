@@ -90,23 +90,23 @@ class _NotificationTile extends ConsumerWidget {
     switch (data.type) {
       case NotificationType.payment:
         icon = Icons.check_circle_outline_rounded;
-        color = Colors.green;
+        color = AppColors.success;
         break;
       case NotificationType.grade:
         icon = Icons.star_rounded;
-        color = Colors.orange;
+        color = AppColors.amber;
         break;
       case NotificationType.attendance:
         icon = Icons.event_available_rounded;
-        color = Colors.blue;
+        color = AppColors.info;
         break;
       case NotificationType.assignment:
         icon = Icons.book_rounded;
-        color = Colors.purple;
+        color = AppColors.purple500;
         break;
       case NotificationType.announcement:
         icon = Icons.campaign_rounded;
-        color = Colors.red;
+        color = AppColors.danger;
         break;
       default:
         icon = Icons.notifications_none_rounded;

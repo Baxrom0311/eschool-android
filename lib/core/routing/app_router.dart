@@ -30,6 +30,19 @@ import '../../presentation/screens/profile/children_list_screen.dart';
 import '../../presentation/screens/profile/change_password_screen.dart';
 import '../../presentation/screens/profile/edit_profile_screen.dart';
 
+import '../../presentation/screens/class_story/class_story_screen.dart';
+import '../../presentation/screens/quiz/quiz_list_screen.dart';
+import '../../presentation/screens/quiz/quiz_session_screen.dart';
+import '../../presentation/screens/transport/transport_screen.dart';
+import '../../data/models/quiz_model.dart';
+import '../../presentation/screens/diary/diary_screen.dart';
+import '../../presentation/screens/events/events_screen.dart';
+import '../../presentation/screens/behavior/behavior_screen.dart';
+import '../../presentation/screens/forms/forms_list_screen.dart';
+import '../../presentation/screens/forms/form_detail_screen.dart';
+import '../../presentation/screens/gallery/gallery_screen.dart';
+import '../../presentation/screens/gallery/gallery_album_screen.dart';
+import '../../data/models/gallery_model.dart';
 import '../../presentation/screens/leaderboard/leaderboard_screen.dart';
 import '../../presentation/screens/conference/conference_screen.dart';
 import '../../presentation/screens/absence/absence_excuse_screen.dart';
@@ -256,6 +269,86 @@ class AppRouter {
       name: RouteNames.notifications,
       path: RouteNames.notifications,
       builder: (context, state) => const NotificationsScreen(),
+    ),
+
+    // ─── Diary ───
+    GoRoute(
+      name: RouteNames.diary,
+      path: RouteNames.diary,
+      builder: (context, state) => const DiaryScreen(),
+    ),
+
+    // ─── Quiz ───
+    GoRoute(
+      name: RouteNames.quizList,
+      path: RouteNames.quizList,
+      builder: (context, state) => const QuizListScreen(),
+    ),
+    GoRoute(
+      name: RouteNames.quizSession,
+      path: RouteNames.quizSession,
+      builder: (context, state) {
+        final quiz = state.extra as QuizModel;
+        return QuizSessionScreen(quiz: quiz);
+      },
+    ),
+
+    // ─── Class Story ───
+    GoRoute(
+      name: RouteNames.classStory,
+      path: RouteNames.classStory,
+      builder: (context, state) => const ClassStoryScreen(),
+    ),
+
+    // ─── Transport ───
+    GoRoute(
+      name: RouteNames.transport,
+      path: RouteNames.transport,
+      builder: (context, state) => const TransportScreen(),
+    ),
+
+    // ─── Events ───
+    GoRoute(
+      name: RouteNames.events,
+      path: RouteNames.events,
+      builder: (context, state) => const EventsScreen(),
+    ),
+
+    // ─── Behavior ───
+    GoRoute(
+      name: RouteNames.behavior,
+      path: RouteNames.behavior,
+      builder: (context, state) => const BehaviorScreen(),
+    ),
+
+    // ─── Forms ───
+    GoRoute(
+      name: RouteNames.formsList,
+      path: RouteNames.formsList,
+      builder: (context, state) => const FormsListScreen(),
+    ),
+    GoRoute(
+      name: RouteNames.formDetail,
+      path: RouteNames.formDetail,
+      builder: (context, state) {
+        final formId = state.extra as int;
+        return FormDetailScreen(formId: formId);
+      },
+    ),
+
+    // ─── Gallery ───
+    GoRoute(
+      name: RouteNames.gallery,
+      path: RouteNames.gallery,
+      builder: (context, state) => const GalleryScreen(),
+    ),
+    GoRoute(
+      name: RouteNames.galleryAlbum,
+      path: RouteNames.galleryAlbum,
+      builder: (context, state) {
+        final album = state.extra as GalleryAlbumModel;
+        return GalleryAlbumScreen(album: album);
+      },
     ),
 
     // ─── Extra Modules ───

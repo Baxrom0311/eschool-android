@@ -1027,4 +1027,251 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paymentFailedMessage =>
       'To\'lovni amalga oshirishda muammo yuzaga keldi. Iltimos, qayta urinib ko\'ring yoki qo\'llab-quvvatlash xizmatiga murojaat qiling.';
+
+  @override
+  String get aiInsightsTitle => 'AI Recommendations';
+
+  @override
+  String aiInsightsError(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String get aiInsightsEmpty => 'No data found';
+
+  @override
+  String aiRiskLevelLabel(String level) {
+    return 'Risk level: $level';
+  }
+
+  @override
+  String aiAttendanceAndGrade(String attendance, String grade) {
+    return 'Attendance: $attendance% | Average grade: $grade';
+  }
+
+  @override
+  String get aiWeakAreasTitle => 'Subjects that need more attention';
+
+  @override
+  String get diaryServiceTitle => 'Diary';
+
+  @override
+  String get diaryTitle => 'Diary';
+
+  @override
+  String get diaryWeeklyView => 'Weekly';
+
+  @override
+  String get diaryDailyView => 'Daily';
+
+  @override
+  String get diaryNoLessons => 'No lessons on this day';
+
+  @override
+  String get diaryNoData => 'No diary data found';
+
+  @override
+  String get diaryLoadFailed => 'Failed to load diary';
+
+  @override
+  String get diarySubject => 'Subject';
+
+  @override
+  String get diaryTeacher => 'Teacher';
+
+  @override
+  String get diaryTopic => 'Topic';
+
+  @override
+  String get diaryGrade => 'Grade';
+
+  @override
+  String get diaryHomework => 'Homework';
+
+  @override
+  String get diaryComment => 'Comment';
+
+  @override
+  String get diaryPresent => 'Present';
+
+  @override
+  String get diaryAbsent => 'Absent';
+
+  @override
+  String get diaryLate => 'Late';
+
+  @override
+  String get diaryExcused => 'Excused';
+
+  @override
+  String diaryLessonsCount(int count) => '$count lessons';
+
+  @override
+  String diaryAvgGrade(String grade) => 'Average: $grade';
+
+  @override
+  String diaryAttendanceRate(int present, int total) =>
+      'Attendance: $present/$total';
+
+  @override
+  String get classStoryServiceTitle => 'Class News';
+
+  @override
+  String get classStoryTitle => 'Class News';
+
+  @override
+  String get classStoryEmpty => 'No stories yet';
+
+  @override
+  String get classStoryLoadFailed => 'Failed to load stories';
+
+  @override
+  String get classStoryCommentHint => 'Write a comment...';
+
+  @override
+  String classStoryLikes(int count) => '$count likes';
+
+  @override
+  String classStoryComments(int count) => '$count comments';
+
+  @override
+  String get transportServiceTitle => 'Transport';
+
+  @override
+  String get transportTitle => 'School Bus';
+
+  @override
+  String get transportNoBus => 'No bus found';
+
+  @override
+  String get transportNoBusDesc =>
+      'Your child is not assigned to any active bus route';
+
+  @override
+  String get transportDriver => 'Driver';
+
+  @override
+  String get transportLiveLocation => 'Live Location';
+
+  @override
+  String get transportJustNow => 'Just now';
+
+  @override
+  String get transportStops => 'Stops';
+
+  @override
+  String get transportPickup => 'Pickup';
+
+  @override
+  String get transportDropoff => 'Drop-off';
+
+  @override
+  String get quizServiceTitle => 'Quizzes';
+  @override
+  String get quizTitle => 'Quizzes';
+  @override
+  String get quizEmpty => 'No quizzes available';
+  @override
+  String get quizLoadFailed => 'Failed to load quizzes';
+  @override
+  String get quizMinutes => 'min';
+  @override
+  String get quizMaxScore => 'Max score';
+  @override
+  String get quizAlreadyAttempted => 'Completed';
+  @override
+  String get quizQuestion => 'Question';
+  @override
+  String get quizAnswered => 'answered';
+  @override
+  String get quizPrevious => 'Previous';
+  @override
+  String get quizNext => 'Next';
+  @override
+  String get quizSubmit => 'Submit';
+  @override
+  String get quizStartFailed => 'Failed to start quiz';
+  @override
+  String get quizScore => 'Score';
+  @override
+  String get quizResultGreat => 'Great result!';
+  @override
+  String get quizResultTryAgain => 'Better luck next time!';
+  @override
+  String get quizBackToList => 'Back to quizzes';
+
+  @override
+  String get eventsServiceTitle => 'Events';
+  @override
+  String get eventsTitle => 'Events';
+  @override
+  String get eventsEmpty => 'No events found';
+  @override
+  String get eventsLoadFailed => 'Failed to load events';
+  @override
+  String get eventsAll => 'All';
+  @override
+  String get eventsHoliday => 'Holiday';
+  @override
+  String get eventsExam => 'Exam';
+  @override
+  String get eventsMeeting => 'Meeting';
+  @override
+  String get eventsSport => 'Sport';
+  @override
+  String get eventsOther => 'Other';
+  @override
+  String get galleryServiceTitle => 'Gallery';
+  @override
+  String get galleryTitle => 'Photo Gallery';
+  @override
+  String get galleryEmpty => 'No albums yet';
+  @override
+  String get galleryLoadFailed => 'Failed to load gallery';
+  @override
+  String get galleryPhotos => 'photos';
+  @override
+  String get galleryNoPhotos => 'No photos in this album';
+  @override
+  String get formsServiceTitle => 'Surveys';
+  @override
+  String get formsTitle => 'Surveys';
+  @override
+  String get formsEmpty => 'No surveys available';
+  @override
+  String get formsLoadFailed => 'Failed to load surveys';
+  @override
+  String get formsSubmitted => 'Submitted';
+  @override
+  String get formsExpired => 'Expired';
+  @override
+  String get formsPending => 'Pending';
+  @override
+  String get formsSubmitAction => 'Submit';
+  @override
+  String get formsSubmitFailed => 'Submission failed';
+  @override
+  String get formsAlreadySubmitted => 'You have already submitted';
+  @override
+  String get formsSubmittedSuccess => 'Your response was submitted successfully!';
+  @override
+  String get formsBackToList => 'Back to surveys';
+  @override
+  String get behaviorServiceTitle => 'Behavior';
+  @override
+  String get behaviorTitle => 'Behavior';
+  @override
+  String get behaviorLoadFailed => 'Failed to load data';
+  @override
+  String get behaviorEmpty => 'No behavior records';
+  @override
+  String get behaviorNetScore => 'Net score';
+  @override
+  String get behaviorPositive => 'Positive';
+  @override
+  String get behaviorNegative => 'Negative';
+  @override
+  String get behaviorTotal => 'Total';
+  @override
+  String get behaviorHistory => 'History';
 }

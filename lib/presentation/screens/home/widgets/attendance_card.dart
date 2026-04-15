@@ -34,13 +34,13 @@ class AttendanceCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: isDark
-                    ? [const Color(0xFF1E1B4B), const Color(0xFF312E81)]
-                    : AppColors.liquidIndigo,
+                    ? AppColors.liquidIndigo // Deep saturations for Dark Mode
+                    : AppColors.skyGradientLight, // Light airy SKY blues for Light Mode
               ),
               borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
-                  color: (isDark ? Colors.black : AppColors.liquidIndigo.first).withValues(alpha: isDark ? 0.4 : 0.2),
+                  color: (isDark ? AppColors.liquidIndigo.first : AppColors.skyBlue400).withValues(alpha: isDark ? 0.3 : 0.1),
                   blurRadius: 24,
                   offset: const Offset(0, 12),
                 ),
@@ -65,6 +65,7 @@ class AttendanceCard extends StatelessWidget {
                         l10n.attendanceStatLabel,
                         '${attendanceRate.toStringAsFixed(0)}%',
                         Icons.calendar_today_rounded,
+                        isDark,
                       ),
                     ),
                     Container(
@@ -75,9 +76,9 @@ class AttendanceCard extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.white.withValues(alpha: 0.0),
-                            Colors.white.withValues(alpha: 0.2),
-                            Colors.white.withValues(alpha: 0.0),
+                            (isDark ? Colors.white : AppColors.slate900).withValues(alpha: 0.0),
+                            (isDark ? Colors.white : AppColors.slate900).withValues(alpha: 0.2),
+                            (isDark ? Colors.white : AppColors.slate900).withValues(alpha: 0.0),
                           ],
                         ),
                       ),
@@ -87,6 +88,7 @@ class AttendanceCard extends StatelessWidget {
                         l10n.coinsStatLabel,
                         '$score',
                         Icons.stars_rounded,
+                        isDark,
                         isEnd: true,
                       ),
                     ),
@@ -144,35 +146,38 @@ class AttendanceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCompactStat(String label, String value, IconData icon, {bool isEnd = false}) {
+  Widget _buildCompactStat(String label, String value, IconData icon, bool isDark, {bool isEnd = false}) {
+    final textColor = isDark ? Colors.white : AppColors.slate900;
+    final hintColor = isDark ? Colors.white70 : AppColors.slate600;
+
     return Column(
       crossAxisAlignment: isEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (!isEnd) Icon(icon, color: Colors.white70, size: 14),
+            if (!isEnd) Icon(icon, color: hintColor, size: 14),
             if (!isEnd) const SizedBox(width: 8),
             Text(
               label.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
-                color: Colors.white60,
+                color: hintColor,
                 letterSpacing: 1.5,
               ),
             ),
             if (isEnd) const SizedBox(width: 8),
-            if (isEnd) Icon(icon, color: Colors.white70, size: 14),
+            if (isEnd) Icon(icon, color: hintColor, size: 14),
           ],
         ),
         const SizedBox(height: 8),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 34,
             fontWeight: FontWeight.w900,
-            color: Colors.white,
+            color: textColor,
             letterSpacing: -1.5,
             height: 1.0,
           ),

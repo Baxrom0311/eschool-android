@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../data/models/child_model.dart';
 import '../../../data/models/rating_model.dart';
@@ -135,7 +136,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                               score: top3[1].totalScore,
                               rank: 2,
                               avatarSize: 65,
-                              color: const Color(0xFFC0C0C0), // Silver
+                              color: AppColors.silverMedal,
                             ),
                           // 1st Place
                           if (top3.isNotEmpty)
@@ -144,7 +145,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                               score: top3[0].totalScore,
                               rank: 1,
                               avatarSize: 85,
-                              color: const Color(0xFFFFD700), // Gold
+                              color: AppColors.gold,
                               isFirst: true,
                             ),
                           // 3rd Place
@@ -154,7 +155,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                               score: top3[2].totalScore,
                               rank: 3,
                               avatarSize: 65,
-                              color: const Color(0xFFCD7F32), // Bronze
+                              color: AppColors.bronze,
                             ),
                         ],
                       ),
@@ -326,7 +327,7 @@ class _PodiumItem extends StatelessWidget {
         if (isFirst)
           const Icon(
             Icons.workspace_premium_rounded,
-            color: Color(0xFFFFD700),
+            color: AppColors.gold,
             size: 32,
           ),
         const SizedBox(height: 4),

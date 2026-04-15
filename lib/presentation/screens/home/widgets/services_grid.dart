@@ -15,9 +15,21 @@ class ServicesGrid extends StatelessWidget {
     
     final services = [
       _ServiceItem(
+        title: l10n.diaryServiceTitle,
+        icon: Icons.menu_book_rounded,
+        colors: [AppColors.skyBlue500, AppColors.skyBlue700],
+        route: RouteNames.diary,
+      ),
+      _ServiceItem(
+        title: l10n.classStoryServiceTitle,
+        icon: Icons.auto_stories_rounded,
+        colors: AppColors.liquidIndigo,
+        route: RouteNames.classStory,
+      ),
+      _ServiceItem(
         title: l10n.conferenceServiceTitle,
         icon: Icons.chat_bubble_rounded,
-        colors: AppColors.liquidIndigo,
+        colors: [const Color(0xFF8B5CF6), const Color(0xFFA78BFA)],
         route: RouteNames.conference,
       ),
       _ServiceItem(
@@ -33,9 +45,45 @@ class ServicesGrid extends StatelessWidget {
         route: RouteNames.library,
       ),
       _ServiceItem(
+        title: l10n.quizServiceTitle,
+        icon: Icons.quiz_rounded,
+        colors: AppColors.liquidRose,
+        route: RouteNames.quizList,
+      ),
+      _ServiceItem(
+        title: l10n.transportServiceTitle,
+        icon: Icons.directions_bus_rounded,
+        colors: AppColors.liquidEmerald,
+        route: RouteNames.transport,
+      ),
+      _ServiceItem(
+        title: l10n.eventsServiceTitle,
+        icon: Icons.event_rounded,
+        colors: AppColors.liquidAmber,
+        route: RouteNames.events,
+      ),
+      _ServiceItem(
+        title: l10n.galleryServiceTitle,
+        icon: Icons.photo_library_rounded,
+        colors: AppColors.liquidIndigo,
+        route: RouteNames.gallery,
+      ),
+      _ServiceItem(
+        title: l10n.formsServiceTitle,
+        icon: Icons.assignment_rounded,
+        colors: [const Color(0xFF0EA5E9), const Color(0xFF38BDF8)],
+        route: RouteNames.formsList,
+      ),
+      _ServiceItem(
+        title: l10n.behaviorServiceTitle,
+        icon: Icons.psychology_rounded,
+        colors: [const Color(0xFFF97316), const Color(0xFFFB923C)],
+        route: RouteNames.behavior,
+      ),
+      _ServiceItem(
         title: l10n.ratingServiceTitle,
         icon: Icons.emoji_events_rounded,
-        colors: AppColors.liquidAmber,
+        colors: [const Color(0xFFD97706), const Color(0xFFF59E0B)],
         route: RouteNames.leaderboard,
       ),
     ];

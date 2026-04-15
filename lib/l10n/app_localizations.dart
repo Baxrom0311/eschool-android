@@ -2103,6 +2103,273 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'To\'lovni amalga oshirishda muammo yuzaga keldi. Iltimos, qayta urinib ko\'ring yoki qo\'llab-quvvatlash xizmatiga murojaat qiling.'**
   String get paymentFailedMessage;
+
+  /// No description provided for @aiInsightsTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'AI Tavsiyalar'**
+  String get aiInsightsTitle;
+
+  /// No description provided for @aiInsightsError.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xatolik: {message}'**
+  String aiInsightsError(String message);
+
+  /// No description provided for @aiInsightsEmpty.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ma\'lumot topilmadi'**
+  String get aiInsightsEmpty;
+
+  /// No description provided for @aiRiskLevelLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xavf darajasi: {level}'**
+  String aiRiskLevelLabel(String level);
+
+  /// No description provided for @aiAttendanceAndGrade.
+  ///
+  /// In uz, this message translates to:
+  /// **'Davomat: {attendance}% | O\'rtacha baho: {grade}'**
+  String aiAttendanceAndGrade(String attendance, String grade);
+
+  /// No description provided for @aiWeakAreasTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qaysi fanlardan ko\'proq shug\'ullanish kerak?'**
+  String get aiWeakAreasTitle;
+
+  /// No description provided for @diaryServiceTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kundalik'**
+  String get diaryServiceTitle;
+
+  /// No description provided for @diaryTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kundalik'**
+  String get diaryTitle;
+
+  /// No description provided for @diaryWeeklyView.
+  ///
+  /// In uz, this message translates to:
+  /// **'Haftalik'**
+  String get diaryWeeklyView;
+
+  /// No description provided for @diaryDailyView.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kunlik'**
+  String get diaryDailyView;
+
+  /// No description provided for @diaryNoLessons.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bu kunda darslar yo\'q'**
+  String get diaryNoLessons;
+
+  /// No description provided for @diaryNoData.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kundalik ma\'lumotlari topilmadi'**
+  String get diaryNoData;
+
+  /// No description provided for @diaryLoadFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kundalikni yuklashda xatolik'**
+  String get diaryLoadFailed;
+
+  /// No description provided for @diarySubject.
+  ///
+  /// In uz, this message translates to:
+  /// **'Fan'**
+  String get diarySubject;
+
+  /// No description provided for @diaryTeacher.
+  ///
+  /// In uz, this message translates to:
+  /// **'O\'qituvchi'**
+  String get diaryTeacher;
+
+  /// No description provided for @diaryTopic.
+  ///
+  /// In uz, this message translates to:
+  /// **'Mavzu'**
+  String get diaryTopic;
+
+  /// No description provided for @diaryGrade.
+  ///
+  /// In uz, this message translates to:
+  /// **'Baho'**
+  String get diaryGrade;
+
+  /// No description provided for @diaryHomework.
+  ///
+  /// In uz, this message translates to:
+  /// **'Uy vazifasi'**
+  String get diaryHomework;
+
+  /// No description provided for @diaryComment.
+  ///
+  /// In uz, this message translates to:
+  /// **'Izoh'**
+  String get diaryComment;
+
+  /// No description provided for @diaryPresent.
+  ///
+  /// In uz, this message translates to:
+  /// **'Keldi'**
+  String get diaryPresent;
+
+  /// No description provided for @diaryAbsent.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kelmadi'**
+  String get diaryAbsent;
+
+  /// No description provided for @diaryLate.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kech qoldi'**
+  String get diaryLate;
+
+  /// No description provided for @diaryExcused.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sababli'**
+  String get diaryExcused;
+
+  /// No description provided for @diaryLessonsCount.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} ta dars'**
+  String diaryLessonsCount(int count);
+
+  /// No description provided for @diaryAvgGrade.
+  ///
+  /// In uz, this message translates to:
+  /// **'O\'rtacha: {grade}'**
+  String diaryAvgGrade(String grade);
+
+  /// No description provided for @diaryAttendanceRate.
+  ///
+  /// In uz, this message translates to:
+  /// **'Davomat: {present}/{total}'**
+  String diaryAttendanceRate(int present, int total);
+
+  /// No description provided for @classStoryServiceTitle.
+  String get classStoryServiceTitle;
+
+  /// No description provided for @classStoryTitle.
+  String get classStoryTitle;
+
+  /// No description provided for @classStoryEmpty.
+  String get classStoryEmpty;
+
+  /// No description provided for @classStoryLoadFailed.
+  String get classStoryLoadFailed;
+
+  /// No description provided for @classStoryCommentHint.
+  String get classStoryCommentHint;
+
+  /// No description provided for @classStoryLikes.
+  String classStoryLikes(int count);
+
+  /// No description provided for @classStoryComments.
+  String classStoryComments(int count);
+
+  /// No description provided for @transportServiceTitle.
+  String get transportServiceTitle;
+
+  /// No description provided for @transportTitle.
+  String get transportTitle;
+
+  /// No description provided for @transportNoBus.
+  String get transportNoBus;
+
+  /// No description provided for @transportNoBusDesc.
+  String get transportNoBusDesc;
+
+  /// No description provided for @transportDriver.
+  String get transportDriver;
+
+  /// No description provided for @transportLiveLocation.
+  String get transportLiveLocation;
+
+  /// No description provided for @transportJustNow.
+  String get transportJustNow;
+
+  /// No description provided for @transportStops.
+  String get transportStops;
+
+  /// No description provided for @transportPickup.
+  String get transportPickup;
+
+  /// No description provided for @transportDropoff.
+  String get transportDropoff;
+
+  /// No description provided for @quizServiceTitle.
+  String get quizServiceTitle;
+  String get quizTitle;
+  String get quizEmpty;
+  String get quizLoadFailed;
+  String get quizMinutes;
+  String get quizMaxScore;
+  String get quizAlreadyAttempted;
+  String get quizQuestion;
+  String get quizAnswered;
+  String get quizPrevious;
+  String get quizNext;
+  String get quizSubmit;
+  String get quizStartFailed;
+  String get quizScore;
+  String get quizResultGreat;
+  String get quizResultTryAgain;
+  String get quizBackToList;
+
+  String get eventsServiceTitle;
+  String get eventsTitle;
+  String get eventsEmpty;
+  String get eventsLoadFailed;
+  String get eventsAll;
+  String get eventsHoliday;
+  String get eventsExam;
+  String get eventsMeeting;
+  String get eventsSport;
+  String get eventsOther;
+
+  String get galleryServiceTitle;
+  String get galleryTitle;
+  String get galleryEmpty;
+  String get galleryLoadFailed;
+  String get galleryPhotos;
+  String get galleryNoPhotos;
+
+  String get formsServiceTitle;
+  String get formsTitle;
+  String get formsEmpty;
+  String get formsLoadFailed;
+  String get formsSubmitted;
+  String get formsExpired;
+  String get formsPending;
+  String get formsSubmitAction;
+  String get formsSubmitFailed;
+  String get formsAlreadySubmitted;
+  String get formsSubmittedSuccess;
+  String get formsBackToList;
+
+  String get behaviorServiceTitle;
+  String get behaviorTitle;
+  String get behaviorLoadFailed;
+  String get behaviorEmpty;
+  String get behaviorNetScore;
+  String get behaviorPositive;
+  String get behaviorNegative;
+  String get behaviorTotal;
+  String get behaviorHistory;
 }
 
 class _AppLocalizationsDelegate

@@ -154,7 +154,7 @@ class ScheduleCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [AppColors.primaryBlue, Color(0xFF60A5FA)],
+                              colors: [AppColors.primaryBlue, AppColors.blue400],
                             ),
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [

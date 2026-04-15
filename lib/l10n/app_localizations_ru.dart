@@ -1029,4 +1029,251 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get paymentFailedMessage =>
       'Произошла ошибка при совершении платежа. Пожалуйста, попробуйте еще раз или обратитесь в службу поддержки.';
+
+  @override
+  String get aiInsightsTitle => 'AI Рекомендации';
+
+  @override
+  String aiInsightsError(String message) {
+    return 'Ошибка: $message';
+  }
+
+  @override
+  String get aiInsightsEmpty => 'Данные не найдены';
+
+  @override
+  String aiRiskLevelLabel(String level) {
+    return 'Уровень риска: $level';
+  }
+
+  @override
+  String aiAttendanceAndGrade(String attendance, String grade) {
+    return 'Посещаемость: $attendance% | Средний балл: $grade';
+  }
+
+  @override
+  String get aiWeakAreasTitle => 'По каким предметам нужно больше заниматься';
+
+  @override
+  String get diaryServiceTitle => 'Дневник';
+
+  @override
+  String get diaryTitle => 'Дневник';
+
+  @override
+  String get diaryWeeklyView => 'Неделя';
+
+  @override
+  String get diaryDailyView => 'День';
+
+  @override
+  String get diaryNoLessons => 'В этот день уроков нет';
+
+  @override
+  String get diaryNoData => 'Данные дневника не найдены';
+
+  @override
+  String get diaryLoadFailed => 'Не удалось загрузить дневник';
+
+  @override
+  String get diarySubject => 'Предмет';
+
+  @override
+  String get diaryTeacher => 'Учитель';
+
+  @override
+  String get diaryTopic => 'Тема';
+
+  @override
+  String get diaryGrade => 'Оценка';
+
+  @override
+  String get diaryHomework => 'Домашнее задание';
+
+  @override
+  String get diaryComment => 'Комментарий';
+
+  @override
+  String get diaryPresent => 'Присутствовал';
+
+  @override
+  String get diaryAbsent => 'Отсутствовал';
+
+  @override
+  String get diaryLate => 'Опоздал';
+
+  @override
+  String get diaryExcused => 'По уважительной причине';
+
+  @override
+  String diaryLessonsCount(int count) => '$count уроков';
+
+  @override
+  String diaryAvgGrade(String grade) => 'Средняя: $grade';
+
+  @override
+  String diaryAttendanceRate(int present, int total) =>
+      'Посещаемость: $present/$total';
+
+  @override
+  String get classStoryServiceTitle => 'Новости класса';
+
+  @override
+  String get classStoryTitle => 'Новости класса';
+
+  @override
+  String get classStoryEmpty => 'Пока нет новостей';
+
+  @override
+  String get classStoryLoadFailed => 'Не удалось загрузить новости';
+
+  @override
+  String get classStoryCommentHint => 'Напишите комментарий...';
+
+  @override
+  String classStoryLikes(int count) => '$count лайков';
+
+  @override
+  String classStoryComments(int count) => '$count комментариев';
+
+  @override
+  String get transportServiceTitle => 'Транспорт';
+
+  @override
+  String get transportTitle => 'Школьный автобус';
+
+  @override
+  String get transportNoBus => 'Автобус не найден';
+
+  @override
+  String get transportNoBusDesc =>
+      'Ваш ребёнок не закреплён за активным маршрутом';
+
+  @override
+  String get transportDriver => 'Водитель';
+
+  @override
+  String get transportLiveLocation => 'Местоположение';
+
+  @override
+  String get transportJustNow => 'Только что';
+
+  @override
+  String get transportStops => 'Остановки';
+
+  @override
+  String get transportPickup => 'Посадка';
+
+  @override
+  String get transportDropoff => 'Высадка';
+
+  @override
+  String get quizServiceTitle => 'Тесты';
+  @override
+  String get quizTitle => 'Тесты';
+  @override
+  String get quizEmpty => 'Нет доступных тестов';
+  @override
+  String get quizLoadFailed => 'Не удалось загрузить тесты';
+  @override
+  String get quizMinutes => 'мин';
+  @override
+  String get quizMaxScore => 'Макс. балл';
+  @override
+  String get quizAlreadyAttempted => 'Завершён';
+  @override
+  String get quizQuestion => 'Вопрос';
+  @override
+  String get quizAnswered => 'отвечено';
+  @override
+  String get quizPrevious => 'Назад';
+  @override
+  String get quizNext => 'Далее';
+  @override
+  String get quizSubmit => 'Завершить';
+  @override
+  String get quizStartFailed => 'Не удалось начать тест';
+  @override
+  String get quizScore => 'Баллы';
+  @override
+  String get quizResultGreat => 'Отличный результат!';
+  @override
+  String get quizResultTryAgain => 'В следующий раз будет лучше!';
+  @override
+  String get quizBackToList => 'К списку тестов';
+
+  @override
+  String get eventsServiceTitle => 'Мероприятия';
+  @override
+  String get eventsTitle => 'Мероприятия';
+  @override
+  String get eventsEmpty => 'Мероприятий не найдено';
+  @override
+  String get eventsLoadFailed => 'Не удалось загрузить мероприятия';
+  @override
+  String get eventsAll => 'Все';
+  @override
+  String get eventsHoliday => 'Праздник';
+  @override
+  String get eventsExam => 'Экзамен';
+  @override
+  String get eventsMeeting => 'Собрание';
+  @override
+  String get eventsSport => 'Спорт';
+  @override
+  String get eventsOther => 'Другое';
+  @override
+  String get galleryServiceTitle => 'Галерея';
+  @override
+  String get galleryTitle => 'Фотогалерея';
+  @override
+  String get galleryEmpty => 'Альбомов пока нет';
+  @override
+  String get galleryLoadFailed => 'Не удалось загрузить галерею';
+  @override
+  String get galleryPhotos => 'фото';
+  @override
+  String get galleryNoPhotos => 'В этом альбоме нет фотографий';
+  @override
+  String get formsServiceTitle => 'Опросы';
+  @override
+  String get formsTitle => 'Опросы';
+  @override
+  String get formsEmpty => 'Опросов пока нет';
+  @override
+  String get formsLoadFailed => 'Не удалось загрузить опросы';
+  @override
+  String get formsSubmitted => 'Отправлено';
+  @override
+  String get formsExpired => 'Истёк';
+  @override
+  String get formsPending => 'Ожидает';
+  @override
+  String get formsSubmitAction => 'Отправить';
+  @override
+  String get formsSubmitFailed => 'Не удалось отправить';
+  @override
+  String get formsAlreadySubmitted => 'Вы уже ответили на этот опрос';
+  @override
+  String get formsSubmittedSuccess => 'Ваш ответ успешно отправлен!';
+  @override
+  String get formsBackToList => 'К списку опросов';
+  @override
+  String get behaviorServiceTitle => 'Поведение';
+  @override
+  String get behaviorTitle => 'Поведение';
+  @override
+  String get behaviorLoadFailed => 'Не удалось загрузить данные';
+  @override
+  String get behaviorEmpty => 'Записей о поведении нет';
+  @override
+  String get behaviorNetScore => 'Общий балл';
+  @override
+  String get behaviorPositive => 'Положительные';
+  @override
+  String get behaviorNegative => 'Отрицательные';
+  @override
+  String get behaviorTotal => 'Всего';
+  @override
+  String get behaviorHistory => 'История';
 }

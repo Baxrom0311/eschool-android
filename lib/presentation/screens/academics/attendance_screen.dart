@@ -271,7 +271,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       children: [
                         _LegendItem(label: l10n.attendancePresentLegend, color: AppColors.success),
                         _LegendItem(label: l10n.attendanceAbsentLegend, color: AppColors.danger),
-                        _LegendItem(label: l10n.attendanceLateLegend, color: Colors.amber),
+                        _LegendItem(label: l10n.attendanceLateLegend, color: AppColors.late),
                       ],
                     ),
                   ),
@@ -294,10 +294,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         color = AppColors.danger;
         break;
       case AttendanceStatus.late_:
-        color = Colors.amber;
+        color = AppColors.late;
         break;
       case AttendanceStatus.excused:
-        color = Colors.blueGrey;
+        color = AppColors.excused;
         break;
     }
 
