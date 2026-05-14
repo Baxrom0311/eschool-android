@@ -1,9 +1,6 @@
-import 'dart:ui';
-import 'package:parent_school_app/presentation/widgets/common/animated_pressable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../core/routing/route_names.dart';
 import '../../providers/academic_provider.dart';
@@ -22,6 +19,8 @@ import 'widgets/daily_menu_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/schedule_list.dart';
 import 'widgets/services_grid.dart';
+import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/glass_app_bar.dart';
 import '../../widgets/common/page_background.dart';
 
 /// Home Screen - Main App Screen with Bottom Navigation
@@ -63,16 +62,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      extendBody: true, // Allow content to flow behind floating nav
-      appBar: _currentIndex == 0 ? PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight + 8),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: LiquidGlass.blur, sigmaY: LiquidGlass.blur),
-            child: AppBar(
+      extendBody: true,
+      appBar: _currentIndex == 0
+          ? GlassAppBar(
               title: Hero(
                 tag: 'home_title',
                 child: Text(
@@ -80,15 +75,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   style: theme.appBarTheme.titleTextStyle,
                 ),
               ),
-              centerTitle: true,
-              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: LiquidGlass.opacity(context)),
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
               actions: [
                 IconButton(
                   onPressed: () => context.push(RouteNames.notifications),
                   icon: Badge(
-                    label: const Text('2', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      '2',
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     backgroundColor: theme.colorScheme.error,
                     child: Container(
                       padding: const EdgeInsets.all(8),
@@ -96,16 +93,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         color: theme.colorScheme.primary.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.notifications_outlined, color: theme.colorScheme.primary, size: 22),
+                      child: Icon(
+                        Icons.notifications_outlined,
+                        color: theme.colorScheme.primary,
+                        size: 22,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
               ],
-            ),
-          ),
-        ),
-      ) : null,
+            )
+          : null,
       body: PageBackground(
         child: IndexedStack(
           index: _currentIndex,
@@ -115,89 +114,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12, top: 4),
-          child: Container(
-            decoration: BoxDecoration(
-              color: theme.brightness == Brightness.dark 
-                  ? AppColors.slate900.withValues(alpha: LiquidGlass.opacity(context))
-                  : AppColors.white.withValues(alpha: LiquidGlass.opacity(context)),
-              borderRadius: BorderRadius.circular(100),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 30,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                width: 1,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(100),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: LiquidGlass.blur, sigmaY: LiquidGlass.blur),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildNavItem(0, Icons.home_outlined, Icons.home_rounded, l10n.home),
-                      _buildNavItem(1, Icons.auto_graph_outlined, Icons.auto_graph_rounded, l10n.academics),
-                      _buildNavItem(2, Icons.restaurant_outlined, Icons.restaurant_rounded, l10n.menu),
-                      _buildNavItem(3, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, l10n.paymentShort),
-                      _buildNavItem(4, Icons.person_outline_rounded, Icons.person_rounded, l10n.profile),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
-    final isSelected = _currentIndex == index;
-    final theme = Theme.of(context);
-    
-    return Expanded(
-      child: AnimatedPressable(
-        onTap: () => _onTabSelected(index),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.12) : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                isSelected ? activeIcon : icon,
-                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                letterSpacing: 0.1,
-              ),
-            ),
-          ],
-        ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onTabSelected,
       ),
     );
   }
@@ -302,20 +221,8 @@ class _EducationTabScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight + 8),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: LiquidGlass.blur, sigmaY: LiquidGlass.blur),
-            child: AppBar(
-              title: Text(l10n.academicsTitle, style: theme.appBarTheme.titleTextStyle),
-              centerTitle: true,
-              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: LiquidGlass.opacity(context)),
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-            ),
-          ),
-        ),
+      appBar: GlassAppBar(
+        title: Text(l10n.academicsTitle, style: theme.appBarTheme.titleTextStyle),
       ),
       body: DefaultTabController(
         length: 2,

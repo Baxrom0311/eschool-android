@@ -1,7 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../../../widgets/common/liquid_glass.dart';
 
 class AttendanceCard extends StatelessWidget {
   final double attendanceRate;
@@ -103,40 +103,37 @@ class AttendanceCard extends StatelessWidget {
             left: 0,
             right: 0,
             child: Center(
-              child: ClipRRect(
+              child: LiquidGlassPanel(
                 borderRadius: BorderRadius.circular(100),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: theme.cardColor.withValues(alpha: 0.7),
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.military_tech_rounded, color: theme.colorScheme.primary, size: 16),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.levelBadge(level).toUpperCase(),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurface,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ],
-                    ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                backgroundColor: theme.cardColor.withValues(alpha: 0.7),
+                borderColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
+                ],
+                blurSigma: 10,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.military_tech_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.levelBadge(level).toUpperCase(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

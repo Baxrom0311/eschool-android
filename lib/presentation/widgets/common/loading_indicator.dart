@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Loading indicator widgeti
+import 'liquid_glass.dart';
+
+/// Loading indicator widgeti - Liquid Glass loading surface.
 class LoadingIndicator extends StatelessWidget {
   final double size;
   final Color? color;
@@ -13,31 +15,45 @@ class LoadingIndicator extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: size,
-            height: size,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                color ?? colorScheme.primary,
-              ),
-            ),
+      child: LiquidGlassPanel(
+        borderRadius: BorderRadius.circular(28),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
           ),
-          if (message != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              message!,
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 14,
+        ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: size,
+              height: size,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                strokeCap: StrokeCap.round,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  color ?? colorScheme.primary,
+                ),
               ),
             ),
+            if (message != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                message!,
+                style: TextStyle(
+                  color: colorScheme.onSurface.withValues(alpha: 0.64),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

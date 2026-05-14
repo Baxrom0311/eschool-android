@@ -1,5 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import 'package:parent_school_app/core/theme/app_theme.dart';
+import 'common/liquid_glass.dart';
 
 /// Asosiy pastki navigatsiya paneli
 class BottomNavBar extends StatelessWidget {
@@ -16,26 +20,31 @@ class BottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final glass = LiquidGlassTheme.of(context);
+    final reduceTransparency = LiquidGlass.shouldReduceTransparency(context);
+    final effectiveBlurSigma = reduceTransparency ? 0.0 : glass.blurSigma;
 
-    return Container(
+    final navigationBar = DecoratedBox(
       decoration: BoxDecoration(
-        color:
-            theme.bottomNavigationBarTheme.backgroundColor ?? theme.cardColor,
-        border: Border(
-          top: BorderSide(color: colorScheme.outline.withValues(alpha: 0.4)),
+        color: LiquidGlass.surfaceColor(
+          context,
+          tint:
+              theme.bottomNavigationBarTheme.backgroundColor ?? theme.cardColor,
         ),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: glass.borderColor),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+            color: glass.shadowColor.withValues(alpha: 0.22),
+            blurRadius: 26,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: SafeArea(
+        top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -74,6 +83,22 @@ class BottomNavBar extends StatelessWidget {
         ),
       ),
     );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: effectiveBlurSigma <= 0
+            ? navigationBar
+            : BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: effectiveBlurSigma,
+                  sigmaY: effectiveBlurSigma,
+                ),
+                child: navigationBar,
+              ),
+      ),
+    );
   }
 }
 
@@ -99,25 +124,55 @@ class _NavItem extends StatelessWidget {
         : theme.bottomNavigationBarTheme.unselectedItemColor ??
               colorScheme.onSurfaceVariant;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+    return Expanded(
+      child: Semantics(
+        button: true,
+        label: label,
+        selected: isActive,
+        child: Tooltip(
+          message: label,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(22),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  color: isActive
+                      ? colorScheme.primary.withValues(alpha: 0.14)
+                      : Colors.transparent,
+                  border: isActive
+                      ? Border.all(
+                          color: colorScheme.primary.withValues(alpha: 0.22),
+                        )
+                      : null,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, color: color, size: 24),
+                    const SizedBox(height: 4),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 11,
+                        fontWeight: isActive
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

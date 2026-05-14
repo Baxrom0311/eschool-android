@@ -7,6 +7,7 @@ import '../../../../core/routing/route_names.dart';
 import '../../../providers/academic_provider.dart';
 import '../../../providers/user_provider.dart';
 import '../../../widgets/common/animated_pressable.dart';
+import '../../../widgets/common/liquid_glass.dart';
 
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
@@ -84,21 +85,24 @@ class HomeHeader extends ConsumerWidget {
                     ref.read(scheduleProvider.notifier).selectDay(picked.weekday);
                   }
                 },
-                child: Container(
+                child: LiquidGlassPanel(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.cardColor.withValues(alpha: 0.8),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.05)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                  borderRadius: BorderRadius.circular(100),
+                  backgroundColor: theme.cardColor.withValues(alpha: 0.80),
+                  borderColor: theme.colorScheme.outline.withValues(alpha: 0.10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  blurSigma: 12,
+                  child: Icon(
+                    Icons.calendar_today_rounded,
+                    size: 20,
+                    color: theme.colorScheme.primary,
                   ),
-                  child: Icon(Icons.calendar_today_rounded, size: 20, color: theme.colorScheme.primary),
                 ),
               ),
             ],
@@ -107,18 +111,18 @@ class HomeHeader extends ConsumerWidget {
           // Liquid Glass Child Selector
           AnimatedPressable(
             onTap: () => context.push(RouteNames.childrenList),
-            child: Container(
+            child: LiquidGlassPanel(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.08),
-                    theme.colorScheme.primary.withValues(alpha: 0.02),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(100),
-                border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
+              borderRadius: BorderRadius.circular(100),
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.08),
+                  theme.colorScheme.primary.withValues(alpha: 0.02),
+                ],
               ),
+              borderColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+              boxShadow: const [],
+              blurSigma: 10,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

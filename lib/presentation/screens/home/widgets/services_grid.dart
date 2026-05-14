@@ -4,6 +4,7 @@ import 'package:parent_school_app/core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../widgets/common/animated_pressable.dart';
+import '../../../widgets/common/liquid_glass.dart';
 
 class ServicesGrid extends StatelessWidget {
   const ServicesGrid({super.key});
@@ -12,7 +13,7 @@ class ServicesGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    
+
     final services = [
       _ServiceItem(
         title: l10n.diaryServiceTitle,
@@ -102,12 +103,13 @@ class ServicesGrid extends StatelessWidget {
               ),
               AnimatedPressable(
                 onTap: () {}, // Future: View all services
-                child: Container(
+                child: LiquidGlassPanel(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
+                  borderRadius: BorderRadius.circular(100),
+                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+                  borderColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  boxShadow: const [],
+                  blurSigma: 10,
                   child: Row(
                     children: [
                       Text(
@@ -141,42 +143,38 @@ class ServicesGrid extends StatelessWidget {
             itemBuilder: (context, index) {
               final service = services[index];
               final isDark = theme.brightness == Brightness.dark;
-              
+
               return AnimatedPressable(
                 onTap: () => context.push(service.route),
-                child: Container(
+                child: LiquidGlassPanel(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: theme.cardColor,
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.05),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                  borderRadius: BorderRadius.circular(32),
+                  borderColor: service.colors.first.withValues(alpha: 0.10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: service.colors.first.withValues(
+                        alpha: isDark ? 0.14 : 0.08,
                       ),
-                    ],
-                  ),
+                      blurRadius: 22,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                   child: Row(
                     children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              service.colors.first.withValues(alpha: 0.15),
-                              service.colors.last.withValues(alpha: 0.05),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: service.colors.first.withValues(alpha: 0.1)),
+                      LiquidGlassPanel(
+                        padding: const EdgeInsets.all(12),
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            service.colors.first.withValues(alpha: 0.15),
+                            service.colors.last.withValues(alpha: 0.05),
+                          ],
                         ),
+                        borderColor: service.colors.first.withValues(alpha: 0.12),
+                        boxShadow: const [],
+                        blurSigma: 10,
                         child: Icon(
                           service.icon,
                           color: service.colors.first,

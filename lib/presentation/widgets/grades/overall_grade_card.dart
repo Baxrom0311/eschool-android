@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../core/constants/app_colors.dart';
+import '../common/liquid_glass.dart';
 
 /// Overall Grade Card - Displays GPA and summary info with Bento 2.0 aesthetic
 class OverallGradeCard extends StatelessWidget {
@@ -21,24 +22,19 @@ class OverallGradeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    
-    return Container(
+
+    return LiquidGlassPanel(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.05),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.03),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+      borderRadius: BorderRadius.circular(32),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(
+            alpha: theme.brightness == Brightness.dark ? 0.20 : 0.04,
           ),
-        ],
-      ),
+          blurRadius: 26,
+          offset: const Offset(0, 10),
+        ),
+      ],
       child: Column(
         children: [
           Row(
@@ -164,12 +160,13 @@ class _CompactStat extends StatelessWidget {
 
     return Column(
       children: [
-        Container(
+        LiquidGlassPanel(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
+          borderRadius: BorderRadius.circular(100),
+          backgroundColor: color.withValues(alpha: 0.10),
+          borderColor: color.withValues(alpha: 0.14),
+          boxShadow: const [],
+          blurSigma: 10,
           child: Icon(icon, color: color, size: 20),
         ),
         const SizedBox(height: 12),

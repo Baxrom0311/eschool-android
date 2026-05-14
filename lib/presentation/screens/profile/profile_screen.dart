@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +11,7 @@ import 'package:parent_school_app/presentation/providers/payment_provider.dart';
 import 'package:parent_school_app/presentation/providers/app_theme_mode_provider.dart';
 import 'package:parent_school_app/presentation/providers/app_locale_provider.dart';
 import 'package:parent_school_app/core/localization/app_locale.dart';
+import 'package:parent_school_app/presentation/widgets/common/glass_app_bar.dart';
 import 'package:parent_school_app/presentation/widgets/common/page_background.dart';
 import 'package:parent_school_app/presentation/widgets/common/animated_pressable.dart';
 
@@ -29,20 +29,8 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight + 8),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: LiquidGlass.blur, sigmaY: LiquidGlass.blur),
-            child: AppBar(
-              title: Text(l10n.profile, style: theme.appBarTheme.titleTextStyle),
-              centerTitle: true,
-              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: LiquidGlass.opacity(context)),
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-            ),
-          ),
-        ),
+      appBar: GlassAppBar(
+        title: Text(l10n.profile, style: theme.appBarTheme.titleTextStyle),
       ),
       body: PageBackground(
         child: ListView(

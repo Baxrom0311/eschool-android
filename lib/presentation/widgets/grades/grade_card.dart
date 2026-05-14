@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../common/liquid_glass.dart';
 
 /// Grade Card - Displays subject information, grade, and progress with Bento 2.0 design
 class GradeCard extends StatelessWidget {
@@ -33,24 +34,19 @@ class GradeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    
-    return Container(
+
+    return LiquidGlassPanel(
       padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.05),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.02),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+      borderRadius: BorderRadius.circular(32),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(
+            alpha: theme.brightness == Brightness.dark ? 0.20 : 0.04,
           ),
-        ],
-      ),
+          blurRadius: 24,
+          offset: const Offset(0, 10),
+        ),
+      ],
       child: Column(
         children: [
           Row(
@@ -92,12 +88,13 @@ class GradeCard extends StatelessWidget {
               ),
 
               // Grade Badge
-              Container(
+              LiquidGlassPanel(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: gradeColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                borderRadius: BorderRadius.circular(14),
+                backgroundColor: gradeColor.withValues(alpha: 0.10),
+                borderColor: gradeColor.withValues(alpha: 0.16),
+                boxShadow: const [],
+                blurSigma: 10,
                 child: Text(
                   grade.toString(),
                   style: theme.textTheme.headlineSmall?.copyWith(
@@ -153,18 +150,16 @@ class GradeCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Stack(
-          children: [
-             ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: value / 100,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                minHeight: 6,
-              ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: LinearProgressIndicator(
+            value: value / 100,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
             ),
-          ],
+            valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+            minHeight: 6,
+          ),
         ),
       ],
     );

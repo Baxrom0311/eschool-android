@@ -1,7 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../core/constants/app_colors.dart';
+import '../common/liquid_glass.dart';
 
 /// Meal Card - Displays information about a single meal with premium Bento 2.0 aesthetic
 class MealCard extends StatelessWidget {
@@ -28,22 +28,16 @@ class MealCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.05),
-          width: 1.0,
+    return LiquidGlassPanel(
+      borderRadius: BorderRadius.circular(32),
+      padding: EdgeInsets.zero,
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.05),
+          blurRadius: 26,
+          offset: const Offset(0, 10),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -97,34 +91,35 @@ class MealCard extends StatelessWidget {
                 Positioned(
                   top: 16,
                   left: 16,
-                  child: ClipRRect(
+                  child: LiquidGlassPanel(
                     borderRadius: BorderRadius.circular(100),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    backgroundColor: Colors.black.withValues(alpha: 0.3),
+                    borderColor: Colors.white.withValues(alpha: 0.1),
+                    boxShadow: const [],
+                    blurSigma: 5,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.access_time_filled_rounded,
+                          size: 12,
+                          color: Colors.white,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.access_time_filled_rounded, size: 12, color: Colors.white),
-                            const SizedBox(width: 6),
-                            Text(
-                              time.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 6),
+                        Text(
+                          time.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.0,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -132,23 +127,30 @@ class MealCard extends StatelessWidget {
               Positioned(
                 bottom: 16,
                 right: 16,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: AppColors.liquidAmber),
-                    borderRadius: BorderRadius.circular(100),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.liquidAmber.first.withValues(alpha: 0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                child: LiquidGlassPanel(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
                   ),
+                  borderRadius: BorderRadius.circular(100),
+                  gradient: LinearGradient(colors: AppColors.liquidAmber),
+                  borderColor: Colors.white.withValues(alpha: 0.14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.liquidAmber.first.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  blurSigma: 8,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.bolt_rounded, size: 14, color: Colors.white),
+                      const Icon(
+                        Icons.bolt_rounded,
+                        size: 14,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '$calories KCAL',
@@ -183,12 +185,20 @@ class MealCard extends StatelessWidget {
                       ),
                     ),
                     if (dishes.length > 1)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                      LiquidGlassPanel(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
                         ),
+                        borderRadius: BorderRadius.circular(12),
+                        backgroundColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.10,
+                        ),
+                        borderColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.14,
+                        ),
+                        boxShadow: const [],
+                        blurSigma: 8,
                         child: Text(
                           '${dishes.length} taom',
                           style: theme.textTheme.labelSmall?.copyWith(
@@ -201,24 +211,32 @@ class MealCard extends StatelessWidget {
                 ),
                 if (dishes.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  ...dishes.map((dish) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle_outline_rounded, size: 14, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            dish,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ...dishes.map(
+                    (dish) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 14,
+                            color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              dish,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.7,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  )).toList(),
+                  ),
                 ],
                 if (ingredients.isNotEmpty) ...[
                   const SizedBox(height: 24),
@@ -235,13 +253,20 @@ class MealCard extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: ingredients.map((item) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
+                      return LiquidGlassPanel(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
                         ),
+                        borderRadius: BorderRadius.circular(16),
+                        backgroundColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.05,
+                        ),
+                        borderColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.10,
+                        ),
+                        boxShadow: const [],
+                        blurSigma: 8,
                         child: Text(
                           item,
                           style: theme.textTheme.bodySmall?.copyWith(

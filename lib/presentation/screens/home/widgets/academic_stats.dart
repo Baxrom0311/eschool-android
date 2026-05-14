@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../widgets/common/liquid_glass.dart';
 
 class AcademicStats extends StatelessWidget {
   final double gpa;
@@ -36,11 +37,15 @@ class AcademicStats extends StatelessWidget {
                       width: 88,
                       height: 88,
                       child: CircularProgressIndicator(
-                        value: (gpa / 5.0).clamp(0.1, 1.0), // Min 0.1 for visual sweep
+                        value: (gpa / 5.0).clamp(0.1, 1.0),
                         strokeWidth: 12,
                         strokeCap: StrokeCap.round,
-                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.05),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                        backgroundColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.05,
+                        ),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -71,20 +76,22 @@ class AcademicStats extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
+                  LiquidGlassPanel(
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.liquidAmber.first.withValues(alpha: 0.15),
-                          AppColors.liquidAmber.last.withValues(alpha: 0.05),
-                        ],
-                      ),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.liquidAmber.first.withValues(alpha: 0.1)),
+                    borderRadius: BorderRadius.circular(100),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.liquidAmber.first.withValues(alpha: 0.15),
+                        AppColors.liquidAmber.last.withValues(alpha: 0.05),
+                      ],
                     ),
+                    borderColor: AppColors.liquidAmber.first.withValues(
+                      alpha: 0.14,
+                    ),
+                    boxShadow: const [],
+                    blurSigma: 10,
                     child: const Icon(
                       Icons.military_tech_rounded,
                       size: 36,
@@ -129,22 +136,18 @@ class _BentoStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return LiquidGlassPanel(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.03),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+      borderRadius: BorderRadius.circular(32),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(
+            alpha: theme.brightness == Brightness.dark ? 0.20 : 0.04,
           ),
-        ],
-      ),
+          blurRadius: 24,
+          offset: const Offset(0, 10),
+        ),
+      ],
       child: Column(
         children: [
           Text(

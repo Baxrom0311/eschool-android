@@ -1,8 +1,8 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import 'package:parent_school_app/presentation/widgets/common/glass_app_bar.dart';
 import 'package:parent_school_app/presentation/widgets/common/page_background.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../data/models/badge_model.dart';
@@ -56,42 +56,38 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight + 52),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: AppBar(
-              title: Text(
-                l10n.leaderboardTitle.toUpperCase(),
-                style: theme.appBarTheme.titleTextStyle?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.0,
-                  fontSize: 16,
-                ),
-              ),
-              centerTitle: true,
-              elevation: 0,
-              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
-              surfaceTintColor: Colors.transparent,
-              bottom: TabBar(
-                controller: _tabController,
-                labelColor: theme.colorScheme.primary,
-                unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                indicatorColor: theme.colorScheme.primary,
-                indicatorWeight: 3,
-                indicatorPadding: const EdgeInsets.symmetric(horizontal: 20),
-                labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                dividerColor: Colors.transparent,
-                tabs: [
-                  Tab(text: l10n.leaderboardClassTab.toUpperCase()),
-                  Tab(text: l10n.leaderboardSchoolTab.toUpperCase()),
-                  Tab(text: l10n.leaderboardBadgesTab.toUpperCase()),
-                ],
-              ),
-            ),
+      appBar: GlassAppBar(
+        toolbarHeight: kToolbarHeight,
+        title: Text(
+          l10n.leaderboardTitle.toUpperCase(),
+          style: theme.appBarTheme.titleTextStyle?.copyWith(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.0,
+            fontSize: 16,
           ),
+        ),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: theme.colorScheme.primary,
+          unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          indicatorColor: theme.colorScheme.primary,
+          indicatorWeight: 3,
+          indicatorPadding: const EdgeInsets.symmetric(horizontal: 20),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 13,
+            letterSpacing: 0.5,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+          dividerColor: Colors.transparent,
+          tabs: [
+            Tab(text: l10n.leaderboardClassTab.toUpperCase()),
+            Tab(text: l10n.leaderboardSchoolTab.toUpperCase()),
+            Tab(text: l10n.leaderboardBadgesTab.toUpperCase()),
+          ],
         ),
       ),
       body: PageBackground(

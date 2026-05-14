@@ -1,7 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:parent_school_app/core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../common/liquid_glass.dart';
 
 /// Balance Header - Visual display of account balance with Bento 2.0 aesthetic
 class BalanceHeader extends StatelessWidget {
@@ -104,38 +104,34 @@ class BalanceHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 36),
-              ClipRRect(
+              LiquidGlassPanel(
                 borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: (isDark ? Colors.white : AppColors.slate900).withValues(alpha: 0.05)),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                backgroundColor: (isDark ? Colors.black : Colors.white)
+                    .withValues(alpha: 0.15),
+                borderColor: (isDark ? Colors.white : AppColors.slate900)
+                    .withValues(alpha: 0.05),
+                boxShadow: const [],
+                blurSigma: 5,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.history_rounded,
+                      color: isDark ? Colors.white70 : AppColors.slate600,
+                      size: 14,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.history_rounded,
-                          color: isDark ? Colors.white70 : AppColors.slate600,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          lastUpdated.toUpperCase(),
-                          style: TextStyle(
-                            color: isDark ? Colors.white70 : AppColors.slate600,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: 8),
+                    Text(
+                      lastUpdated.toUpperCase(),
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : AppColors.slate600,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],

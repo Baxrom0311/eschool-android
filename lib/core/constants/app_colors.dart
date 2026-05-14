@@ -14,6 +14,18 @@ class AppColors {
   static const Color primaryLight = skyBlue400;
   static const Color primaryBlue = skyBlue600; // Legacy — use `primary` instead
 
+
+  // ─── Liquid Glass Accent Palette ───
+  static const Color aqua50 = Color(0xFFE8FBFF);
+  static const Color aqua100 = Color(0xFFCFF8FF);
+  static const Color aqua200 = Color(0xFFA5F3FC);
+  static const Color aqua300 = Color(0xFF67E8F9);
+  static const Color aqua400 = Color(0xFF22D3EE);
+  static const Color aqua500 = Color(0xFF06B6D4);
+  static const Color aqua700 = Color(0xFF0E7490);
+  static const Color violet300 = Color(0xFFC4B5FD);
+  static const Color rose300 = Color(0xFFFDA4AF);
+
   // ─── Sky Blue Palette ───
   static const Color skyBlue50 = Color(0xFFF0F9FF);
   static const Color skyBlue100 = Color(0xFFE0F2FE);
@@ -37,6 +49,13 @@ class AppColors {
   // ─── Glass & Steel (Premium Surface) ───
   static const Color silver = Color(0xFF94A3B8);
   static const Color steel = Color(0xFF64748B);
+
+  static const Color glassSurfaceLight = Color(0xBFFFFFFF);
+  static const Color glassSurfaceDark = Color(0x661E293B);
+  static const Color glassBorderLight = Color(0x99FFFFFF);
+  static const Color glassBorderDark = Color(0x33FFFFFF);
+  static const Color glassHighlight = Color(0xCCFFFFFF);
+
   static const Color glassWhite = Color(0x1AFFFFFF);
   static const Color glassWhiteBorder = Color(0x1A0F172A);
   static const Color softSlate = Color(0xFFF1F5F9);

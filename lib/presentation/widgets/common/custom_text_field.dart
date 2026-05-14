@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/constants/app_text_styles.dart';
 
-/// Umumiy matn kiritish maydoni
+/// Umumiy matn kiritish maydoni - Liquid Glass focus holati bilan.
 class CustomTextField extends StatefulWidget {
   final String? label;
   final String? hint;
@@ -38,11 +39,46 @@ class CustomTextField extends StatefulWidget {
 
 class _CustomTextFieldState extends State<CustomTextField> {
   late bool _isObscured;
+  FocusNode? _internalFocusNode;
+  bool _isFocused = false;
+
+  FocusNode get _effectiveFocusNode => widget.focusNode ?? _internalFocusNode!;
 
   @override
   void initState() {
     super.initState();
     _isObscured = widget.obscureText;
+    _internalFocusNode = widget.focusNode == null ? FocusNode() : null;
+    _effectiveFocusNode.addListener(_handleFocusChanged);
+    _isFocused = _effectiveFocusNode.hasFocus;
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusNode != widget.focusNode) {
+      (oldWidget.focusNode ?? _internalFocusNode)?.removeListener(
+        _handleFocusChanged,
+      );
+      if (oldWidget.focusNode == null) {
+        _internalFocusNode?.dispose();
+      }
+      _internalFocusNode = widget.focusNode == null ? FocusNode() : null;
+      _effectiveFocusNode.addListener(_handleFocusChanged);
+      _isFocused = _effectiveFocusNode.hasFocus;
+    }
+  }
+
+  @override
+  void dispose() {
+    _effectiveFocusNode.removeListener(_handleFocusChanged);
+    _internalFocusNode?.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChanged() {
+    if (!mounted) return;
+    setState(() => _isFocused = _effectiveFocusNode.hasFocus);
   }
 
   @override
@@ -60,41 +96,60 @@ class _CustomTextFieldState extends State<CustomTextField> {
           Text(
             widget.label!,
             style: AppTextStyles.label.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
+              color: _isFocused
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
           ),
           const SizedBox(height: 8),
         ],
-        TextFormField(
-          controller: widget.controller,
-          validator: widget.validator,
-          obscureText: _isObscured,
-          keyboardType: widget.keyboardType,
-          maxLines: widget.obscureText ? 1 : widget.maxLines,
-          enabled: widget.enabled,
-          onChanged: widget.onChanged,
-          focusNode: widget.focusNode,
-          style: AppTextStyles.input.copyWith(color: colorScheme.onSurface),
-          decoration: InputDecoration(
-            hintText: widget.hint,
-            hintStyle: AppTextStyles.inputHint.copyWith(color: hintColor),
-            prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon, color: hintColor, size: 22)
-                : null,
-            suffixIcon: widget.obscureText
-                ? IconButton(
-                    icon: Icon(
-                      _isObscured ? Icons.visibility_off : Icons.visibility,
-                      color: hintColor,
-                      size: 22,
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: _isFocused
+                ? [
+                    BoxShadow(
+                      color: colorScheme.primary.withValues(alpha: 0.16),
+                      blurRadius: 22,
+                      spreadRadius: -10,
+                      offset: const Offset(0, 12),
                     ),
-                    onPressed: () {
-                      setState(() => _isObscured = !_isObscured);
-                    },
-                  )
-                : widget.suffix,
+                  ]
+                : const [],
+          ),
+          child: TextFormField(
+            controller: widget.controller,
+            validator: widget.validator,
+            obscureText: _isObscured,
+            keyboardType: widget.keyboardType,
+            maxLines: widget.obscureText ? 1 : widget.maxLines,
+            enabled: widget.enabled,
+            onChanged: widget.onChanged,
+            focusNode: _effectiveFocusNode,
+            style: AppTextStyles.input.copyWith(color: colorScheme.onSurface),
+            decoration: InputDecoration(
+              hintText: widget.hint,
+              hintStyle: AppTextStyles.inputHint.copyWith(color: hintColor),
+              prefixIcon: widget.prefixIcon != null
+                  ? Icon(widget.prefixIcon, color: hintColor, size: 22)
+                  : null,
+              suffixIcon: widget.obscureText
+                  ? IconButton(
+                      icon: Icon(
+                        _isObscured ? Icons.visibility_off : Icons.visibility,
+                        color: hintColor,
+                        size: 22,
+                      ),
+                      onPressed: () {
+                        setState(() => _isObscured = !_isObscured);
+                      },
+                    )
+                  : widget.suffix,
+            ),
           ),
         ),
       ],
