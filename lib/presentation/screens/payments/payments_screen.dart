@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,8 +11,11 @@ import '../../providers/payment_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../../core/services/socket_service.dart';
 import '../../widgets/payments/balance_header.dart';
+import '../../widgets/common/glass_app_bar.dart';
+import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/page_background.dart';
-import '../../widgets/common/animated_pressable.dart';
+import '../../widgets/common/liquid_glass.dart';
 
 /// Payments Screen - Main view for billing and payments
 class PaymentsScreen extends ConsumerStatefulWidget {
@@ -84,7 +86,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     if (parentId == null || socket == null) return;
 
     final channelName = 'parent.$parentId';
-    
+
     // Payment received eventini tinglash
     socket.listenPrivate(
       channelName,
@@ -122,26 +124,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight + 8),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: LiquidGlass.blur, sigmaY: LiquidGlass.blur),
-            child: AppBar(
-              title: Text(l10n.paymentsTitle, style: theme.appBarTheme.titleTextStyle),
-              centerTitle: true,
-              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: LiquidGlass.opacity(context)),
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-            ),
-          ),
-        ),
+      appBar: GlassAppBar(
+        title: Text(l10n.paymentsTitle, style: theme.appBarTheme.titleTextStyle),
       ),
       body: PageBackground(
         child: state.isLoading && state.balance == null
-            ? const Center(child: CircularProgressIndicator())
+            ? const LoadingIndicator()
             : RefreshIndicator(
-                onRefresh: () => ref.read(paymentProvider.notifier).refresh(studentId: child?.id),
+                onRefresh: () => ref
+                    .read(paymentProvider.notifier)
+                    .refresh(studentId: child?.id),
                 color: theme.colorScheme.primary,
                 backgroundColor: theme.cardColor,
                 child: ListView(
@@ -152,24 +144,37 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
                     // ─── Header Section ───
                     BalanceHeader(
-                      balance: hasFinancialData ? _formatCurrencyAmount(l10n, state.balance?.balance ?? 0) : l10n.noFinancialData,
-                      lastUpdated: _formatLastUpdated(l10n, state.balance?.nextPaymentDate),
+                      balance: hasFinancialData
+                          ? _formatCurrencyAmount(
+                              l10n,
+                              state.balance?.balance ?? 0,
+                            )
+                          : l10n.noFinancialData,
+                      lastUpdated: _formatLastUpdated(
+                        l10n,
+                        state.balance?.nextPaymentDate,
+                      ),
                     ),
 
                     const SizedBox(height: 16),
 
                     if (state.error != null)
-                      Container(
+                      LiquidGlassPanel(
                         margin: const EdgeInsets.only(bottom: 24),
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.2)),
+                        borderRadius: BorderRadius.circular(16),
+                        backgroundColor: theme.colorScheme.error.withValues(
+                          alpha: 0.10,
                         ),
+                        borderColor: theme.colorScheme.error.withValues(alpha: 0.20),
+                        boxShadow: const [],
+                        blurSigma: 10,
                         child: Text(
                           state.error!,
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error, fontWeight: FontWeight.w700),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
 
@@ -179,46 +184,69 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         title: l10n.contractInfoTitle,
                         icon: Icons.description_rounded,
                         items: [
-                          if (state.balance?.contractNumber != null) {'label': l10n.contractLabel, 'value': state.balance!.contractNumber!},
-                          if (child != null) {'label': l10n.studentLabel, 'value': child.fullName},
-                          if (child != null) {'label': l10n.classLabel, 'value': child.className},
-                          if (hasFinancialData && (state.balance?.monthlyFee ?? 0) > 0)
-                            {'label': l10n.monthlyPaymentLabel, 'value': _formatCurrencyAmount(l10n, state.balance!.monthlyFee)},
+                          if (state.balance?.contractNumber != null)
+                            {
+                              'label': l10n.contractLabel,
+                              'value': state.balance!.contractNumber!,
+                            },
+                          if (child != null)
+                            {'label': l10n.studentLabel, 'value': child.fullName},
+                          if (child != null)
+                            {'label': l10n.classLabel, 'value': child.className},
+                          if (hasFinancialData &&
+                              (state.balance?.monthlyFee ?? 0) > 0)
+                            {
+                              'label': l10n.monthlyPaymentLabel,
+                              'value': _formatCurrencyAmount(
+                                l10n,
+                                state.balance!.monthlyFee,
+                              ),
+                            },
                         ],
                       ),
 
                     if (hasDebt) ...[
                       const SizedBox(height: 16),
-                      Container(
+                      LiquidGlassPanel(
                         padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              AppColors.liquidAmber.first.withValues(alpha: 0.15),
-                              AppColors.liquidAmber.last.withValues(alpha: 0.05),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(32),
-                          border: Border.all(color: AppColors.liquidAmber.first.withValues(alpha: 0.1)),
+                        borderRadius: BorderRadius.circular(32),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.liquidAmber.first.withValues(alpha: 0.15),
+                            AppColors.liquidAmber.last.withValues(alpha: 0.05),
+                          ],
                         ),
+                        borderColor: AppColors.liquidAmber.first.withValues(
+                          alpha: 0.14,
+                        ),
+                        boxShadow: const [],
+                        blurSigma: 10,
                         child: Row(
                           children: [
-                            Container(
+                            LiquidGlassPanel(
                               padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: AppColors.liquidAmber),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.liquidAmber.first.withValues(alpha: 0.4),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                              borderRadius: BorderRadius.circular(100),
+                              gradient: LinearGradient(
+                                colors: AppColors.liquidAmber,
                               ),
-                              child: const Icon(Icons.priority_high_rounded, color: Colors.white, size: 20),
+                              borderColor: Colors.white.withValues(alpha: 0.14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.liquidAmber.first.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                              blurSigma: 8,
+                              child: const Icon(
+                                Icons.priority_high_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
                             const SizedBox(width: 20),
                             Expanded(
@@ -235,9 +263,13 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    l10n.debtPaymentPrompt(_formatCurrencyAmount(l10n, debtAmount)),
+                                    l10n.debtPaymentPrompt(
+                                      _formatCurrencyAmount(l10n, debtAmount),
+                                    ),
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                      color: theme.colorScheme.onSurface.withValues(
+                                        alpha: 0.7,
+                                      ),
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -252,73 +284,21 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     const SizedBox(height: 32),
 
                     // ─── Action Buttons ───
-                    AnimatedPressable(
-                      onTap: () => context.push(RouteNames.paymentMethod),
-                      child: Container(
-                        height: 72,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: AppColors.liquidIndigo,
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.liquidIndigo.first.withValues(alpha: 0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.payments_rounded, color: Colors.white, size: 22),
-                            const SizedBox(width: 12),
-                            Text(
-                              l10n.payNowAction,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    CustomButton(
+                      text: l10n.payNowAction,
+                      icon: Icons.payments_rounded,
+                      height: 72,
+                      borderRadius: 24,
+                      onPressed: () => context.push(RouteNames.paymentMethod),
                     ),
                     const SizedBox(height: 16),
-                    AnimatedPressable(
-                      onTap: () => context.push(RouteNames.paymentHistory),
-                      child: Container(
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.history_rounded, color: theme.colorScheme.primary, size: 22),
-                            const SizedBox(width: 12),
-                            Text(
-                              l10n.paymentHistoryTitle,
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    CustomButton(
+                      text: l10n.paymentHistoryTitle,
+                      icon: Icons.history_rounded,
+                      height: 72,
+                      borderRadius: 24,
+                      isOutlined: true,
+                      onPressed: () => context.push(RouteNames.paymentHistory),
                     ),
                   ],
                 ),
@@ -333,67 +313,76 @@ class _InfoCard extends StatelessWidget {
   final IconData icon;
   final List<Map<String, String>> items;
 
-  const _InfoCard({required this.title, required this.icon, required this.items});
+  const _InfoCard({
+    required this.title,
+    required this.icon,
+    required this.items,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.03),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+    return LiquidGlassPanel(
+      padding: const EdgeInsets.all(24),
+      borderRadius: BorderRadius.circular(32),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(
+            alpha: theme.brightness == Brightness.dark ? 0.20 : 0.04,
+          ),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
+        ),
+      ],
+      child: Column(
+        children: [
+          Row(
+            children: [
+              LiquidGlassPanel(
+                padding: const EdgeInsets.all(10),
+                borderRadius: BorderRadius.circular(12),
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.10,
+                ),
+                borderColor: theme.colorScheme.primary.withValues(alpha: 0.14),
+                boxShadow: const [],
+                blurSigma: 8,
+                child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    item['label']!,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.4,
+                      ),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    item['value']!,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: theme.colorScheme.primary, size: 20),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            ...items.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        item['label']!,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        item['value']!,
-                        style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
-                      ),
-                    ],
-                  ),
-                )),
-          ],
-        ),
       ),
     );
   }

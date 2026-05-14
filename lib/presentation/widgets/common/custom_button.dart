@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:parent_school_app/core/constants/app_colors.dart';
+
 import '../../../core/constants/app_text_styles.dart';
 import 'animated_pressable.dart';
+import 'liquid_glass.dart';
 
 /// Premium Custom Button - Liquid Glass Standard
 class CustomButton extends StatelessWidget {
@@ -28,7 +30,7 @@ class CustomButton extends StatelessWidget {
     this.icon,
     this.width,
     this.height = 62,
-    this.borderRadius = 32, // Bento 2.0 Standard
+    this.borderRadius = 32,
     this.gradient,
   });
 
@@ -36,54 +38,77 @@ class CustomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDisabled = onPressed == null || isLoading;
 
     if (isOutlined) {
       final outlineColor = backgroundColor ?? colorScheme.primary;
       final outlineTextColor = textColor ?? outlineColor;
 
       return AnimatedPressable(
-        onTap: isLoading ? null : onPressed,
-        child: Container(
-          width: width ?? double.infinity,
-          height: height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: outlineColor.withValues(alpha: 0.5), width: 1.5),
+        onTap: isDisabled ? null : onPressed,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 180),
+          opacity: onPressed == null ? 0.55 : 1,
+          child: SizedBox(
+            width: width ?? double.infinity,
+            height: height,
+            child: LiquidGlassPanel(
+              borderRadius: BorderRadius.circular(borderRadius),
+              padding: EdgeInsets.zero,
+              backgroundColor: outlineColor.withValues(alpha: 0.05),
+              borderColor: outlineColor.withValues(alpha: 0.38),
+              boxShadow: [
+                BoxShadow(
+                  color: outlineColor.withValues(alpha: 0.10),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+              blurSigma: 14,
+              child: Center(child: _buildChild(outlineTextColor)),
+            ),
           ),
-          alignment: Alignment.center,
-          child: _buildChild(outlineTextColor),
         ),
       );
     }
 
     // Default Gradient (Liquid Indigo) if no background color is provided
-    final buttonGradient = gradient ?? (backgroundColor == null ? AppColors.liquidIndigo : null);
+    final buttonGradient = gradient ??
+        (backgroundColor == null ? AppColors.liquidIndigo : null);
     final filledColor = backgroundColor ?? colorScheme.primary;
     final filledTextColor = textColor ?? Colors.white;
+    final glowColor = buttonGradient?.first ?? filledColor;
 
     return AnimatedPressable(
-      onTap: isLoading ? null : onPressed,
-      child: Container(
-        width: width ?? double.infinity,
-        height: height,
-        decoration: BoxDecoration(
-          color: buttonGradient == null ? filledColor : null,
-          gradient: buttonGradient != null ? LinearGradient(
-            colors: buttonGradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ) : null,
-          borderRadius: BorderRadius.circular(borderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: (buttonGradient?.first ?? filledColor).withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
+      onTap: isDisabled ? null : onPressed,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 180),
+        opacity: onPressed == null ? 0.55 : 1,
+        child: Container(
+          width: width ?? double.infinity,
+          height: height,
+          decoration: BoxDecoration(
+            color: buttonGradient == null ? filledColor : null,
+            gradient: buttonGradient != null
+                ? LinearGradient(
+                    colors: buttonGradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+            boxShadow: [
+              BoxShadow(
+                color: glowColor.withValues(alpha: 0.30),
+                blurRadius: 22,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: _buildChild(filledTextColor),
         ),
-        alignment: Alignment.center,
-        child: _buildChild(filledTextColor),
       ),
     );
   }
@@ -95,6 +120,7 @@ class CustomButton extends StatelessWidget {
         height: 24,
         child: CircularProgressIndicator(
           strokeWidth: 3,
+          strokeCap: StrokeCap.round,
           valueColor: AlwaysStoppedAnimation<Color>(color),
         ),
       );

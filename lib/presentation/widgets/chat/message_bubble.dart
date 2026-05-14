@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Message Bubble - Displays a single chat message
+import '../common/liquid_glass.dart';
+
+/// Message Bubble - Displays a single chat message with Liquid Glass surfaces.
 class MessageBubble extends StatelessWidget {
   final String text;
   final String time;
@@ -17,56 +19,93 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final radius = BorderRadius.only(
+      topLeft: const Radius.circular(22),
+      topRight: const Radius.circular(22),
+      bottomLeft: Radius.circular(isMe ? 22 : 6),
+      bottomRight: Radius.circular(isMe ? 6 : 22),
+    );
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          text,
+          style: TextStyle(
+            color: isMe ? colorScheme.onPrimary : colorScheme.onSurface,
+            fontSize: 15,
+            height: 1.4,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          time,
+          style: TextStyle(
+            color: isMe
+                ? colorScheme.onPrimary.withValues(alpha: 0.78)
+                : colorScheme.onSurfaceVariant,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: isMe
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
+        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          Container(
+          ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: MediaQuery.of(context).size.width * 0.75,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isMe ? colorScheme.primary : theme.cardColor,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(20),
-                topRight: const Radius.circular(20),
-                bottomLeft: Radius.circular(isMe ? 20 : 0),
-                bottomRight: Radius.circular(isMe ? 0 : 20),
-              ),
-              border: isMe
-                  ? null
-                  : Border.all(
-                      color: colorScheme.outline.withValues(alpha: 0.6),
+            child: isMe
+                ? DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: radius,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          colorScheme.primary,
+                          colorScheme.primary.withValues(alpha: 0.82),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withValues(alpha: 0.20),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  text,
-                  style: TextStyle(
-                    color: isMe ? colorScheme.onPrimary : colorScheme.onSurface,
-                    fontSize: 15,
-                    height: 1.4,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: content,
+                    ),
+                  )
+                : LiquidGlassPanel(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    borderRadius: radius,
+                    borderColor: colorScheme.outline.withValues(alpha: 0.24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 14,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                    blurSigma: 18,
+                    child: content,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  time,
-                  style: TextStyle(
-                    color: isMe
-                        ? colorScheme.onPrimary.withValues(alpha: 0.78)
-                        : colorScheme.onSurfaceVariant,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

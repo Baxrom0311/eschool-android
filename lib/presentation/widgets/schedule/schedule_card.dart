@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
+import '../common/liquid_glass.dart';
 
 /// Schedule Card - Displays a single lesson in the schedule
 class ScheduleCard extends StatelessWidget {
@@ -29,7 +30,6 @@ class ScheduleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
@@ -46,7 +46,9 @@ class ScheduleCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
-                    color: isNow ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                    color: isNow
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -59,7 +61,10 @@ class ScheduleCard extends StatelessWidget {
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: (isNow ? theme.colorScheme.primary : AppColors.slate400).withValues(alpha: 0.3),
+                        color: (isNow
+                                ? theme.colorScheme.primary
+                                : AppColors.slate400)
+                            .withValues(alpha: 0.3),
                         blurRadius: 4,
                       ),
                     ],
@@ -73,7 +78,7 @@ class ScheduleCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          (isNow ? theme.colorScheme.primary : theme.dividerColor),
+                          isNow ? theme.colorScheme.primary : theme.dividerColor,
                           theme.dividerColor.withValues(alpha: 0.5),
                         ],
                       ),
@@ -97,23 +102,20 @@ class ScheduleCard extends StatelessWidget {
 
           // ─── Content Card Section ───
           Expanded(
-            child: Container(
+            child: LiquidGlassPanel(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(
-                  color: (isNow ? theme.colorScheme.primary : colorScheme.outline).withValues(alpha: 0.15),
-                  width: 1,
+              borderRadius: BorderRadius.circular(32),
+              borderColor:
+                  (isNow ? theme.colorScheme.primary : theme.colorScheme.outline)
+                      .withValues(alpha: isNow ? 0.34 : 0.16),
+              boxShadow: [
+                BoxShadow(
+                  color: (isNow ? theme.colorScheme.primary : Colors.black)
+                      .withValues(alpha: isNow ? 0.12 : 0.04),
+                  blurRadius: isNow ? 26 : 18,
+                  offset: const Offset(0, 10),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
+              ],
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -132,13 +134,19 @@ class ScheduleCard extends StatelessWidget {
                         ),
                       ),
                       if (markText != null && markText!.isNotEmpty)
-                        Container(
+                        LiquidGlassPanel(
                           margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.success.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
                           ),
+                          borderRadius: BorderRadius.circular(8),
+                          backgroundColor: AppColors.success.withValues(
+                            alpha: 0.10,
+                          ),
+                          borderColor: AppColors.success.withValues(alpha: 0.14),
+                          boxShadow: const [],
+                          blurSigma: 8,
                           child: Text(
                             markText!,
                             style: const TextStyle(
@@ -151,7 +159,10 @@ class ScheduleCard extends StatelessWidget {
                       if (isNow)
                         Container(
                           margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [AppColors.primaryBlue, AppColors.blue400],

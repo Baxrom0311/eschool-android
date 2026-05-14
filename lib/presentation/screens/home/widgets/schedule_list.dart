@@ -7,6 +7,8 @@ import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../data/models/schedule_model.dart';
 import '../../../providers/academic_provider.dart';
+import '../../../widgets/common/loading_indicator.dart';
+import '../../../widgets/common/liquid_glass.dart';
 
 class ScheduleList extends ConsumerWidget {
   const ScheduleList({super.key});
@@ -49,7 +51,11 @@ class ScheduleList extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(Icons.arrow_forward_ios_rounded, size: 12, color: colorScheme.primary),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 12,
+                      color: colorScheme.primary,
+                    ),
                   ],
                 ),
               ),
@@ -67,11 +73,18 @@ class ScheduleList extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.event_busy_rounded, size: 32, color: colorScheme.outline),
+                      Icon(
+                        Icons.event_busy_rounded,
+                        size: 32,
+                        color: colorScheme.outline,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         l10n.noLessonsTodayShort,
-                        style: TextStyle(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -87,7 +100,7 @@ class ScheduleList extends ConsumerWidget {
                 },
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const LoadingIndicator(size: 28),
             error: (err, stack) =>
                 Center(child: Text(ApiErrorHandler.readableMessage(err))),
           ),
@@ -110,11 +123,11 @@ class _ScheduleItem extends StatelessWidget {
     final isActive = classItem.isActive;
     final markText = classItem.markText;
 
-    return Container(
+    return SizedBox(
       width: 200,
-      margin: const EdgeInsets.only(right: 14),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
+      child: LiquidGlassPanel(
+        margin: const EdgeInsets.only(right: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         borderRadius: BorderRadius.circular(32),
         gradient: isActive
             ? LinearGradient(
@@ -126,107 +139,122 @@ class _ScheduleItem extends StatelessWidget {
                 ],
               )
             : null,
-        color: !isActive ? theme.cardColor : null,
-        border: Border.all(
-          color: isActive
-              ? Colors.white.withValues(alpha: 0.1)
-              : theme.colorScheme.outline.withValues(alpha: 0.1),
-          width: 1.0,
-        ),
+        borderColor: isActive
+            ? Colors.white.withValues(alpha: 0.12)
+            : theme.colorScheme.outline.withValues(alpha: 0.14),
         boxShadow: [
           BoxShadow(
             color: isActive
-                ? colorScheme.primary.withValues(alpha: 0.1)
-                : theme.shadowColor.withValues(alpha: 0.05),
-            blurRadius: 20,
+                ? colorScheme.primary.withValues(alpha: 0.14)
+                : theme.shadowColor.withValues(alpha: 0.06),
+            blurRadius: 22,
             offset: const Offset(0, 10),
           ),
         ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: isActive ? Colors.white24 : colorScheme.primary.withValues(alpha: 0.1),
+        blurSigma: isActive ? 18 : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                LiquidGlassPanel(
+                  padding: const EdgeInsets.all(4),
                   borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(
-                  Icons.schedule_rounded,
-                  size: 14,
-                  color: isActive ? Colors.white : colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                time,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: isActive
-                      ? Colors.white.withValues(alpha: 0.9)
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            classItem.subjectName,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
-              color: isActive ? Colors.white : colorScheme.onSurface,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.room_rounded,
+                  backgroundColor: isActive
+                      ? Colors.white.withValues(alpha: 0.24)
+                      : colorScheme.primary.withValues(alpha: 0.10),
+                  borderColor: isActive
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : colorScheme.primary.withValues(alpha: 0.12),
+                  boxShadow: const [],
+                  blurSigma: 8,
+                  child: Icon(
+                    Icons.schedule_rounded,
                     size: 14,
-                    color: isActive ? Colors.white70 : colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    classItem.roomNumber ?? '-',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isActive ? Colors.white70 : colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              if (markText != null && markText.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isActive ? Colors.white24 : AppColors.success.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    markText,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: isActive ? Colors.white : AppColors.success,
-                    ),
+                    color: isActive ? Colors.white : colorScheme.primary,
                   ),
                 ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 8),
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isActive
+                        ? Colors.white.withValues(alpha: 0.9)
+                        : colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              classItem.subjectName,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+                color: isActive ? Colors.white : colorScheme.onSurface,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.room_rounded,
+                      size: 14,
+                      color: isActive
+                          ? Colors.white70
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      classItem.roomNumber ?? '-',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isActive
+                          ? Colors.white70
+                          : colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                if (markText != null && markText.isNotEmpty)
+                  LiquidGlassPanel(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    backgroundColor: isActive
+                        ? Colors.white.withValues(alpha: 0.24)
+                        : AppColors.success.withValues(alpha: 0.10),
+                    borderColor: isActive
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : AppColors.success.withValues(alpha: 0.14),
+                    boxShadow: const [],
+                    blurSigma: 8,
+                    child: Text(
+                      markText,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: isActive ? Colors.white : AppColors.success,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
+
   }
 }

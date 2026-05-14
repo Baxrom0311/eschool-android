@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:parent_school_app/core/localization/l10n_extension.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../widgets/common/animated_pressable.dart';
+import '../../../widgets/common/liquid_glass.dart';
 
 class DailyMenuCard extends StatelessWidget {
   const DailyMenuCard({super.key});
@@ -53,13 +54,13 @@ class DailyMenuCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
+                  LiquidGlassPanel(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                    ),
+                    borderRadius: BorderRadius.circular(100),
+                    backgroundColor: Colors.black.withValues(alpha: 0.10),
+                    borderColor: Colors.white.withValues(alpha: 0.12),
+                    boxShadow: const [],
+                    blurSigma: 8,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

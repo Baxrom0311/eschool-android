@@ -17,6 +17,7 @@ import 'core/services/firebase_service.dart';
 import 'presentation/providers/app_locale_provider.dart';
 import 'presentation/providers/app_theme_mode_provider.dart';
 import 'presentation/screens/home/widgets/network_status_banner.dart';
+import 'presentation/widgets/common/page_background.dart';
 import 'core/services/socket_listener.dart';
 
 void main() async {
@@ -118,7 +119,9 @@ class _ParentSchoolAppState extends ConsumerState<ParentSchoolApp> {
         if (l10n != null) {
           AppLocalizationsRegistry.update(l10n);
         }
-        return NetworkStatusBanner(child: child!);
+        return PageBackground(
+          child: NetworkStatusBanner(child: child!),
+        );
       },
     );
   }

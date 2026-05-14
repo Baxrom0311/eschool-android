@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -10,7 +9,9 @@ import '../../providers/menu_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/menu/meal_card.dart';
 import '../../widgets/common/app_state_view.dart';
+import '../../widgets/common/glass_app_bar.dart';
 import '../../widgets/common/page_background.dart';
+import '../../widgets/common/liquid_glass.dart';
 
 /// Daily Menu Screen - Weekly food schedule
 class DailyMenuScreen extends ConsumerStatefulWidget {
@@ -111,20 +112,8 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight + 8),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: LiquidGlass.blur, sigmaY: LiquidGlass.blur),
-            child: AppBar(
-              title: Text(l10n.dailyMenuTitle, style: theme.appBarTheme.titleTextStyle),
-              centerTitle: true,
-              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: LiquidGlass.opacity(context)),
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-            ),
-          ),
-        ),
+      appBar: GlassAppBar(
+        title: Text(l10n.dailyMenuTitle, style: theme.appBarTheme.titleTextStyle),
       ),
       body: PageBackground(
         child: Column(
@@ -132,79 +121,71 @@ class _DailyMenuScreenState extends ConsumerState<DailyMenuScreen> {
             SizedBox(height: MediaQuery.of(context).padding.top + 56),
 
             // ─── Modern Liquid Glass Calendar ───
-            Container(
+            LiquidGlassPanel(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              borderRadius: BorderRadius.circular(32),
+              child: TableCalendar(
+                firstDay: DateTime.now().subtract(const Duration(days: 90)),
+                lastDay: DateTime.now().add(const Duration(days: 90)),
+                focusedDay: _focusedDay,
+                calendarFormat: _calendarFormat,
+                availableCalendarFormats: const {CalendarFormat.week: 'Week'},
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                },
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                  titleTextStyle: theme.textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    letterSpacing: -0.5,
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: theme.cardColor.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
-                    ),
-                    child: TableCalendar(
-                      firstDay: DateTime.now().subtract(const Duration(days: 90)),
-                      lastDay: DateTime.now().add(const Duration(days: 90)),
-                      focusedDay: _focusedDay,
-                      calendarFormat: _calendarFormat,
-                      availableCalendarFormats: const {CalendarFormat.week: 'Week'},
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                      onDaySelected: (selectedDay, focusedDay) {
-                        setState(() {
-                          _selectedDay = selectedDay;
-                          _focusedDay = focusedDay;
-                        });
-                      },
-                      headerStyle: HeaderStyle(
-                        formatButtonVisible: false,
-                        titleCentered: true,
-                        titleTextStyle: theme.textTheme.titleMedium!.copyWith(
-                          fontWeight: FontWeight.w900, 
-                          fontSize: 16,
-                          letterSpacing: -0.5,
-                        ),
-                        leftChevronIcon: Icon(Icons.chevron_left_rounded, color: theme.colorScheme.primary),
-                        rightChevronIcon: Icon(Icons.chevron_right_rounded, color: theme.colorScheme.primary),
-                      ),
-                      calendarStyle: CalendarStyle(
-                        defaultTextStyle: theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w700),
-                        weekendTextStyle: theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
-                        selectedDecoration: BoxDecoration(
-                          gradient: LinearGradient(colors: AppColors.liquidIndigo),
-                          shape: BoxShape.circle,
-                        ),
-                        todayDecoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        todayTextStyle: theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w900, color: theme.colorScheme.primary),
-                      ),
-                      daysOfWeekStyle: DaysOfWeekStyle(
-                        weekdayStyle: theme.textTheme.labelSmall!.copyWith(
-                          fontWeight: FontWeight.w900, 
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                          letterSpacing: 1.0,
-                        ),
-                        weekendStyle: theme.textTheme.labelSmall!.copyWith(
-                          fontWeight: FontWeight.w900, 
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ),
+                  leftChevronIcon: Icon(
+                    Icons.chevron_left_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
+                  rightChevronIcon: Icon(
+                    Icons.chevron_right_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                calendarStyle: CalendarStyle(
+                  defaultTextStyle: theme.textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  weekendTextStyle: theme.textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                  ),
+                  selectedDecoration: BoxDecoration(
+                    gradient: LinearGradient(colors: AppColors.liquidIndigo),
+                    shape: BoxShape.circle,
+                  ),
+                  todayDecoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  todayTextStyle: theme.textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                daysOfWeekStyle: DaysOfWeekStyle(
+                  weekdayStyle: theme.textTheme.labelSmall!.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                    letterSpacing: 1.0,
+                  ),
+                  weekendStyle: theme.textTheme.labelSmall!.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                    letterSpacing: 1.0,
                   ),
                 ),
               ),
